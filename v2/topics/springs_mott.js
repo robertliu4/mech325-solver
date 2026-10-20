@@ -1,0 +1,181 @@
+// Mott Table 18-4: G and E (psi, GPa)
+const MOTT_G = {
+  A227: ['Hard-drawn steel A227 (Fig. 18-8)', 11.5e6, 79.3, 28.6e6, 197], A228: ['Music wire A228 (Fig. 18-9)', 11.85e6, 81.7, 29.0e6, 200],
+  A229: ['Oil-tempered A229 (Fig. 18-10)', 11.2e6, 77.2, 28.5e6, 196], A231: ['Chromium-vanadium A231 (Fig. 18-11)', 11.2e6, 77.2, 28.5e6, 196],
+  A401: ['Chromium-silicon A401 (Fig. 18-12)', 11.2e6, 77.2, 29.5e6, 203], A313: ['Stainless 302/304/316 A313 (Fig. 18-13)', 10.0e6, 69.0, 28.0e6, 193],
+  A313_177: ['Stainless 17-7 PH A313 (Fig. 18-13)', 10.5e6, 72.4, 29.5e6, 203], B134: ['Spring brass B134', 5.0e6, 34.5, 15.0e6, 103],
+  B159: ['Phosphor bronze B159', 6.0e6, 41.4, 15.0e6, 103], B197: ['Beryllium copper B197', 7.0e6, 48.3, 17.0e6, 117],
+};
+const MFIG = { A227: 'fig18-8', A228: 'fig18-9', A229: 'fig18-10', A231: 'fig18-11', A401: 'fig18-12', A313: 'fig18-13', A313_177: 'fig18-13' };
+const SIu = v => v.units === 'SI';
+const NE = { plain: 0, pg: 1, sq: 2, sg: 2 };
+const PI2 = Math.PI;
+
+window.TOPIC = {
+  id: 'springs', book: 'mott',
+  title: 'Helical Compression Springs — Analysis & Design',
+  subtitle: 'Mott Ch. 18-3 … 18-6 (Example Problems 18-1, 18-2) · Fizz guide §5.3',
+  sibling: 'springs_shigley.html',
+  intro: 'Mott\'s procedure: the allowable stress is read from the <b>design-stress charts</b> (Figs. 18-8 … 18-13) for the material, wire size and service class (light / average / severe) instead of being computed from Sut. '
+    + '<b>Design mode</b> (Example 18-2, Method 1): two force–length points → rate k and free length; a trial mean diameter and design stress give a trial wire size (Eq. 18-7); pick a standard wire (Table 18-2), then check stress at the operating load against the average-service curve and at solid length against the light-service curve, find the coils (Eq. 18-8), lengths, buckling (Fig. 18-15), coil clearance and hole size. '
+    + '<b>Analysis mode</b> (Example 18-1): a measured spring (Lf, OD, Dw, N) is checked the same way. Units: US (lb, in, psi) or SI (N, mm, MPa).',
+  example: { units: 'US', mode: 'design', Fo: 12, Lo: 1.25, Fi: 8, Li: 1.75, mat: 'A231', service: 'avg', Dmt: 0.6, tdi: 130000, Dw: 0.0625, td: 145000, tmax: 170000, ends: 'sg', Dhole: 0.75 },
+
+  figures: [
+    { id: 'fig18-5', ref: 'Figure 18-5', title: 'Notation for diameters: OD, Dm, ID, Dw', src: 'figures/mott/fig18-5.png', page: 677 },
+    { id: 'fig18-6', ref: 'Figure 18-6', title: 'Notation for lengths and forces: Lf, Li, Lo, Ls; Fi, Fo, Fs; coil clearance', src: 'figures/mott/fig18-6.png', page: 678 },
+    { id: 'fig18-3', ref: 'Figure 18-3', title: 'End treatments: plain, squared & ground, squared, plain ground', src: 'figures/mott/fig18-3.png', page: 675, note: 'Active coils: plain Na = N; plain & ground Na = N − 1; squared or squared & ground Na = N − 2.' },
+    { id: 'fig18-7', ref: 'Figure 18-7', title: 'Pitch angle λ = tan⁻¹[p/(π Dm)] — keep below ≈ 12°', src: 'figures/mott/fig18-7.png', page: 679 },
+    { id: 'table18-2a', ref: 'Table 18-2 (a)', title: 'Wire gages and diameters — gages 7/0 to 19 (U.S. Steel Wire, Music wire, B&S, metric)', src: 'figures/mott/table18-2a.png', page: 677 },
+    { id: 'table18-2b', ref: 'Table 18-2 (b)', title: 'Wire gages and diameters — gages 20 to 40', src: 'figures/mott/table18-2b.png', page: 678 },
+    { id: 'table18-4', ref: 'Table 18-4', title: 'Shear modulus G and tension modulus E of spring wires', src: 'figures/mott/table18-4.png', page: 685 },
+    { id: 'fig18-8', ref: 'Figure 18-8', title: 'Design shear stresses — ASTM A227 hard-drawn', src: 'figures/mott/fig18-8.png', page: 681, note: 'Light service = max allowable (solid-height check); average service = design stress for normal use; severe = > 10⁶ cycles / shock.' },
+    { id: 'fig18-9', ref: 'Figure 18-9', title: 'Design shear stresses — ASTM A228 music wire', src: 'figures/mott/fig18-9.png', page: 682 },
+    { id: 'fig18-10', ref: 'Figure 18-10', title: 'Design shear stresses — ASTM A229 oil-tempered', src: 'figures/mott/fig18-10.png', page: 682 },
+    { id: 'fig18-11', ref: 'Figure 18-11', title: 'Design shear stresses — ASTM A231 chromium-vanadium', src: 'figures/mott/fig18-11.png', page: 682 },
+    { id: 'fig18-12', ref: 'Figure 18-12', title: 'Design shear stresses — ASTM A401 chromium-silicon', src: 'figures/mott/fig18-12.png', page: 683 },
+    { id: 'fig18-13', ref: 'Figure 18-13', title: 'Design shear stresses — ASTM A313 stainless (302; ×0.95 for 304, ×0.85 for 316)', src: 'figures/mott/fig18-13.png', page: 683 },
+    { id: 'fig18-14', ref: 'Figure 18-14', title: 'Wahl factor K vs spring index C', src: 'figures/mott/fig18-14.png', page: 684 },
+    { id: 'fig18-15', ref: 'Figure 18-15', title: 'Buckling criteria: critical fo/Lf vs Lf/Dm for end conditions A, B, C', src: 'figures/mott/fig18-15.png', page: 685, note: 'Curve A: fixed (squared & ground on flat plates); B: one fixed, one pinned; C: both pinned. For Lf/Dm < 5.2 (curve A) buckling will not occur.' },
+  ],
+
+  sections: [
+    { title: 'Inputs', steps: [
+      { id: 'in', title: 'Mode, forces and lengths', fig: ['fig18-6'], eq: '18-1',
+        formula: 'k = \\frac{F_o - F_i}{L_i - L_o} \\qquad L_f = L_i + \\frac{F_i}{k}',
+        text: '<b>Design:</b> operating force Fo at length Lo, and a second point (installed force Fi at Li). If only the free length is known, set Fi = 0 and Li = Lf. <b>Analysis:</b> enter the measured spring below and the operating force Fo.',
+        vars: [
+          { id: 'units', label: 'Unit system', kind: 'choice', type: 'text', options: [{ label: 'US: lb, in, psi', value: 'US' }, { label: 'SI: N, mm, MPa', value: 'SI' }], default: 'US' },
+          { id: 'mode', label: 'Mode', kind: 'choice', type: 'text', options: [{ label: 'Design a spring (Example 18-2)', value: 'design' }, { label: 'Analyse a given spring (Example 18-1)', value: 'analyse' }], default: 'design' },
+          { id: 'Fo', symbol: 'F_o', label: 'Operating force (max normal load)', unit: 'lb / N', kind: 'input' },
+          { id: 'Lo', symbol: 'L_o', label: 'Operating length', unit: 'in / mm', kind: 'input', hint: 'design mode' },
+          { id: 'Fi', symbol: 'F_i', label: 'Installed force (0 if free length known)', unit: 'lb / N', kind: 'input', default: 0 },
+          { id: 'Li', symbol: 'L_i', label: 'Installed length (= Lf if Fi = 0)', unit: 'in / mm', kind: 'input', hint: 'design mode' },
+          { id: 'Lfg', symbol: 'L_f', label: 'Free length (analysis mode)', unit: 'in / mm', kind: 'input' },
+          { id: 'ODg', symbol: 'OD', label: 'Outside diameter (analysis mode)', unit: 'in / mm', kind: 'input' },
+          { id: 'Ng', symbol: 'N', label: 'Total coils (analysis mode)', kind: 'input' },
+        ] },
+      { id: 'mat', title: 'Material, service and end type', fig: ['table18-4', 'fig18-3'],
+        vars: [
+          { id: 'mat', label: 'Wire material', kind: 'choice', type: 'text', options: Object.keys(MOTT_G).map(k => ({ label: MOTT_G[k][0], value: k })), default: 'A231' },
+          { id: 'G', symbol: 'G', label: 'Shear modulus', unit: 'psi / MPa', kind: 'lookup', fig: 'table18-4', auto: v => MOTT_G[v.mat] ? (SIu(v) ? MOTT_G[v.mat][2] * 1000 : MOTT_G[v.mat][1]) : undefined },
+          { id: 'service', label: 'Service class (design-stress curve)', kind: 'choice', type: 'text', options: [{ label: 'Light — static / < 10⁴ cycles', value: 'light' }, { label: 'Average — typical, up to 10⁶ cycles', value: 'avg' }, { label: 'Severe — > 10⁶ cycles or shock', value: 'severe' }], default: 'avg' },
+          { id: 'ends', label: 'End type', kind: 'choice', type: 'text', options: [{ label: 'Squared and ground (Na = N − 2)', value: 'sg' }, { label: 'Squared / closed (Na = N − 2)', value: 'sq' }, { label: 'Plain and ground (Na = N − 1)', value: 'pg' }, { label: 'Plain (Na = N)', value: 'plain' }], default: 'sg' },
+        ] },
+    ] },
+
+    { title: 'Rate, free length and trial wire size (design)', steps: [
+      { id: 'rate', title: 'Spring rate and free length', eq: '18-1a', fig: ['fig18-6'],
+        vars: [
+          { id: 'k', symbol: 'k', label: 'Spring rate', unit: 'lb/in / N/mm', kind: 'calc', digits: 4, compute: v => {
+              if (v.mode === 'analyse') return (H.has(v, 'Fo', 'fo') && v.fo > 0) ? v.Fo / v.fo : undefined;
+              return (H.has(v, 'Fo', 'Fi', 'Li', 'Lo') && v.Li !== v.Lo) ? (v.Fo - v.Fi) / (v.Li - v.Lo) : undefined; },
+            work: v => (v.mode !== 'analyse' && H.has(v, 'Fo', 'Fi', 'Li', 'Lo')) ? '\\(k = \\dfrac{' + H.fmt(v.Fo) + ' - ' + H.fmt(v.Fi) + '}{' + H.fmt(v.Li) + ' - ' + H.fmt(v.Lo) + '} = ' + H.fmt(v.k, 4) + '\\)' : (v.mode === 'analyse' && H.has(v, 'Fo', 'fo') ? '\\(k = F_o/f_o = ' + H.fmt(v.Fo) + '/' + H.fmt(v.fo, 4) + ' = ' + H.fmt(v.k, 4) + '\\)' : null) },
+          { id: 'Lf', symbol: 'L_f', label: 'Free length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? v.Lfg : (H.has(v, 'Li', 'Fi', 'k') && v.k > 0 ? v.Li + v.Fi / v.k : undefined),
+            work: v => (v.mode !== 'analyse' && H.has(v, 'Li', 'Fi', 'k')) ? '\\(L_f = ' + H.fmt(v.Li) + ' + ' + H.fmt(v.Fi) + '/' + H.fmt(v.k, 4) + ' = ' + H.fmt(v.Lf, 4) + '\\)' : null },
+        ] },
+      { id: 'trial', title: 'Trial mean diameter, design stress and trial wire diameter', eq: '18-7', fig: ['fig18-5', 'fig18-8', 'fig18-9', 'fig18-10', 'fig18-11', 'fig18-12', 'fig18-13'],
+        formula: 'D_w = \\left[\\frac{8 K F_o D_m}{\\pi\\tau_d}\\right]^{1/3} \\approx \\left[\\frac{3.06\\,F_o D_m}{\\tau_d}\\right]^{1/3}\\ (K \\approx 1.2)',
+        text: 'Choose Dm to fit the space (smaller than any hole, larger than any rod). Estimate the design stress from the material chart (the curve for your service class) at a guessed wire size; it is corrected after a standard wire is picked. Method 2 (Example 18-3) instead assumes C = 7: \\(D_w = \\sqrt{8(1.2)(7)F_o/(\\pi\\tau_d)}\\).',
+        vars: [
+          { id: 'Dmt', symbol: 'D_m', label: 'Trial mean diameter', unit: 'in / mm', kind: 'input' },
+          { id: 'tdi', symbol: '\\tau_{d,i}', label: 'Initial design-stress estimate', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-11', hint: 'read the service curve for the material' },
+          { id: 'Dwt', symbol: 'D_{w,t}', label: 'Trial wire diameter (Eq. 18-7)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fo', 'Dmt', 'tdi') && v.tdi > 0 ? Math.pow(8 * 1.2 * v.Fo * v.Dmt / (Math.PI * v.tdi), 1 / 3) : undefined,
+            work: v => H.has(v, 'Dwt') ? '\\(D_w = \\left[\\dfrac{3.06(' + H.fmt(v.Fo) + ')(' + H.fmt(v.Dmt) + ')}{' + H.fmt(v.tdi) + '}\\right]^{1/3} = ' + H.fmt(v.Dwt, 4) + '\\)' : null },
+          { id: 'Dwt2', symbol: 'D_{w,t}^{(C=7)}', label: 'Trial wire diameter, Method 2 (Eq. 18-9 with C = 7, K = 1.2)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fo', 'tdi') && v.tdi > 0 ? Math.sqrt(8 * 1.2 * 7 * v.Fo / (Math.PI * v.tdi)) : undefined },
+        ],
+        when: v => v.mode !== 'analyse' },
+    ] },
+
+    { title: 'Standard wire and allowable stresses', steps: [
+      { id: 'wire', title: 'Standard wire diameter and chart stresses', fig: ['table18-2a', 'table18-2b', 'fig18-8', 'fig18-9', 'fig18-10', 'fig18-11', 'fig18-12', 'fig18-13'],
+        text: 'Pick the next larger standard size from Table 18-2 (design) or enter the measured wire (analysis). Then re-read the chart at that diameter: <b>design stress</b> from the service curve, and <b>maximum allowable stress</b> from the <i>light-service</i> curve (used for the solid-height check).',
+        vars: [
+          { id: 'Dw', symbol: 'D_w', label: 'Wire diameter (standard)', unit: 'in / mm', kind: 'lookup', fig: 'table18-2a', check: v => (v.mode !== 'analyse' && H.has(v, 'Dw', 'Dwt') && v.Dw < v.Dwt) ? 'Smaller than the trial size — stress will exceed the design stress' : null },
+          { id: 'td', symbol: '\\tau_d', label: 'Design stress at Dw (service curve)', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-11', hint: 'e.g. A231, 0.0625 in: ≈ 145 ksi average' },
+          { id: 'tmax', symbol: '\\tau_{max}', label: 'Max allowable stress at Dw (light-service curve)', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-11', hint: 'e.g. A231, 0.0625 in: ≈ 170 ksi' },
+        ] },
+    ] },
+
+    { title: 'Geometry, index, stress', steps: [
+      { id: 'geo', title: 'Diameters, spring index, Wahl factor', eq: '18-5', fig: ['fig18-5', 'fig18-14'],
+        formula: 'C = \\frac{D_m}{D_w} \\qquad K = \\frac{4C-1}{4C-4} + \\frac{0.615}{C}',
+        vars: [
+          { id: 'Dm', symbol: 'D_m', label: 'Mean diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? (H.has(v, 'ODg', 'Dw') ? v.ODg - v.Dw : undefined) : v.Dmt },
+          { id: 'OD', symbol: 'OD', label: 'Outside diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dm', 'Dw') ? v.Dm + v.Dw : undefined },
+          { id: 'ID', symbol: 'ID', label: 'Inside diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dm', 'Dw') ? v.Dm - v.Dw : undefined },
+          { id: 'C', symbol: 'C', label: 'Spring index', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dm', 'Dw') && v.Dw > 0 ? v.Dm / v.Dw : undefined, check: v => (v.C !== undefined && v.C < 5) ? 'Mott: C should be ≥ 5 (forming cracks below 5); typical 5–12' : (v.C > 12 ? 'C > 12 — springs tangle; consider a smaller Dm' : null) },
+          { id: 'K', symbol: 'K', label: 'Wahl factor', kind: 'calc', digits: 4, compute: v => H.has(v, 'C') && v.C > 1 ? (4 * v.C - 1) / (4 * v.C - 4) + 0.615 / v.C : undefined,
+            work: v => H.has(v, 'K') ? '\\(K = \\dfrac{4(' + H.fmt(v.C, 4) + ') - 1}{4(' + H.fmt(v.C, 4) + ') - 4} + \\dfrac{0.615}{' + H.fmt(v.C, 4) + '} = ' + H.fmt(v.K, 4) + '\\)' : null },
+        ] },
+      { id: 'stress', title: 'Stress at the operating force', eq: '18-4', formula: '\\tau_o = \\frac{8 K F_o D_m}{\\pi D_w^3} = \\frac{8 K F_o C}{\\pi D_w^2}',
+        vars: [
+          { id: 'tauo', symbol: '\\tau_o', label: 'Operating shear stress', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'K', 'Fo', 'Dm', 'Dw') ? 8 * v.K * v.Fo * v.Dm / (Math.PI * Math.pow(v.Dw, 3)) : undefined,
+            work: v => H.has(v, 'tauo') ? '\\(\\tau_o = \\dfrac{8(' + H.fmt(v.K, 4) + ')(' + H.fmt(v.Fo) + ')(' + H.fmt(v.Dm, 4) + ')}{\\pi(' + H.fmt(v.Dw) + ')^3} = ' + H.fmt(v.tauo, 5) + '\\)' : null },
+          { id: 'nso', symbol: '\\tau_d/\\tau_o', label: 'Margin against design stress', kind: 'calc', digits: 3, compute: v => H.has(v, 'td', 'tauo') && v.tauo > 0 ? v.td / v.tauo : undefined },
+        ],
+        after: v => H.has(v, 'td', 'tauo') ? (v.tauo <= v.td ? '<span class="result-ok">τo = ' + H.fmt(v.tauo, 5) + ' ≤ τd = ' + H.fmt(v.td) + ' — safe at the operating load.</span>' : '<span class="result-bad">τo = ' + H.fmt(v.tauo, 5) + ' &gt; τd = ' + H.fmt(v.td) + ' — increase Dw or reduce Dm.</span>') : '' },
+    ] },
+
+    { title: 'Coils, lengths, solid-height check', steps: [
+      { id: 'coils', title: 'Number of coils and deflection', eq: '18-6, 18-8', fig: ['fig18-3'],
+        formula: 'N_a = \\frac{G D_w}{8 k C^3} \\quad(\\text{design}) \\qquad f_o = \\frac{8 F_o C^3 N_a}{G D_w} \\quad(\\text{analysis})',
+        vars: [
+          { id: 'Na', symbol: 'N_a', label: 'Active coils', kind: 'calc', digits: 4, compute: v => {
+              if (v.mode === 'analyse') return H.has(v, 'Ng') ? v.Ng - NE[v.ends] : undefined;
+              return H.has(v, 'G', 'Dw', 'k', 'C') && v.k > 0 ? v.G * v.Dw / (8 * v.k * Math.pow(v.C, 3)) : undefined; },
+            work: v => (v.mode !== 'analyse' && H.has(v, 'Na')) ? '\\(N_a = \\dfrac{' + H.fmt(v.G, 4) + '(' + H.fmt(v.Dw) + ')}{8(' + H.fmt(v.k, 4) + ')(' + H.fmt(v.C, 4) + ')^3} = ' + H.fmt(v.Na, 4) + '\\)' : null,
+            check: v => (v.Na !== undefined && v.Na < 3) ? 'Fewer than 3 active coils' : null },
+          { id: 'N', symbol: 'N', label: 'Total coils', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? v.Ng : (H.has(v, 'Na') ? v.Na + NE[v.ends] : undefined) },
+          { id: 'fo', symbol: 'f_o', label: 'Operating deflection (from free length)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => {
+              if (v.mode === 'analyse') return H.has(v, 'Fo', 'C', 'Na', 'G', 'Dw') ? 8 * v.Fo * Math.pow(v.C, 3) * v.Na / (v.G * v.Dw) : undefined;
+              return H.has(v, 'Lf', 'Lo') ? v.Lf - v.Lo : undefined; },
+            work: v => (v.mode === 'analyse' && H.has(v, 'fo')) ? '\\(f_o = \\dfrac{8(' + H.fmt(v.Fo) + ')(' + H.fmt(v.C, 4) + ')^3(' + H.fmt(v.Na, 4) + ')}{' + H.fmt(v.G, 4) + '(' + H.fmt(v.Dw) + ')} = ' + H.fmt(v.fo, 4) + '\\)' : null },
+          { id: 'Loa', symbol: 'L_o', label: 'Operating length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? (H.has(v, 'Lf', 'fo') ? v.Lf - v.fo : undefined) : v.Lo },
+        ] },
+      { id: 'solid', title: 'Solid length, force and stress at solid height', formula: 'L_s = D_w N \\;(\\text{ground ends}) \\quad\\text{or}\\quad D_w(N+1) \\qquad F_s = k(L_f - L_s) \\qquad \\tau_s = \\tau_o\\frac{F_s}{F_o}',
+        text: 'Mott uses Ls = Dw·N for squared & ground ends (Example 18-1 / 18-2). For un-ground ends Shigley Table 10-1 adds one wire diameter: Ls = Dw(N + 1). The stress at solid height must stay below the light-service (maximum allowable) curve or the spring takes a permanent set.',
+        vars: [
+          { id: 'Ls', symbol: 'L_s', label: 'Solid length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dw', 'N') ? ((v.ends === 'sg' || v.ends === 'pg') ? v.Dw * v.N : v.Dw * (v.N + 1)) : undefined },
+          { id: 'Fs', symbol: 'F_s', label: 'Force at solid length', unit: 'lb / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'k', 'Lf', 'Ls') ? v.k * (v.Lf - v.Ls) : undefined,
+            work: v => H.has(v, 'Fs') ? '\\(F_s = ' + H.fmt(v.k, 4) + '(' + H.fmt(v.Lf, 4) + ' - ' + H.fmt(v.Ls, 4) + ') = ' + H.fmt(v.Fs, 4) + '\\)' : null },
+          { id: 'taus', symbol: '\\tau_s', label: 'Stress at solid length', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'tauo', 'Fs', 'Fo') && v.Fo > 0 ? v.tauo * v.Fs / v.Fo : undefined,
+            work: v => H.has(v, 'taus') ? '\\(\\tau_s = ' + H.fmt(v.tauo, 5) + '(' + H.fmt(v.Fs, 4) + '/' + H.fmt(v.Fo) + ') = ' + H.fmt(v.taus, 5) + '\\)' : null },
+        ],
+        after: v => { let s = '';
+          if (H.has(v, 'Ls', 'Loa')) s += v.Ls < v.Loa ? '<span class="result-ok">Ls = ' + H.fmt(v.Ls, 4) + ' &lt; Lo = ' + H.fmt(v.Loa, 4) + '.</span> ' : '<span class="result-bad">Ls = ' + H.fmt(v.Ls, 4) + ' ≥ Lo = ' + H.fmt(v.Loa, 4) + ' — spring goes solid before the operating length! Fewer coils / smaller Dw.</span> ';
+          if (H.has(v, 'taus', 'tmax')) s += v.taus <= v.tmax ? '<span class="result-ok">τs = ' + H.fmt(v.taus, 5) + ' ≤ τmax = ' + H.fmt(v.tmax) + ' — no yielding at solid height.</span>' : '<span class="result-bad">τs = ' + H.fmt(v.taus, 5) + ' &gt; τmax = ' + H.fmt(v.tmax) + ' — permanent set when compressed solid.</span>';
+          return s; } },
+    ] },
+
+    { title: 'Buckling, clearances, installation', steps: [
+      { id: 'buck', title: 'Buckling check', fig: ['fig18-15'], formula: '\\frac{L_f}{D_m} \\;\\rightarrow\\; \\left(\\frac{f_o}{L_f}\\right)_{cr} \\text{ from Fig. 18-15}',
+        text: 'Read the critical deflection ratio for the end condition (curve A = squared & ground on flat plates). If Lf/Dm < 5.2 (curve A) buckling cannot occur. The yellow value is pre-filled with an estimate from the same theory (Shigley Eq. 10-10 with steel E, G).',
+        vars: [
+          { id: 'curve', label: 'End condition (Fig. 18-15 curve)', kind: 'choice', options: [{ label: 'A — fixed ends (squared & ground on flat plates)', value: 0.5 }, { label: 'B — one fixed, one pinned', value: 0.707 }, { label: 'C — both pinned', value: 1 }], default: 0.5 },
+          { id: 'LfDm', symbol: 'L_f/D_m', label: 'Slenderness ratio', kind: 'calc', digits: 4, compute: v => H.has(v, 'Lf', 'Dm') && v.Dm > 0 ? v.Lf / v.Dm : undefined },
+          { id: 'rcr', symbol: '(f_o/L_f)_{cr}', label: 'Critical deflection ratio', kind: 'lookup', fig: 'fig18-15', auto: v => { if (!H.has(v, 'LfDm', 'curve')) return undefined;
+              const E = 28.5, G = 11.5; const C1 = E / (2 * (E - G)), C2 = 2 * Math.PI * Math.PI * (E - G) / (2 * G + E); const lam = v.curve * v.LfDm; const t = 1 - C2 / (lam * lam); return t < 0 ? 1 : C1 * (1 - Math.sqrt(t)); } },
+          { id: 'ract', symbol: 'f_o/L_f', label: 'Actual deflection ratio at Fo', kind: 'calc', digits: 4, compute: v => H.has(v, 'fo', 'Lf') && v.Lf > 0 ? v.fo / v.Lf : undefined },
+        ],
+        after: v => H.has(v, 'LfDm') ? ((v.curve === 0.5 && v.LfDm < 5.2) ? '<span class="result-ok">Lf/Dm = ' + H.fmt(v.LfDm, 3) + ' &lt; 5.2 — buckling will not occur.</span>' : (H.has(v, 'rcr', 'ract') ? (v.ract < v.rcr ? '<span class="result-ok">fo/Lf = ' + H.fmt(v.ract, 3) + ' &lt; critical ' + H.fmt(v.rcr, 3) + ' — stable.</span>' : '<span class="result-bad">fo/Lf = ' + H.fmt(v.ract, 3) + ' ≥ critical ' + H.fmt(v.rcr, 3) + ' — the spring will buckle; guide it in a hole or over a rod.</span>') : '')) : '' },
+      { id: 'clr', title: 'Coil clearance, pitch, pitch angle, hole size', eq: '18-2', fig: ['fig18-7'],
+        formula: 'c_c = \\frac{L_o - L_s}{N_a} > \\frac{D_w}{10} \\qquad p = \\frac{L_f - (\\text{end allowance})}{N_a} \\qquad \\lambda = \\tan^{-1}\\frac{p}{\\pi D_m} < 12^\\circ \\qquad D_{hole} > OD + \\frac{D_w}{10}',
+        vars: [
+          { id: 'cc', symbol: 'c_c', label: 'Coil clearance at Lo', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Loa', 'Ls', 'Na') && v.Na > 0 ? (v.Loa - v.Ls) / v.Na : undefined },
+          { id: 'ccmin', symbol: 'D_w/10', label: 'Minimum recommended clearance', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dw') ? v.Dw / 10 : undefined },
+          { id: 'p', symbol: 'p', label: 'Pitch', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Lf', 'Na', 'Dw') && v.Na > 0 ? ({ sg: (v.Lf - 2 * v.Dw) / v.Na, sq: (v.Lf - 3 * v.Dw) / v.Na, pg: v.Lf / (v.Na + 1), plain: (v.Lf - v.Dw) / v.Na })[v.ends] : undefined },
+          { id: 'lam', symbol: '\\lambda', label: 'Pitch angle', unit: '°', kind: 'calc', digits: 3, compute: v => H.has(v, 'p', 'Dm') ? H.deg(Math.atan(v.p / (Math.PI * v.Dm))) : undefined, check: v => v.lam > 12 ? 'Pitch angle > 12° — formulas lose accuracy' : null },
+          { id: 'Dhmin', symbol: 'D_{hole,min}', label: 'Minimum hole diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'OD', 'Dw') ? v.OD + v.Dw / 10 : undefined },
+          { id: 'Dhole', symbol: 'D_{hole}', label: 'Available hole diameter (if any)', unit: 'in / mm', kind: 'input' },
+        ],
+        after: v => { let s = '';
+          if (H.has(v, 'cc', 'ccmin')) s += v.cc > v.ccmin ? '<span class="result-ok">Coil clearance ' + H.fmt(v.cc, 4) + ' &gt; ' + H.fmt(v.ccmin, 4) + ' OK.</span> ' : '<span class="result-bad">Coil clearance ' + H.fmt(v.cc, 4) + ' ≤ Dw/10 = ' + H.fmt(v.ccmin, 4) + ' — too tight.</span> ';
+          if (H.has(v, 'Dhole', 'Dhmin')) s += v.Dhole >= v.Dhmin ? '<span class="result-ok">Hole ' + H.fmt(v.Dhole) + ' ≥ ' + H.fmt(v.Dhmin, 4) + ' OK.</span>' : '<span class="result-bad">Hole ' + H.fmt(v.Dhole) + ' is smaller than the required ' + H.fmt(v.Dhmin, 4) + '.</span>';
+          if (H.has(v, 'tauo', 'td', 'taus', 'tmax', 'Ls', 'Loa')) {
+            const ok = v.tauo <= v.td && v.taus <= v.tmax && v.Ls < v.Loa && (!H.has(v, 'cc', 'ccmin') || v.cc > v.ccmin) && (!H.has(v, 'Dhole', 'Dhmin') || v.Dhole >= v.Dhmin);
+            s += '<div style="margin-top:6px">' + (ok ? '<span class="result-ok"><b>DESIGN OK</b> — ' : '<span class="result-bad"><b>REVISE</b> — ') + MOTT_G[v.mat][0].split(' (')[0] + ', Dw = ' + H.fmt(v.Dw) + ', Dm = ' + H.fmt(v.Dm, 4) + ' (OD ' + H.fmt(v.OD, 4) + ', ID ' + H.fmt(v.ID, 4) + '), Na = ' + H.fmt(v.Na, 4) + ', N = ' + H.fmt(v.N, 4) + ' ' + v.ends + ' ends, Lf = ' + H.fmt(v.Lf, 4) + ', Ls = ' + H.fmt(v.Ls, 4) + ', k = ' + H.fmt(v.k, 4) + '.</span></div>'; }
+          return s; } },
+    ] },
+  ],
+};

@@ -135,7 +135,7 @@
         if (st.eq) refs.push(el('span', 'chip eq', 'Eq. ' + st.eq));
         figs.forEach(f => refs.push(figChip(f)));
         if (refs.length) { const r = el('div', 'figrefs'); refs.forEach(x => r.appendChild(x)); card.appendChild(r); }
-        if (st.formula) card.appendChild(el('div', 'formula', '\\[' + st.formula + '\\]'));
+        if (st.formula) { const f = el('div', 'formula'); f.textContent = '\\[' + st.formula + '\\]'; card.appendChild(f); }
         if (st.vars && st.vars.length) {
           const vs = el('div', 'vars');
           st.vars.forEach(vr => vs.appendChild(buildVar(vr)));
