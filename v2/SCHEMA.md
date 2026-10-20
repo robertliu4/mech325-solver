@@ -70,6 +70,7 @@ window.TOPIC = {
             { id: 'load', label: 'Load type', kind: 'choice', type: 'text', options: ['uniform','moderate shock','heavy shock'], default: 'uniform' },
           ],
           when: v => true,                      // optional: hide the step when false (e.g. only for helical)
+        // sections may also have `when: v => …`; a section whose steps are all hidden hides its title automatically
           after: v => v.Pdes > 100 ? '<span class="result-bad">Large drive — check Ko</span>' : '',  // optional dynamic html under the card
         },
       ] },

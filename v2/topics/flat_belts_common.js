@@ -20,8 +20,8 @@
 //  width    Shigley Ex 17-2: A-3, d=16, D=36, C=192, 860 rpm, 60 hp, Ks 1.15, nd 1.05 → Hd 72.45, T 5309, ΔF 663.7, Cp 0.94, a0 94.0, a2 7.342,
 //           e^{fφ} 11.36, b_min 8.398 (Shigley 8.40). b = 10 in: Fc 73.42, (F1)a 940, F2 276.3, Fi 534.7, Ha 72.45, f′ 0.478, dip 0.471
 //           (Shigley 73.4/940/276/535/72.5/0.479/0.470). Auto width 9 in: (F1)a 846, F2 182.3, Fi 448.1, f′ 0.627 (Shigley's 9-in line 846/182/448/0.63).
-//  width    Tutorial 2 Q3 c–d (S 17-6 b–c, Ex 17-1 drive): b_min 4.138 in (a0 70, a2 4.275); at b = 4.138: (F1)a 289.6, Fc 17.69, F2 42.0,
-//           Fi 148.1 (= Fi,min of part a), Ha 20.62, nfs 1.10.
+//  width    Tutorial 2 Q3 c–d (S 17-6 b–c, Ex 17-1 drive): b_min 4.138 in (a0 70, a2 4.275); at b = 4.138: (F1)a 289.7, Fc 17.69, F2 42.06,
+//           Fi 148.2 (= Fi,min of part a, 148.1), f′ = f = 0.80, Ha 20.62, nfs 1.10.
 //  tension  S 17-6 a / Tutorial 2 Q3 a (Ex 17-1 drive): Fi,min = (T/d)(e^{fφ}+1)/(e^{fφ}−1) = 148.1 lbf → F1 297.6, F2 50.0, dip 0.255 in.
 //  capacity Ex 17-1 belt as built (6 in A-3) at slip: F1 = (F1)a = 420, F2 60.96, ΔF 359, T_max 1077 lbf·in, Ha,max 29.91 hp, Hnom,max 21.75 hp,
 //           Fi 214.8 lbf (dip 0.176 in), nfs for 15 hp = 1.60. (No course answer — the tutorial's wording "torque capacity at the point of slip".)

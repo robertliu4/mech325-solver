@@ -161,8 +161,8 @@
       '<span class="l-in">you enter</span><span class="l-lk">look up in table / graph (yellow)</span><span class="l-ca">calculated (green)</span>'));
     let n = 0;
     (T.sections || []).forEach(sec => {
-      main.appendChild(el('div', 'section-title', rich(sec.title)));
-      if (sec.text) main.appendChild(el('div', 'callout', rich(sec.text)));
+      sec._titleEl = main.appendChild(el('div', 'section-title', rich(sec.title)));
+      if (sec.text) sec._textEl = main.appendChild(el('div', 'callout', rich(sec.text)));
       (sec.steps || []).forEach(st => {
         n++;
         const card = el('div', 'step'); card.id = 'step-' + (st.id || n); st._el = card;
@@ -311,9 +311,16 @@
     });
     const toTypeset = [];
     let visN = 0;
+    (T.sections || []).forEach(sec => {
+      let secVis = true; try { if (sec.when) secVis = !!sec.when(v); } catch (e) { secVis = true; }
+      const anyStep = secVis && (sec.steps || []).some(st => { try { return !st.when || !!st.when(v); } catch (e) { return true; } });
+      if (sec._titleEl) sec._titleEl.style.display = anyStep ? '' : 'none';
+      if (sec._textEl) sec._textEl.style.display = anyStep ? '' : 'none';
+      sec._vis = secVis;
+    });
     (T.sections || []).forEach(sec => (sec.steps || []).forEach(st => {
       // visibility
-      let vis = true; try { if (st.when) vis = !!st.when(v); } catch (e) { vis = true; }
+      let vis = sec._vis !== false; try { if (vis && st.when) vis = !!st.when(v); } catch (e) { vis = true; }
       st._el.classList.toggle('hidden', !vis);
       if (!vis) return;
       if (st.num === undefined) { visN++; st._el.querySelector('.num').textContent = visN + '.'; }
