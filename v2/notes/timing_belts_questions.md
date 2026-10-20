@@ -37,3 +37,9 @@ Calculator: `v2/topics/timing_belts_common.js` (modes = the `mode` choice in ste
 
 Choose flat / V / timing / chain: precision machine, bidirectional, low power, small radial load → **timing belt**;
 continuous low-speed gas-tank crusher → **roller chain**; quiet, smooth, low-cost scooter → **timing belt** (quiet, no lubrication).
+
+## Sizing tables
+- **Pitch** (step "belt pitch"): Mott Fig 7-27 regions digitised (5/8/14/20 mm) at the faster-shaft rpm → ★ region containing P_des (HW1 P4 and Ex 7-4: 8 mm). Only 8 mm has Mott tables.
+- **Sprockets** (step 4): every Table 7-7 pair at the ratio with the elimination checks (Gates Table 4 minimum PD, Table 7-4/7-5 bores, D_max, a belt giving the CD, P_rated·C_L at 30 and 50 mm) → ★ = `pick()` (smallest driver, narrowest width). HW1 P4 32:80 (36:90 also passes); Ex 7-4 56:112.
+- **Belt**: Table 7-7 belts for the pair with CD, course range, CD ± slot, C_L, teeth in mesh → ★ shortest in range (HW1 P4 920) or closest to the given CD (Ex 7-4 1800).
+- **Width**: 20/30/50/85 mm — 30/50 from Tables 7-9/7-10 × C_L vs P_des; 20/85 mm not in Mott → ★ narrowest that passes (30 mm in both cases).

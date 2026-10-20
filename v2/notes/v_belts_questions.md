@@ -44,3 +44,15 @@ Sources read: Flat&V-belts 2024 slides s22–s42, Tutorial 2 (2023) Q1/Q2, Selec
 - HW1 P3b: the minimum deflection force is divided by 6 instead of 16 (it shows 7.23 lbf). The correct value is (1.4·28.12 + 4)/16 = 2.71 lbf.
 - Lecture s38: the slide says "Ks = 1.2" but computes H_D = 1.1(2.0) = 2.2 hp. The verification uses 1.1.
 - COURSE_CONVENTIONS §2 lists HW1 P3a as "ΔP 1.4, CL 1.09, Ha 11.6". The handwritten solution actually shows ΔP 1.9, CL 1.07 and Ha 11.84. The typed variant uses CD 30, 100 in, CL 1.09 and gives 10.55 hp.
+
+## Sizing tables ("which size do I pick, and why")
+Each choice is a live table under its step (★ = rule pick, greyed = fails, **Use** fills the field; the yellow field's auto value is the ★ row):
+
+| Step | Data in the calculator | Rule | Course picks reproduced |
+|---|---|---|---|
+| Section | Mott Fig 7-13, Gates Fig B1 (narrow) + B2 (classical), course A–D chart (slide 27) — region lines digitised by pixel scan of the crops; Shigley Table 17-9 hp ranges and min sheaves | region containing (P_des, faster rpm); within ≈10 % of a line → larger (Fizz p.10). Shigley: chart region if inside Table 17-9's range, else the smallest section whose range contains P_des | Midterm 5V; HW1 P2 5V (on the 3V/5V line); HW1 P3a 3V; Ex 7-2 5V; HW1 P3b 3V (B1); Tut 2 Q2 8V (B1) / CP (B2) — solution "8V or 8VX and CP", chose CP; Ex 17-4 B |
+| Sheaves | Mott standard pitch diameters (Fig 7-14/15/16); Gates stock lists: 3V Table B6, A/B/C/D Tables B21–B24 (VR 1.00 rows), 5V/8V = Mott list + 2a | Mott: closest standard D2 to D1·VR, output within ±2 % (`tolN2`), belt speed nearest 4000 ft/min, 1000–5000 ft/min. Gates: smallest stock sheave ≥ NEMA minimum (must *exceed* it below the 575-rpm column) within ±2 % | Midterm 10.8/21.1; HW1 P2 10.2/27.7; HW1 P3a 7.95/18.95; Ex 7-2 12.4/21.1; HW1 P3b 3.35/8.00; Tut 2 Q2 13/13 |
+| Length | Table 7-2 (3V/5V/8V), Table 17-10 (+ Table 17-11 L_c) | closest standard length (tie → longer), CD in D2 < CD < 3(D1+D2), θ1 ≥ 120° | HW1 P2 132; HW1 P3a 90; Ex 7-2 100; HW1 P3b 40 (3V400); Tut 2 Q2 C330; Tut 2 Q1 D360. **Midterm: the rule gives 112 in** for the correct L = 114.9 in; the course took 125 in after its 122.9-in slip — the table notes it and the example keeps 125 |
+| Belts | N_b = 1 … ⌈P_des/P_belt⌉ + 1 | smallest N_b with n_fs ≥ 1 | 3, 3, 1, 3, 3, 4, 5, 3 |
+
+Not digitised: Gates rating tables (B9–B34) and the drive tables' CD / hp-correction colour key stay manual reads; Gates 5V/8V stock sheaves are Mott's list + 2a (the catalogue text layer is damaged).

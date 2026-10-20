@@ -16,6 +16,9 @@
 //         auto-pick 56:112, 1800-8MGT, CD 22.03, Prated 43.2 × CL 1.20 = 51.84 hp, v 2572 ft/min, bushings 2012 / 2517 — matches Mott
 //         (Mott eliminates 40:80 by the 20-mm-column bushing 1610 instead; same final drive).
 //  check  HW1 P4 drive as built (32/80, 920 belt, 30 mm, SF 1.8): Padj 21.2 ≥ 9.0, SF 2.36, max nominal power 21.2/1.8 = 11.8 hp.
+//  Sizing tables: pitch (Fig 7-27 regions) → 8 mm for HW1 P4 and Ex 7-4; sprocket pairs (Table 7-7 + eliminations) → 32:80 (HW1 P4,
+//         36:90 also listed) and 56:112 (Ex 7-4; 22–36T fail the Gates 4.0-in minimum, 40:80 fails 30-mm power); belt → 920 (HW1 P4),
+//         1800 (Ex 7-4, CD 22 ± 0.375); width → 30 mm in both.
 //  kin    Mott Ex 7-3: 32/80, 1200-8MGT, 1400 rpm → PD 3.208 / 8.020, VR 2.50, n2 560 rpm, v 1175.8 ft/min, CD 14.61 in (Table 7-7: 14.61).
 (function () {
   'use strict';
@@ -192,6 +195,94 @@
   }
   const bushTxt = (N, w) => { const b = bushOf(N, w); if (b === undefined) return 'not made in ' + w + ' mm'; if (!T75[b]) return String(b) + ' (plain bore)'; return b + ' — bore ' + T75[b][0].toFixed(3) + '–' + T75[b][1].toFixed(3) + ' in'; };
 
+  // ---------------- sizing tables (★ = rule pick, Use fills the field) ----------------
+  const inUse = c => c ? ' <span style="color:#2563eb;font-weight:400">← in use</span>' : '';
+  // Mott Fig 7-27 pitch regions, digitised in the crop's pixel space (figures/mott/fig7-27.png, lines located by pixel scan):
+  // x = 134 + 302.75 log10(hp/0.1), y = 948 − 300 log10(rpm/10); boundary lines x = x0 + k (y0 − y) with their plateaus.
+  function fig727(P, n) {
+    if (!(P > 0) || !(n > 0)) return undefined;
+    const x = 134 + 302.75 * Math.log10(P / 0.1), y = 948 - 300 * Math.log10(n / 10);
+    const hpAt = xx => 0.1 * 10 ** ((xx - 134) / 302.75);
+    const b58 = y >= 202.5 ? 233 + 0.990 * (700 - y) : y >= 167 ? 725.5 : Infinity;
+    const b814 = y >= 263.6 ? 380 + 1.0134 * (940 - y) : y >= 167 ? 1065.5 : b58;
+    const b1420 = y >= 432.4 ? 659.5 + 1.0153 * (940 - y) : y >= 205 ? 1174.5 : b814;
+    const b20 = y >= 413 ? 813 + 1.0096 * (940 - y) : y >= 256 ? 1345 : b1420;
+    const rows = [{ p: 5, lo: -Infinity, hi: b58 }, { p: 8, lo: b58, hi: b814 }, { p: 14, lo: b814, hi: b1420 }, { p: 20, lo: b1420, hi: b20 }];
+    let pick = -1;
+    rows.forEach((r, i) => { r.inR = x > r.lo && x <= r.hi; r.hpLo = r.lo === -Infinity ? 0 : hpAt(r.lo); r.hpHi = r.hi === Infinity ? Infinity : hpAt(r.hi); r.none = r.hi <= r.lo + 0.5; if (r.inR && pick < 0) pick = i; });
+    let nearLine = false;
+    if (pick >= 0 && rows[pick].hi - x < 12 && pick + 1 < rows.length && !rows[pick + 1].none) { pick++; nearLine = true; }
+    return { rows, pick, nearLine, outside: x > b20 };
+  }
+  const hpRange = r => r.none ? 'none at this speed' : (r.hpLo > 0 ? F(r.hpLo, 3) : '0') + '–' + (r.hpHi === Infinity ? '…' : F(r.hpHi, 3)) + ' hp';
+  function pitchTableHtml(v) {
+    if (!H.has(v, 'Pdes', 'n1')) return '';
+    const nf = Math.max(v.n1, H.has(v, 'n2') ? v.n2 : 0), c = fig727(v.Pdes, nf); if (!c) return '';
+    const rows = c.rows.map((r, i) => ({ cells: [r.p + ' mm' + (r.p === 8 ? ' (8MGT)' : '') + inUse(Number(v.pitch) === r.p), hpRange(r), r.inR ? 'yes' : 'no', r.p === 8 ? 'Tables 7-4 … 7-11' : 'manufacturer\'s catalogue only'], ok: r.inR, pick: i === c.pick, set: { pitch: r.p } }));
+    return H.table(['Pitch', 'Fig 7-27 region at ' + F(nf) + ' rpm', 'P_des = ' + F(v.Pdes) + ' hp inside?', 'Sprocket/rating data'], rows,
+      { caption: 'Select the belt pitch — Fig 7-27 at the faster-shaft speed', note: (c.nearLine ? '<b>Within ≈10 % of a boundary → the larger pitch is picked.</b> ' : '') + (c.outside ? 'Outside the chart — consult the manufacturer. ' : '') + 'Rule: the pitch whose region on Fig 7-27 contains (P<sub>des</sub>, rpm of the faster shaft) (Timing s6). Mott tabulates only 8 mm ("I could bet my entire fortune that it will be 8 mm", Mech p.28) — HW1 P4 (9 hp, 1750 rpm) and Mott Ex 7-4 (34 hp, 1750 rpm) are both 8 mm. Regions digitised from the figure (±5 %).' });
+  }
+  // sprocket-pair candidates: same checks as pick(), reported per pair and width
+  function evalPair(v, N1, N2) {
+    const P1 = pdOf(N1, v), P2 = pdOf(N2, v), out = { N1, N2, P1, P2, VRp: N2 / N1, why: [] };
+    out.okMin = !(H.has(v, 'PDmin') && P1 < v.PDmin - 1e-9);
+    out.okD = !(H.has(v, 'Dmax') && (odOf(N1) > v.Dmax || odOf(N2) > v.Dmax));
+    const bt = chooseBelt(N1, N2, v, true); out.belt = bt ? bt.b : undefined; out.cd = bt ? bt.cd : undefined;
+    out.w = {};
+    [30, 50].forEach(w => {
+      const b1 = bushOf(N1, w), b2 = bushOf(N2, w);
+      let bore = b1 !== undefined && b2 !== undefined;
+      if (bore && H.has(v, 'dsh1') && T75[b1] && (v.dsh1 > T75[b1][1] || v.dsh1 < T75[b1][0])) bore = false;
+      if (bore && H.has(v, 'dsh2') && T75[b2] && (v.dsh2 > T75[b2][1] || v.dsh2 < T75[b2][0])) bore = false;
+      const P = rating(N1, v.n1, w), Pa = (P !== undefined && bt) ? P * (T711[bt.b] || 1) : undefined;
+      out.w[w] = { bore, Pa, okP: Pa !== undefined && H.has(v, 'Pdes') && Pa >= v.Pdes, made: b1 !== undefined && b2 !== undefined };
+    });
+    out.ok = out.okMin && out.okD && !!bt && (out.w[30].bore && out.w[30].okP || out.w[50].bore && out.w[50].okP);
+    return out;
+  }
+  function pairTableHtml(v) {
+    if (M(v) !== 'design' || !H.has(v, 'VR', 'n1') || v.VR < 1) return '';
+    let best = Infinity; PAIRS.forEach(p => { const d = Math.abs(p[1] / p[0] - v.VR); if (d < best) best = d; });
+    const cand = PAIRS.filter(p => Math.abs(p[1] / p[0] - v.VR) <= Math.max(best + 1e-9, 0.02 * v.VR)).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const pk = pick(v);
+    const yesno = (b, t) => b ? (t || 'yes') : 'no';
+    const rows = cand.map(([N1, N2]) => {
+      const e = evalPair(v, N1, N2);
+      const wc = w => !e.w[w].made ? 'not made' : !e.w[w].bore ? 'bore ✘' : e.w[w].Pa === undefined ? '—' : F(e.w[w].Pa, 3) + ' hp' + (e.w[w].okP ? ' ✔' : ' ✘');
+      return { cells: [N1 + ' : ' + N2 + inUse(v.N1 === N1 && v.N2 === N2), F(e.VRp, 4) + ' (' + F(v.n1 / e.VRp) + ' rpm)', F(e.P1, 4) + ' in' + (e.okMin ? '' : ' < ' + F(v.PDmin) + ' ✘'), yesno(e.okD, H.has(v, 'Dmax') ? 'yes' : '—'), e.belt ? e.belt + ' (CD ' + F(e.cd) + ')' : 'none in range ✘', wc(30), wc(50)],
+        ok: e.ok, pick: !!(pk && pk.N1 === N1 && pk.N2 === N2), set: { N1, N2, PD1: '', PD2: '', belt: '' } };
+    });
+    return H.table(['N_1 : N_2', 'VR (n_2)', 'PD_1 (≥ Gates min)', 'OD ≤ D_max', 'Belt (CD in)', 'P_rated·C_L 30 mm', 'P_rated·C_L 50 mm'], rows,
+      { caption: 'Select the sprockets — Table 7-7 pairs for VR = ' + F(v.VR, 4) + (H.has(v, 'Pdes') ? ', P_des = ' + F(v.Pdes) + ' hp' : ''),
+        note: 'Rule (Fizz p.20–23, Mech p.29, Mott Ex 7-4): list every Table 7-7 pair at the ratio, then eliminate — driver PD below the Gates Table 4 minimum (course step 3), bushing bores that cannot fit the shafts (Table 7-4/7-5), flange OD above D<sub>max</sub>, no belt giving the CD, rating × C<sub>L</sub> below P<sub>des</sub> — and keep the <b>smallest driver</b>, at the narrowest width that works (30 mm before 50 mm). HW1 P4: 32:80 or 36:90 → 32:80; Mott Ex 7-4: 56:112. Use also clears the belt and PDs so they re-fill.' });
+  }
+  function beltTableHtml(v) {
+    if (!H.has(v, 'N1', 'N2') || !(v.pitch === 8 || !H.has(v, 'pitch'))) return '';
+    const P1 = H.has(v, 'PD1') ? v.PD1 : pdOf(v.N1, v), P2 = H.has(v, 'PD2') ? v.PD2 : pdOf(v.N2, v); if (!(P1 > 0 && P2 > 0)) return '';
+    const lo = Math.max(P1, P2), hi = 3 * (P1 + P2), hasNom = H.has(v, 'CDnom'), tol = v.CDtol > 0 ? v.CDtol : 0;
+    const cb = chooseBelt(v.N1, v.N2, v, false), pb = cb ? cb.b : undefined;
+    const all = BELTS77.map(b => { const cd = cdOf(b / 25.4, P1, P2); const th = cd ? 180 - 2 * H.deg(Math.asin(Math.abs(P2 - P1) / (2 * cd))) : undefined; return { b, cd, th, inR: cd !== undefined && cd > lo && cd < hi, inNom: hasNom && cd !== undefined && Math.abs(cd - v.CDnom) <= tol + 1e-9 }; });
+    let pi = all.findIndex(r => r.b === pb); if (pi < 0) pi = 0;
+    const shown = all.slice(Math.max(0, pi - 2), pi + 5);
+    const rows = shown.map(r => ({ cells: [r.b + '-8MGT (' + Math.round(r.b / 8) + ' teeth)' + inUse(v.belt === r.b), F(r.b / 25.4, 4) + ' in', r.cd !== undefined ? F(r.cd, 4) + ' in' : '—', r.inR ? 'yes' : 'no', hasNom ? (r.inNom ? 'yes' : 'no') + ' (' + (r.cd !== undefined ? (r.cd - v.CDnom >= 0 ? '+' : '') + F(r.cd - v.CDnom, 3) : '—') + ')' : '—', T711[r.b] !== undefined ? F(T711[r.b]) : '—', r.th ? Math.floor(Math.min(v.N1, v.N2) * r.th / 360) : '—'],
+      ok: hasNom ? r.inR && (tol > 0 ? r.inNom : true) : r.inR, pick: r.b === pb, set: { belt: r.b } }));
+    return H.table(['Belt', 'L_p', 'CD (Mott 7-13)', 'D_2 < CD < 3(D_1+D_2)?', hasNom ? 'within ' + F(v.CDnom) + ' ± ' + F(tol) + ' in?' : 'CD given?', 'C_L (Table 7-11)', 'teeth in mesh'], rows,
+      { caption: 'Select the belt length — Table 7-7 belts for ' + v.N1 + ' : ' + v.N2,
+        note: 'Rule: ' + (hasNom ? 'the belt whose CD is closest to the given ' + F(v.CDnom) + ' in, within ± the slot adjustment (Fizz p.23, Mech p.31, Mott Ex 7-4).' : 'no CD given → the shortest Table 7-7 belt with D<sub>2</sub> &lt; CD &lt; 3(D<sub>1</sub> + D<sub>2</sub>) (course step 4; HW1 P4: 920-8MGT, CD 8.97 in — the student solution\'s 1040-8MGT, CD 11.40 in, is also inside the range).') + ' C<sub>L</sub> multiplies the rating in the next step; at least 6 teeth in mesh.' });
+  }
+  function widthTableHtml(v) {
+    if (!H.has(v, 'N1', 'N2', 'n1')) return '';
+    const Ns = nSmall(v), nf = nFast(v), cl = H.has(v, 'CL') ? v.CL : (T711[v.belt] || 1), ew = effWidth(v);
+    const rows = [20, 30, 50, 85].map(w => {
+      const P = (w === 30 || w === 50) ? rating(Ns, nf, w) : undefined, Pa = P !== undefined ? P * cl : undefined;
+      const ok = Pa !== undefined && (!H.has(v, 'Pdes') || Pa >= v.Pdes);
+      return { cells: [w + ' mm' + inUse((v.width === String(w)) || (v.width === 'auto' && ew === w)), w === 30 ? 'Table 7-9' : w === 50 ? 'Table 7-10' : 'not in Mott (catalogue)', P !== undefined ? F(P, 3) + ' hp' : '—', Pa !== undefined ? F(Pa, 3) + ' hp' : '—', H.has(v, 'Pdes') && Pa !== undefined ? F(Pa / v.Pdes, 3) : '—'],
+        ok: Pa === undefined ? false : ok, pick: w === ew && ok, set: (w === 30 || w === 50) ? { width: String(w), Prated: '' } : undefined };
+    });
+    return H.table(['Width', 'Rating table', 'P_rated (' + Ns + ' T, ' + F(nf) + ' rpm)', 'P_adj = P_rated·C_L (' + F(cl) + ')', 'SF = P_adj/P_des'], rows,
+      { caption: 'Select the belt width' + (H.has(v, 'Pdes') ? ' — P_des = ' + F(v.Pdes) + ' hp' : ''), note: 'Rule: the narrowest width whose adjusted rating covers P<sub>des</sub> (Timing s9: "select the width to exceed the design hp"). Mott prints only 30 mm (Table 7-9) and 50 mm (Table 7-10); 20 and 85 mm need the manufacturer\'s catalogue. HW1 P4: 30 mm, 21.2 hp ≥ 9.0 hp. Mech p.31 suggests starting at 50 mm — safe but usually wider than needed. Use clears a typed P<sub>rated</sub>.' });
+  }
+
   const MODES = [
     { value: 'design', label: 'Design a drive — pitch, sprockets, belt, width and CD (course 7 steps, Mott 7-8)' },
     { value: 'check', label: 'Check an existing drive — rated vs design power, SF, belt speed, length correction' },
@@ -307,18 +398,19 @@
               { id: 'Dmax', symbol: 'D_{max}', label: 'Largest sprocket OD allowed', unit: 'in', kind: 'input' },
             ] },
           { id: 'pitch', title: 'Course steps 2–3: belt pitch and smallest motor sprocket', when: on('design', 'check'), fig: ['fig7-27', 'gates4', 'gates4-full', 'table7-6'],
-            text: 'Fig. 7-27: design power vs rpm of the faster shaft. Gates Table No. 4: the motor sprocket pitch diameter must be at least this (limits the belt pull on the motor bearings).',
+            text: 'Fig. 7-27: design power vs rpm of the faster shaft — the table below lists every pitch with its region at your speed (★ = the region containing the point). Gates Table No. 4: the motor sprocket pitch diameter must be at least this (limits the belt pull on the motor bearings).',
             vars: [
               { id: 'pitch', label: 'Belt pitch (Fig. 7-27)', kind: 'choice', allowBlank: false, options: [{ label: '5 mm', value: 5 }, { label: '8 mm (8MGT) — tabulated in Mott', value: 8 }, { label: '14 mm', value: 14 }, { label: '20 mm', value: 20 }], default: 8,
                 check: v => (H.has(v, 'pitch') && v.pitch !== 8) ? 'Mott only tabulates 8 mm: sprocket, belt and rating auto-fills below assume 8 mm' : null },
               { id: 'PDmin', symbol: 'PD_{min}', label: 'Minimum motor-sprocket PD (Gates Table 4)', unit: 'in', kind: 'lookup', fig: 'gates4', hint: 'Gates Table No. 4: motor hp × rpm; 0 if not a motor', auto: v => H.has(v, 'P', 'n1') ? gates4(v.P, v.n1) : undefined },
-            ] },
+            ],
+            after: v => pitchTableHtml(v) },
         ] },
 
         { title: '3 · Solution', steps: [
           { id: 'spk', title: 'Course step 4: sprockets for the ratio', fig: ['table7-7a', 'table7-7b', 'table7-4'], eq: '7-4',
             formula: 'VR = \\frac{N_2}{N_1},\\qquad PD = \\frac{N\\,p}{\\pi}\\ \\text{(Table 7-4)}',
-            text: 'Design: the auto-pick lists the Table 7-7 pairs at the nearest ratio and keeps the smallest driver that passes every check (Gates minimum, bores, D<sub>max</sub>, CD, power). Check/kinematics: enter the given sprockets.',
+            text: 'Design: the table below lists the Table 7-7 pairs at the ratio with every elimination check (Gates minimum, bores, D<sub>max</sub>, CD, power at 30/50 mm); the ★ pair — the smallest driver that passes — is the auto value. Check/kinematics: enter the given sprockets.',
             vars: [
               { id: 'N1', symbol: 'N_1', label: 'Driver sprocket teeth', unit: '', kind: 'lookup', fig: 'table7-7b', hint: 'Table 7-7 (design: auto-picked)', auto: v => M(v) === 'design' ? (pick(v) || {}).N1 : undefined },
               { id: 'N2', symbol: 'N_2', label: 'Driven sprocket teeth', unit: '', kind: 'lookup', fig: 'table7-7b', hint: 'Table 7-7 (design: auto-picked)',
@@ -330,7 +422,8 @@
               { id: 'PD1', symbol: 'PD_1', label: 'Driver pitch diameter', unit: 'in', kind: 'lookup', fig: 'table7-4', hint: 'Table 7-4', auto: v => H.has(v, 'N1') ? pdOf(v.N1, v) : undefined,
                 check: v => (H.has(v, 'PD1', 'PDmin') && v.PD1 < v.PDmin - 1e-9 && M(v) !== 'kin') ? 'Below the Gates Table 4 minimum ' + F(v.PDmin) + ' in — use a larger motor sprocket' : null },
               { id: 'PD2', symbol: 'PD_2', label: 'Driven pitch diameter', unit: 'in', kind: 'lookup', fig: 'table7-4', hint: 'Table 7-4', auto: v => H.has(v, 'N2') ? pdOf(v.N2, v) : undefined },
-            ] },
+            ],
+            after: v => pairTableHtml(v) },
           { id: 'blt', title: 'Course step 4: belt and centre distance', fig: ['table7-7a', 'table7-7b', 'table7-11'], eq: shig ? '17-1, 17-16b ≡ Mott 7-13' : '7-12, 7-13, 7-14',
             formula: 'L_p = \\frac{N_{belt}\\,p}{25.4},\\quad B = 4L_p - 6.28(PD_2 + PD_1),\\quad CD = \\frac{B + \\sqrt{B^2 - 32(PD_2 - PD_1)^2}}{16}',
             vars: [
@@ -349,7 +442,8 @@
                 work: v => H.has(v, 'th1') ? '\\(\\theta_1 = 180^\\circ - 2\\sin^{-1}\\frac{' + F(v.PD2) + ' - ' + F(v.PD1) + '}{2(' + F(v.CD) + ')} = ' + F(v.th1) + '^\\circ;\\quad TIM = ' + F(Math.min(v.N1, v.N2)) + '(' + F(v.th1) + ')/360 = ' + F(v.TIM) + '\\)' : null },
               { id: 'TIM', symbol: 'TIM', label: 'Teeth in mesh, small sprocket', unit: '', kind: 'calc', compute: v => H.has(v, 'th1', 'N1', 'N2') ? Math.floor(nSmall(v) * v.th1 / 360) : undefined,
                 check: v => (H.has(v, 'TIM') && v.TIM < 6) ? 'Fewer than 6 teeth in mesh (slide 4)' : null },
-            ] },
+            ],
+            after: v => M(v) === 'design' ? beltTableHtml(v) : '' },
           { id: 'pow', title: 'Course steps 5–6: belt width, rating and length correction', when: on('design', 'check'), fig: ['table7-9', 'table7-10', 'table7-11'],
             formula: 'P_{adj} = P_{rated}\\times C_L \\ \\ge\\ P_{des},\\qquad SF = \\frac{P_{adj}}{P_{des}},\\qquad P_{max} = \\frac{P_{adj}}{SF_{Table\\,7\\text{-}8}}',
             text: 'Row = rpm of the faster shaft (interpolate), column = teeth on the small sprocket. Mott only prints the 30 and 50 mm tables (20/85 mm are in the manufacturer\'s catalogue).',
@@ -365,7 +459,8 @@
               { id: 'SFa', symbol: 'SF', label: 'Safety factor P_allow/P_des', unit: '', kind: 'calc', digits: 3, compute: v => H.has(v, 'Padj', 'Pdes') ? v.Padj / v.Pdes : undefined,
                 work: v => H.has(v, 'SFa') ? '\\(SF = ' + F(v.Padj) + '/' + F(v.Pdes) + ' = ' + F(v.SFa, 3) + '\\)' : null },
               { id: 'Pmax', symbol: 'P_{max}', label: 'Largest motor power this drive carries', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'Padj', 'SF') ? v.Padj / v.SF : undefined },
-            ] },
+            ],
+            after: v => widthTableHtml(v) },
           { id: 'spd', title: 'Course step 6: belt speed', eq: shig ? '(e) V = πdn/12' : '7-2',
             formula: 'v_{belt} = \\frac{\\pi\\,PD_1\\,n_1}{12} < 6500\\ \\text{ft/min}\\quad(\\text{target }3500\\text{–}4000)',
             vars: [

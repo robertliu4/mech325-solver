@@ -27,6 +27,10 @@
 //           Fi 214.8 lbf (dip 0.176 in), nfs for 15 hp = 1.60. (No course answer — the tutorial's wording "torque capacity at the point of slip".)
 //  catalogue Ex 17-1 drive with Habasit A-3 (36 N/mm, t 3.4 mm): (F1)a = 36 × 6 × 5.710 = 1233 lbf, Fc 26.41, F2 985.8, Fi 1083, f′ 0.0761,
 //           narrowest catalogue width 1.352 in (no course answer; slide 21 gives only the N/mm values).
+//  Sizing tables: belt (Table 17-2 rows that fit the small pulley, a0 and b_min at H_d; ★ = narrowest → F-1 for Tutorial 1, A-3 for
+//           Ex 17-1 and HW1 P1 (the course belts); Ex 17-2's d = 16 in admits
+//           A-2…A-5 and leather, ★ A-5 3.94 in, the problem's A-3 needs 8.40 in), standard width (whole inches ≥ b_min: Ex 17-2 ★ 9 in,
+//           Shigley took the catalogue's 10 in — both lines shown), Habasit type (catalogue mode, fits by min pulley mm, b_min per type).
 //  geometry crossed d=6, D=18, C=96 → φ = 3.3922 rad (194.4°) on both pulleys, L 231.2 in; open belt L 230.1 in → C from L = 96.0 in.
 (function () {
   'use strict';
@@ -97,6 +101,81 @@
     if (L0 === undefined || L0 > L) return undefined;
     for (let i = 0; i < 200; i++) { const m = (lo + hi) / 2; (beltLength(d, D, m, crossed) < L ? lo = m : hi = m); }
     return (lo + hi) / 2;
+  }
+
+  // ---------------- sizing tables (★ = rule pick, Use fills the field) ----------------
+  const inUse = c => c ? ' <span style="color:#2563eb;font-weight:400">← in use</span>' : '';
+  // Shigley Table 17-3 — urethane flat belts: min pulley dia by (pulley rpm / belt length in ft): ≤ 250 | 250–499 | 500–1000
+  const T173 = { 0.062: [0.38, 0.44, 0.50], 0.078: [0.50, 0.63, 0.75], 0.090: [0.50, 0.63, 0.75] };
+  function dminFor(s, v) {
+    if (s.mat !== 'urethane') return s.dmin + ((s.dmin >= 6 && s.mat === 'leather' && bw(v) >= 8) ? 2 : 0);   // Table 17-2 footnote a
+    const r = H.has(v, 'n', 'L') ? v.n / (v.L / 12) : undefined, row = T173[s.t];
+    return r === undefined ? row[0] : row[r <= 250 ? 0 : r < 500 ? 1 : 2];
+  }
+  const cvOf = (s, V) => s.mat !== 'leather' ? 1 : (V > 0 ? H.interp(V / 1000, [0, 1, 2, 3, 4, 5, 6], [1.0, 0.99, 0.97, 0.94, 0.90, 0.83, 0.74]) : undefined);
+  const dFd = v => H.has(v, 'Hd', 'n', 'd') ? 2 * 63025 * v.Hd / (v.n * v.d) : undefined;
+  // narrowest width with f′ = f at H_d (Ex 17-2): b = ΔF/(a0 − a2) · e^{fφ}/(e^{fφ} − 1)
+  function bminFor(a0, gamma, t, f, v) {
+    const dF = dFd(v); if (dF === undefined || !H.has(v, 'V', 'phi')) return undefined;
+    const a2 = 12 * gamma * t / G * (v.V / 60) ** 2, e = Math.exp(f * v.phi);
+    return a0 > a2 ? dF / (a0 - a2) * e / (e - 1) : undefined;
+  }
+  function specRows(v) {
+    if (!H.has(v, 'd')) return undefined;
+    const rows = Object.keys(SPECS).map(k => {
+      const s = SPECS[k], cpr = CP[s.mat], cp = cpr ? cpr[cpCol(v.d)] : undefined, cv = cvOf(s, v.V), dmin = dminFor(s, v);
+      const fits = v.d >= dmin - 1e-9 && !isNaN(cp);
+      const a0 = (!isNaN(cp) && cv !== undefined) ? s.Fa * cp * cv : undefined;
+      let bmin = a0 !== undefined ? bminFor(a0, s.g, s.t, s.f, v) : undefined;
+      const fixed = s.b;   // urethane flat belts come in one width
+      return { k, s, cp, cv, dmin, fits, a0, bmin, ok: fits && bmin !== undefined && (!fixed || bmin <= fixed + 1e-9) };
+    });
+    const oks = rows.filter(r => r.ok);
+    const pick = oks.reduce((b, r) => (!b || r.bmin < b.bmin) ? r : b, undefined);
+    return { rows, pick };
+  }
+  function specTableHtml(v) {
+    const R = specRows(v); if (!R) return '';
+    const sh = H.has(v, 'Hd', 'V', 'phi');
+    const rows = R.rows.map(r => ({ cells: [r.k + inUse(v.spec === r.k), F(r.dmin) + ' in' + (r.fits ? ' ✔' : ' ✘'), isNaN(r.cp) || r.cp === undefined ? '— ✘' : F(r.cp), F(r.s.Fa), F(r.s.g, 3), F(r.s.f), r.a0 !== undefined ? F(r.a0, 3) : '—', sh ? (r.bmin !== undefined ? F(r.bmin, 3) + ' in' + (r.s.b ? (r.bmin <= r.s.b ? ' ≤ ' : ' > ') + F(r.s.b) + ' (fixed)' : '') : 'cannot carry') : '—'],
+      ok: r.ok, pick: R.pick === r, set: { spec: r.k, Fa: '', dmin: '', Cp: '', Cv: '', t: '', gamma: '', f: '' } }));
+    return H.table(['Belt (Table 17-2)', 'd_min vs d = ' + F(v.d) + ' in', 'C_p (Table 17-4)', 'F_a lbf/in', 'γ lbf/in³', 'f', 'a_0 = F_a·C_p·C_v lbf/in', 'b_min' + (H.has(v, 'Hd') ? ' (H_d ' + F(v.Hd) + ' hp)' : '')], rows,
+      { caption: 'Select the belt — Table 17-2 belts that fit the ' + F(v.d) + '-in small pulley',
+        note: 'A belt fits when d ≥ d<sub>min</sub> (Table 17-2; urethane Table 17-3 by rpm per foot of belt; leather 2-ply 20/64 and 23/64 add 2 in for belts ≥ 8 in wide) and Table 17-4 has a C<sub>p</sub> for the small pulley (not "—"). b<sub>min</sub> = ΔF/(a<sub>0</sub> − a<sub>2</sub>) · e<sup>fφ</sup>/(e<sup>fφ</sup> − 1) is the narrowest belt that carries H<sub>d</sub> without slipping (Shigley Ex 17-2). ★ = the fitting belt that needs the narrowest width — a calculator choice (Shigley gives no single rule; Mech p.15 only says "choose a belt yourself"). It reproduces the belts of Tutorial 1 (F-1, 2-in pulley), Ex 17-1 and HW1 P1 (A-3, 5–6-in pulleys); on the 16-in pulley of Ex 17-2 it stars A-5, while the problem names A-3 (b<sub>min</sub> 8.40 in). Use also clears the typed table reads (F<sub>a</sub>, C<sub>p</sub>, t, γ, f).' });
+  }
+  // standard widths: whole inches from b_min up (Shigley Ex 17-2 took the catalogue's 10 in)
+  function widthRows(v, bmin, F1aPerIn) {
+    if (!(bmin > 0) || !(F1aPerIn > 0) || !H.has(v, 'gamma', 't', 'V', 'phi')) return undefined;
+    const dF = dFd(v); if (dF === undefined) return undefined;
+    const b0 = Math.ceil(bmin - 1e-9), list = [b0 - 1, b0, b0 + 1, b0 + 2].filter(b => b > 0);
+    return list.map(b => {
+      const w = 12 * v.gamma * b * v.t, Fc = w / G * (v.V / 60) ** 2, F1a = F1aPerIn * b, F2 = F1a - dF, Fi = (F1a + F2) / 2 - Fc;
+      const fp = F2 > Fc ? Math.log((F1a - Fc) / (F2 - Fc)) / v.phi : undefined;
+      return { b, Fc, F1a, F2, Fi, fp, ok: b >= bmin - 1e-9 && fp !== undefined, dip: (Cof(v) > 0 && Fi > 0) ? Cof(v) ** 2 * w / (96 * Fi) : undefined, pick: b === b0 };
+    });
+  }
+  function widthTableHtml(v, mode) {
+    const cat = mode === 'catalogue', bmin = cat ? bminCat(v) : v.bmin, perIn = cat ? v.ka : (H.has(v, 'Fa', 'Cp', 'Cv') ? v.Fa * v.Cp * v.Cv : undefined);
+    const rows = widthRows(v, bmin, perIn); if (!rows) return '';
+    const field = cat ? 'b' : 'bsel';
+    return H.table(['Width b', '(F_1)_a', 'F_c', 'F_2', 'F_i', "f′ vs f = " + F(v.f), 'dip'], rows.map(r => ({
+      cells: [F(r.b) + ' in' + inUse(H.has(v, field) && Math.abs(v[field] - r.b) < 1e-9 || (!H.has(v, field) && !cat && r.pick)), F(r.F1a) + ' lbf', F(r.Fc) + ' lbf', F(r.F2) + ' lbf', F(r.Fi) + ' lbf', r.fp !== undefined ? F(r.fp, 3) + (r.fp < v.f - 1e-9 ? ' < f' : ' ≥ f ✘') : 'F_2 ≤ F_c ✘', r.dip !== undefined ? F(r.dip, 3) + ' in' : '—'],
+      ok: r.ok, pick: r.pick, set: { [field]: r.b } })),
+      { caption: 'Select a standard width — b<sub>min</sub> = ' + F(bmin, 4) + ' in', note: 'Rule: the next available width ≥ b<sub>min</sub>; whole inches here. Shigley Ex 17-2 took the catalogue\'s next width, 10 in (b<sub>min</sub> 8.40 in) — the 9-in line is also shown in the example. A width below b<sub>min</sub> slips (f′ ≥ f) at the design power.' + (cat ? ' Habasit belts are made to width; whole inches are shown for comparison with Shigley.' : '') });
+  }
+  function habTableHtml(v) {
+    if (!H.has(v, 'd')) return '';
+    const dF = dFd(v), dmm = v.d * 25.4;
+    const rows = Object.keys(HAB).map(c => {
+      const h = HAB[c], ka = h[3] * NMM, t = h[0] / 25.4, g = HAB_TABLE17_2[c] ? SPECS[HAB_TABLE17_2[c]].g : 0.042, f = HAB_TABLE17_2[c] ? SPECS[HAB_TABLE17_2[c]].f : 0.5;
+      const fits = dmm >= h[1] - 1e-9, bmin = dF !== undefined ? bminFor(ka, g, t, f, v) : undefined;
+      return { c, h, ka, fits, bmin, ok: fits && bmin !== undefined };
+    });
+    const pick = rows.filter(r => r.ok).reduce((b, r) => (!b || r.bmin < b.bmin) ? r : b, undefined);
+    return H.table(['Code', 'Type', 't mm', 'min pulley mm vs ' + F(dmm, 3), "F_a' N/mm", '(F_1)_a per inch', 'b_min at H_d'], rows.map(r => ({
+      cells: [r.c + inUse(v.hab === r.c), HAB_GROUP(r.c), F(r.h[0]), F(r.h[1]) + (r.fits ? ' ✔' : ' ✘'), F(r.h[3]), F(r.ka, 3) + ' lbf/in', r.bmin !== undefined ? F(r.bmin, 3) + ' in' : '—'],
+      ok: r.ok, pick: r === pick, set: { hab: r.c, kN: '', tmm: '', dminmm: '' } })),
+      { caption: 'Select the Habasit belt type (slide 21 / catalogue p.9)', note: 'A type fits when the small pulley is at least the catalogue minimum. (F<sub>1</sub>)<sub>a</sub> = nominal peripheral force per unit width × b (1 N/mm = 5.710 lbf/in); b<sub>min</sub> as in Shigley Ex 17-2 with Table 17-2 γ and f for the A-codes, else γ = 0.042 lbf/in³, f = 0.5. ★ = the fitting type needing the narrowest belt (calculator choice); the course highlights S-250H, A-3 and TF-22.' });
   }
 
   const MODES = [
@@ -242,7 +321,7 @@
                 work: v => H.has(v, 'Hd') ? '\\(H_d = H_{nom}K_s n_d = ' + F(v.Hnom) + '(' + F(v.Ks) + ')(' + F(v.nd) + ') = ' + F(v.Hd) + '\\ \\text{hp}\\)' : null },
             ] },
           { id: 'spec', title: 'Belt material — Table 17-2, corrections C_p and C_v', when: v => notGeo(v) && M(v) !== 'catalogue', fig: ['table17-2', 'table17-4', 'fig17-9', 'table17-3'],
-            text: 'Pick the belt; F<sub>a</sub>, d<sub>min</sub>, C<sub>p</sub> (Table 17-4, small pulley) and C<sub>v</sub> fill in — type over them to use your own table reading.',
+            text: 'Pick the belt the problem names; in a design question choose it from the table below (every Table 17-2 belt, whether it fits the small pulley, its allowable tension per inch and the minimum width it needs). F<sub>a</sub>, d<sub>min</sub>, C<sub>p</sub> (Table 17-4, small pulley) and C<sub>v</sub> fill in — type over them to use your own table reading.',
             vars: [
               { id: 'spec', label: 'Belt (Table 17-2)', kind: 'choice', type: 'text', options: Object.keys(SPECS) },
               { id: 'Fa', symbol: 'F_a', label: 'Allowable tension per inch of width', unit: 'lbf/in', kind: 'lookup', fig: 'table17-2', hint: 'Table 17-2 (at 600 ft/min)', auto: v => spec(v) ? spec(v).Fa : undefined },
@@ -253,7 +332,8 @@
                 check: v => (spec(v) && H.has(v, 'd') && CP[spec(v).mat] && isNaN(CP[spec(v).mat][cpCol(v.d)]) && !H.has(v, 'Cp')) ? 'Table 17-4 shows "—": the pulley is too small for this belt' : null },
               { id: 'Cv', symbol: 'C_v', label: 'Velocity correction factor', unit: '', kind: 'lookup', fig: 'fig17-9', hint: '1 for polyamide/urethane; leather: Fig. 17-9 (auto = rough fit)',
                 auto: v => { if (!spec(v)) return undefined; if (spec(v).mat !== 'leather') return 1; if (!H.has(v, 'V')) return undefined; return H.interp(v.V / 1000, [0, 1, 2, 3, 4, 5, 6], [1.0, 0.99, 0.97, 0.94, 0.90, 0.83, 0.74]); } },
-            ] },
+            ],
+            after: v => specTableHtml(v) },
           { id: 'hab', title: 'Catalogue belt — Habasit (slide 21)', when: on('catalogue'), fig: ['habasit', 'habasit-full', 'habasit-crown', 'habasit-shaft', 'habasit-k1'],
             text: 'The catalogue gives (F<sub>1</sub>)<sub>a</sub> directly as a force per unit width — no C<sub>p</sub> or C<sub>v</sub>. Course highlights S-250H (29 N/mm), A-3 (36 N/mm) and TF-22 (22 N/mm).',
             vars: [
@@ -264,7 +344,8 @@
                 check: v => (H.has(v, 'dminmm', 'd') && v.d * 25.4 < v.dminmm) ? 'Small pulley (' + F(v.d * 25.4) + ' mm) is below the catalogue minimum' : null },
               { id: 'ka', symbol: "F_{a}'", label: 'Same, in lbf per inch of width', unit: 'lbf/in', kind: 'calc', compute: v => H.has(v, 'kN') ? v.kN * NMM : undefined,
                 work: v => H.has(v, 'ka') ? '\\(' + F(v.kN) + '\\ \\text{N/mm} \\times 5.710 = ' + F(v.ka) + '\\ \\text{lbf/in}\\)' : null },
-            ] },
+            ],
+            after: v => habTableHtml(v) },
           { id: 'prop', title: 'Thickness, specific weight and friction', when: notGeo, fig: ['table17-2'],
             vars: [
               { id: 't', symbol: 't', label: 'Belt thickness', unit: 'in', kind: 'lookup', fig: 'table17-2', hint: 'Table 17-2 (catalogue: mm ÷ 25.4)',
@@ -278,7 +359,8 @@
           { id: 'wid', title: 'Belt width', when: on('analyse', 'capacity', 'tension', 'catalogue'),
             vars: [
               { id: 'b', symbol: 'b', label: 'Belt width', unit: 'in', kind: 'input', hint: 'urethane: fixed by the belt (auto)', auto: v => spec(v) && spec(v).b ? spec(v).b : undefined },
-            ] },
+            ],
+            after: v => M(v) === 'catalogue' ? widthTableHtml(v, 'catalogue') : '' },
         ] },
 
         { title: '3 · Solution', steps: [
@@ -318,7 +400,8 @@
               { id: 'bsel', symbol: 'b', label: 'Width chosen', unit: 'in', kind: 'lookup', hint: 'next available width; auto = next whole inch (Shigley Ex 17-2: catalogue gave 10 in)',
                 auto: v => H.has(v, 'bmin') ? Math.ceil(v.bmin - 1e-9) : undefined,
                 check: v => (H.has(v, 'bsel', 'bmin') && v.bsel < v.bmin - 1e-9) ? 'Narrower than b_min — the belt will slip' : null },
-            ] },
+            ],
+            after: v => widthTableHtml(v, 'width') },
           { id: 'fc', title: 'Course step 2: centrifugal tension', when: notGeo, eq: '(e)',
             formula: 'w = 12\\gamma b t\\ \\text{lbf/ft},\\qquad F_c = \\frac{w}{32.17}\\left(\\frac{V}{60}\\right)^2',
             vars: [

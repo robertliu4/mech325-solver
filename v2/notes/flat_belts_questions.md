@@ -39,3 +39,8 @@ Calculator: `v2/topics/flat_belts_common.js` (modes = the `mode` choice in step 
 - Midterm 2025 MC 10: power capacity for similar size, lowest → highest: **flat belt < V-belt < roller chain**.
 - Midterm 2025 MC 13: hp → ft·lbf/s **multiply by 550**.
 - Slides 18–19: flat belts need crowned pulleys; trapezoidal crowning for conveyors (self-tracking).
+
+## Sizing tables
+- **Belt** (step "Belt material"): every Table 17-2 row — d_min (Table 17-2; urethane Table 17-3 by rpm per foot of belt; leather 2-ply footnote +2 in for b ≥ 8 in) vs the small pulley, C_p (Table 17-4, "—" = does not fit), F_a, γ, f, a_0 = F_aC_pC_v and b_min at H_d (Ex 17-2 formula). ★ = the fitting belt that needs the narrowest width (calculator choice; the guides give no rule) → Tutorial 1 F-1, Ex 17-1 / HW1 P1 A-3; Ex 17-2 stars A-5 (problem names A-3).
+- **Width** (`width` mode, and `catalogue` mode): whole inches around b_min with (F_1)_a, F_c, F_2, F_i, f′, dip → ★ next whole inch ≥ b_min (Ex 17-2: 9 in; Shigley took the catalogue's 10 in, both shown).
+- **Habasit type** (`catalogue` mode): all catalogue codes with min pulley (mm) vs d, F_a′ (N/mm) → lbf/in and b_min → ★ narrowest fitting type.
