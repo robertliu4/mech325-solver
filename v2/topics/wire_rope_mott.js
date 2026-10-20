@@ -62,25 +62,20 @@
     title: 'Wire Rope — Sheave/Drum Design & Working Load',
     subtitle: 'Mott Ch. 7-7 (Tables 7-19 … 7-25, Figs. 7-41 … 7-51, Eqs. 7-23 … 7-25) · merged Fizz §1.7 + Mech §8.3.5',
     sibling: 'wire_rope_shigley.html',
-    intro: 'Mott\'s wire-rope guide (Mech bible §8.3.5.1, Example Problems 7-7/7-8): nominal diameter (Table 7-19) and classification (Table 7-20) → D/d ratio (Table 7-22) and tread diameter → drum groove depth h = 0.374d, drum diameter D + 2h, groove radius (Table 7-23), pitch 2.065r–2.18r, fleet angle ½°–2° → sheave groove depth 1.5d–1.75d, throat angle 35°–45°, pitch and rim diameters → rope grade (Table 7-24), minimum breaking force and weight (Table 7-25, auto-filled for standard sizes) → maximum working load = breaking force / SF (SF ≥ 5 for human safety). The optional <b>mine-hoist</b> block at the end applies Shigley\'s F<sub>t</sub>, F<sub>f</sub>, F<sub>b</sub>, n<sub>f</sub>, n<sub>s</sub> equations (figures from Shigley) because Mott has no fatigue method — the Mech bible says to use that for any problem with acceleration. <b>Course defaults</b> (MECH 325 "Wire Rope 2025" slides, Tutorial 3 Q1, HW1 P8): the course <i>designs</i> with Mott / Wesco catalogue data and <i>analyses</i> with Shigley 17-6, so the hoist block uses S<sub>u</sub> = 240 kpsi (wire, lower bound of IPS) for fatigue, p/S<sub>u</sub> = 0.0014 (6×19 at 10⁶ bends), sheave D = 45d unless a drum is given, F<sub>u</sub> = (S<sub>u</sub>)<sub>nom</sub>·πd²/4 from Shigley Table 17-24 with no D/d loss (this page applies the Fig 17-20 loss by default, as the Mech bible does — set it to 0 to reproduce the course; Wesco / Table 7-25 breaking strengths as a check), g = 32.2 ft/s²; n<sub>f</sub> is reported without bending (F<sub>f</sub>/F<sub>t</sub>, HW1 P8) and with bending ((F<sub>f</sub> − F<sub>b</sub>)/F<sub>t</sub>, Tutorial 3) and multiplied by the end-fitting efficiency (Flemish eye 92.5–95 %, torqued clips 80 %).',
+    intro: 'Mott wire-rope design (Ex 7-7/7-8): rope size → D/d (Table 7-22) → drum and sheave grooves → grade → breaking force (Table 7-25) → working load = breaking force/SF. Problems with acceleration or fatigue (mine hoist, Tutorial 3, HW1 P8): switch on the Shigley hoist block at the end.',
     example: { d: 2, cons: '6x19 Seale', ratioSel: 'suggested', fleet: 1.0, hs: 3.0, throat: 40, grade: 'IPS', core: 'FC', SF: 5, mode: 'hoist', srope: '6x19', W: 8000, m: 1, L: 480, a: 2, Dh: 90, Su: 240, bends: 1.0, psu: 1.4, loss: 0, nreq: 5, fit: 'none', lay: 'regular', sheave: 'cast steel' },
     assumptions: [
-      { text: 'Use the Mott guide (rope, drum, sheave, working load) unless the problem has acceleration or is a mine hoist — then switch on the Shigley hoist block', src: 'Mech p.38', var: 'mode' },
-      { text: 'Rope diameter not given → choose a standard size from Table 7-19; rope type given as wires per strand → classify with Table 7-20', src: 'Mech p.38 · Mech p.39', var: 'd' },
-      { text: 'Tread diameter D from the SUGGESTED D/d of Table 7-22 (minimum only when space is tight; Mott Ex. 7-7 uses the suggested ratio)', src: 'Mech p.39', var: 'ratioSel' },
-      { text: 'Drum: minimum groove depth h = 0.374d, drum diameter = D + 2h', src: 'Mech p.40' },
-      { text: 'Groove radius from the "new" column of Table 7-23 unless specified otherwise (re-machine if worn below the "worn" value)', src: 'Mech p.40', var: 'r' },
-      { text: 'Drum groove pitch between 2.065r and 2.18r — mid-range used', src: 'Mech p.40', var: 'pitch' },
-      { text: 'Fleet angle between ½° and 2° (Mott: at most 1½° on a smooth drum) — 1° used', src: 'Mech p.40', var: 'fleet' },
-      { text: 'Sheave throat angle between 35° and 45° — 40° used', src: 'Mech p.41', var: 'throat' },
-      { text: 'Sheave groove depth 1.5d–1.75d — the lower limit 1.5d is used', src: 'Mech p.41', var: 'hs' },
-      { text: 'Sheave pitch diameter = D + d (measured to the rope centreline, Mott Fig. 7-49 — Mech p.41 prints D + 2d); rim diameter = D + 2h', src: 'Mech p.41' },
-      { text: 'Rope grade is often given; otherwise improved plow steel (IPS) with a fibre core', src: 'Mech p.42', var: 'grade' },
-      { text: 'Design factor SF = 5 — "just use 5 if not sure"; the minimum for cranes, hoists and anything involving human safety', src: 'Mech p.42', var: 'SF' },
-      { text: 'Breaking forces in Table 7-25 are in US tons: 1 ton = 2000 lb', src: 'Mech p.42' },
-      { text: 'Hoist block: w without the core, 10⁶ bends for 6×19 if not given (p/S_u = 0.0014), wire S_u at the lower bound (240 kpsi for IPS), g = 32.2 ft/s², D = "better" 45d unless a drum is given', src: 'Mech p.47–50 · course Tutorial 3', var: 'bends' },
-      { text: 'Hoist block: F_u = Table 17-24 strength × πd²/4 reduced by the Fig. 17-20 strength loss for D/d; the course (Tutorial 3) uses no reduction — set the loss to 0 to match', src: 'Mech p.45 · Mech p.51', var: 'loss' },
-      { text: 'Hoist block: required factor of safety 5 (average operations / hoisting), Table 17-25 for specific cases', src: 'Mech p.45', var: 'nreq' },
+      { text: 'Mott guide for rope, drum, sheave and working load; the Shigley hoist block for acceleration/fatigue problems', src: 'Mech p.38', var: 'mode' },
+      { text: 'Rope size not given → a standard size from Table 7-19; classify by wires per strand with Table 7-20', src: 'Mech p.38–39', var: 'd' },
+      { text: 'Tread diameter from the SUGGESTED D/d of Table 7-22 (minimum only when space is tight)', src: 'Mech p.39 · Mott Ex 7-7', var: 'ratioSel' },
+      { text: 'Drum groove depth h = 0.374d, drum diameter D + 2h; groove radius from the "new" column of Table 7-23', src: 'Mech p.40', var: 'r' },
+      { text: 'Groove pitch mid-way between 2.065r and 2.18r; fleet angle 1° (½°–2°)', src: 'Mech p.40', var: 'pitch' },
+      { text: 'Sheave groove depth 1.5d, throat angle 40° (35°–45°); pitch diameter D + d (rope centreline — Mech p.41 prints D + 2d)', src: 'Mech p.41 · Mott Fig 7-49', var: 'hs' },
+      { text: 'Grade IPS with fibre core unless given; SF = 5 for hoists, cranes and anything involving people; 1 ton = 2000 lb', src: 'Mech p.42', var: 'SF' },
+      { text: 'Hoist block: w without core, 10^6 bends (\\(p/S_u = 0.0014\\) for 6×19), wire S_u = 240 kpsi (IPS lower bound), g = 32.2 \\(\\mathrm{ft/s^2}\\), D = 45d unless a drum is given', src: 'Mech p.47–50 · Tutorial 3', var: 'bends' },
+      { text: 'Hoist block: \\(F_u\\) = Table 17-24 strength × \\(\\pi d^2/4\\) less the Fig 17-20 loss; the course (Tutorial 3) uses no loss — set it to 0', src: 'Mech p.45, p.51', var: 'loss' },
+      { text: 'Hoist block: required factor 5 (hoisting); Table 17-25 for mine shafts, elevators (9–11 fast passenger), cranes', src: 'Mech p.45 · midterm 2022 MC', var: 'nreq' },
+      { text: 'Working load depends on modulus, bearing pressure, application SF and start/stop loads — not on a maximum sheave size', src: 'midterms 2021–2024 MC · RAP quiz', step: 'hbp' },
     ],
 
     figures: [
@@ -103,9 +98,9 @@
       { id: 'fig17-21', ref: 'Figure 17-21', book: 'shigley', title: 'Shigley fatigue chart 1000·p/Su vs bends to failure', src: 'figures/shigley/fig17-21.png', page: 943, note: 'Divide the reading by 1000.' },
       { id: 'fig17-23', ref: 'Figure 17-23', book: 'shigley', title: 'Mine hoist geometry (Shigley Example 17-6)', src: 'figures/shigley/fig17-23.png', page: 946 },
       { id: 'table17-25', ref: 'Table 17-25', book: 'shigley', title: 'Shigley minimum factors of safety by application', src: 'figures/shigley/table17-25.png', page: 941 },
-      { id: 'table17-24', ref: 'Table 17-24', book: 'shigley', title: 'Shigley wire-rope data: nominal strength (kpsi on πd²/4), weight, minimum sheave, Er', src: 'figures/shigley/table17-24.png', page: 939, note: 'Course: Fu = nominal strength × πd²/4 (6×19 monitor/IPS 106 kpsi → 333 kip for 2 in).' },
+      { id: 'table17-24', ref: 'Table 17-24', book: 'shigley', title: 'Shigley wire-rope data: nominal strength (kpsi on \\(\\pi d^2/4\\)), weight, minimum sheave, E_r', src: 'figures/shigley/table17-24.png', page: 939, note: 'Course: \\(F_u\\) = nominal strength × \\(\\pi d^2/4\\) (6×19 IPS 106 kpsi → 333 kip for 2 in).' },
       { id: 'table17-26', ref: 'Table 17-26', book: 'shigley', title: 'Shigley maximum allowable bearing pressure of ropes on sheaves (psi)', src: 'figures/shigley/table17-26.png', page: 942 },
-      { id: 'wesco', ref: 'Wesco 6×19 FC EIPS catalogue (slide 7)', book: 'course', title: 'Wesco 6×19 fibre-core EIPS breaking strengths (bright / galvanised), tons of 2000 lb', src: 'figures/course/wire_rope_wesco_6x19_eips.png', note: 'Check on Fu: 2 in = 352 000 lb vs Table 17-24 nominal 106 kpsi × π(2)²/4 = 333 kip (Mott Table 7-25: 160 tons = 320 kip).' },
+      { id: 'wesco', ref: 'Wesco 6×19 FC EIPS catalogue (slide 7)', book: 'course', title: 'Wesco 6×19 fibre-core EIPS breaking strengths (bright / galvanised), tons of 2000 lb', src: 'figures/course/wire_rope_wesco_6x19_eips.png', note: 'Check on F_u: 2 in = 352 000 lb vs \\(106(\\pi\\,2^2/4) = 333\\) kip (Mott Table 7-25: 160 tons).' },
       { id: 'wesco-wll', ref: 'Wesco WLL sling tables (slide 21)', book: 'course', title: 'Wesco working-load-limit tables for single-leg and 2-leg bridle slings (design factor 5:1, basket D/d = 25)', src: 'figures/course/wire_rope_wesco_wll_slings.png' },
       { id: 'clips', ref: 'Wire-rope clips table (Canvas note, HW1 p19)', book: 'course', title: 'Wire rope clips: minimum number, rope turn-back and torque by rope diameter; 80 % termination efficiency when torqued correctly', src: 'figures/course/wire_rope_clips_table.png', note: '3/4 in → 4 clips, 18 in, 130 ft·lb; 1 in → 5, 26 in, 225; 2 in → 8, 71 in, 750. Flemish eye splice: 92.5 % (1.625 in) / 95 % (0.75 in).' },
       { id: 'wesco-iwrc', ref: 'Wesco 6×19 IWRC catalogue (slide 8)', book: 'course', title: 'Wesco PowerStrand 6×19 IWRC class: weight per foot and minimum breaking strength (bright / galvanised EIPS)', src: 'figures/course/wire_rope_wesco_6x19_iwrc.png', note: 'Wire Rope 2025.pdf slide 8 (Wesco Industries catalogue page; that catalogue is not in the course catalogue folder). Use for IWRC ropes; FC ropes use slide 7.' },
@@ -121,7 +116,7 @@
       { title: 'Step 1–2: rope and tread diameter', steps: [
         { id: 'rope', title: 'Rope diameter, classification and D/d ratio', fig: ['table7-19', 'table7-20', 'table7-21', 'table7-22', 'fig7-48', 'wc-dd', 'wr-knuckle'],
           formula: 'D = \\left(\\frac{D}{d}\\right)_{\\text{Table 7-22}} \\times d',
-          text: 'If the rope type is given as "wires per strand", classify it with Table 7-20. Use the suggested D/d for long life, the minimum only when space is tight (Figure 7-48 shows the life penalty).',
+          text: 'Classify a "wires per strand" rope with Table 7-20. Suggested D/d for long life; minimum only when space is tight (Fig 7-48).',
           vars: [
             { id: 'd', symbol: 'd', label: 'Nominal rope diameter', unit: 'in', kind: 'input', hint: 'standard sizes in Table 7-19' },
             { id: 'cons', label: 'Rope construction', kind: 'choice', type: 'text', options: Object.keys(DD) },
@@ -153,7 +148,7 @@
       { title: 'Step 4: sheave', steps: [
         { id: 'sheave', title: 'Sheave groove depth, throat angle, pitch and rim diameters', fig: ['fig7-49'], eq: '7-23',
           formula: '1.5d \\le h_{sheave} \\le 1.75d,\\qquad 35^\\circ \\le \\text{throat} \\le 45^\\circ,\\qquad D_{pitch} = D + d,\\qquad D_{rim} = D + 2h_{sheave}',
-          text: 'Pitch diameter is measured to the rope centreline (Figure 7-49): tread diameter plus one rope diameter. The Mech bible (p.41) prints D + 2d, which would put the pitch circle a full rope diameter above the tread.',
+          text: 'Pitch diameter is measured to the rope centreline: D + d (Fig 7-49; Mech p.41 prints D + 2d).',
           vars: [
             { id: 'hsmin', symbol: 'h_{min}', label: 'Groove depth lower limit 1.5d', unit: 'in', kind: 'calc', compute: v => H.has(v, 'd') ? 1.5 * v.d : undefined },
             { id: 'hsmax', symbol: 'h_{max}', label: 'Groove depth upper limit 1.75d', unit: 'in', kind: 'calc', compute: v => H.has(v, 'd') ? 1.75 * v.d : undefined },
@@ -169,9 +164,9 @@
       { title: 'Steps 5–6: grade and working load', steps: [
         { id: 'wl', title: 'Rope grade, breaking force and maximum working load', fig: ['table7-24', 'table7-25', 'table7-26', 'wesco', 'wesco-wll', 'wesco-iwrc', 'wesco-7x19', 'wesco-pro34k', 'wc-6x19'],
           formula: '\\text{Max. working load} = \\frac{\\text{Min. breaking force}}{SF}\\qquad(1\\ \\text{ton} = 2000\\ \\text{lb})',
-          text: 'Table 7-25 covers the 6×19 and 6×36 classes with fibre core (FC) or IWRC in IPS and XIP; breaking force auto-fills for standard diameters. SF ≥ 5 for overhead cranes, gantry cranes, hoists and anything involving human safety (Mech bible: "just use 5 if not sure").',
+          text: 'Table 7-25 (6×19 and 6×36, FC or IWRC, IPS/XIP) fills the breaking force for standard sizes. SF ≥ 5 for hoists, cranes and human safety.',
           vars: [
-            { id: 'grade', label: 'Rope grade', kind: 'choice', type: 'text', options: [{ label: 'PS — plow steel (1570 N/mm²)', value: 'PS' }, { label: 'IPS — improved plow steel (1770 N/mm²)', value: 'IPS' }, { label: 'XIP — extra improved plow steel (1960 N/mm²)', value: 'XIP' }], default: 'IPS' },
+            { id: 'grade', label: 'Rope grade', kind: 'choice', type: 'text', options: [{ label: 'PS — plow steel (1570 \\(\\mathrm{N/mm^2}\\))', value: 'PS' }, { label: 'IPS — improved plow steel (1770 \\(\\mathrm{N/mm^2}\\))', value: 'IPS' }, { label: 'XIP — extra improved plow steel (1960 \\(\\mathrm{N/mm^2}\\))', value: 'XIP' }], default: 'IPS' },
             { id: 'core', label: 'Core', kind: 'choice', type: 'text', options: [{ label: 'Fiber core (FC)', value: 'FC' }, { label: 'IWRC — independent wire rope core', value: 'IWRC' }], default: 'FC' },
             { id: 'Fbr', symbol: 'F_{br}', label: 'Minimum breaking force', unit: 'tons', kind: 'lookup', fig: 'table7-25', auto: v => { const r = H.has(v, 'd') ? row(v.d) : undefined; const c = col(v); return (r && c !== undefined) ? r[c] : undefined; }, hint: 'PS is not tabulated — scale IPS by 1570/1770' },
             { id: 'wft', symbol: 'w', label: 'Weight per foot', unit: 'lb/ft', kind: 'lookup', fig: 'table7-25', auto: v => { const r = H.has(v, 'd') ? row(v.d) : undefined; return r ? r[v.core === 'IWRC' ? 3 : 0] : undefined; }, hint: 'Table 7-25 FC / IWRC column (2 in FC: 6.72 lb/ft)' },
@@ -181,7 +176,7 @@
             { id: 'MWLlb', symbol: '', label: 'Maximum working load', unit: 'lb', kind: 'calc', compute: v => H.has(v, 'MWL') ? v.MWL * 2000 : undefined },
           ] },
         { id: 'wl2', title: 'Applied load vs maximum working load', fig: ['wesco-wll'],
-          text: 'Compare the applied load (including rope weight and any shock allowance) with the MWL; the Wesco sling tables use the same 5:1 design factor.',
+          text: 'Compare the applied load (with rope weight and any shock allowance) to the MWL.',
           vars: [
             { id: 'Wapp', symbol: 'W', label: 'Applied load incl. rope weight and shock (optional)', unit: 'lb', kind: 'input', check: v => (H.has(v, 'Wapp', 'MWLlb') && v.Wapp > v.MWLlb) ? 'Applied load exceeds the maximum working load' : null },
             { id: 'Lrope', symbol: 'L', label: 'Rope length (optional, for total rope weight)', unit: 'ft', kind: 'input' },
@@ -194,7 +189,7 @@
           } },
       ] },
 
-      { title: 'Mine-hoist / acceleration analysis (Shigley 17-6 — the course method)', text: 'Mott has no fatigue method. For problems with acceleration or a required fatigue factor the course (Tutorial 3, HW1 P8) and the Mech bible switch to Shigley §17-6 (Example 17-6); the equations are Shigley\'s with the course defaults.', steps: [
+      { title: 'Mine-hoist / acceleration analysis (Shigley 17-6 — the course method)', text: 'Mott has no fatigue method: the course (Tutorial 3, HW1 P8) uses Shigley §17-6 here.', steps: [
         { id: 'mode', title: 'Enable hoist analysis', vars: [
           { id: 'mode', label: 'Analysis', kind: 'choice', type: 'text', options: [{ label: 'Not needed (static working-load check above)', value: 'none' }, { label: 'Mine hoist — tension, fatigue and static factors of safety (course)', value: 'hoist' }], default: 'none' },
         ],
@@ -202,30 +197,30 @@
             const ok = !H.has(v, 'Wapp') || v.Wapp <= v.MWLlb;
             return (ok ? '<span class="result-ok">PASS</span>' : '<span class="result-bad">FAIL</span>') + ' — static working-load check: MWL = ' + H.fmt(v.MWL) + ' tons = ' + H.fmt(v.MWLlb) + ' lb at SF = ' + H.fmt(v.SF) + (H.has(v, 'Wapp') ? ' vs applied ' + H.fmt(v.Wapp) + ' lb' : ' (enter the applied load above to compare)') + '. Switch on the hoist analysis for acceleration / fatigue problems.'; } },
         { id: 'hin', title: 'Load and hoist data', fig: ['fig17-23', 'table17-27'], when: hoist,
-          text: 'W = weight at the end of the rope (cage + load), m = ropes sharing it, L = maximum suspended length, a = maximum acceleration. D for the hoist equations: the course uses the "better" sheave 45d (Tutorial 3: 90 in for a 2-in rope) unless the problem gives a drum (HW1 P8: 72 in) — the auto is 45d from Shigley Table 17-27, not the Mott Table 7-22 tread diameter above.',
+          text: 'W = cage + load, m = ropes, L = longest suspended length, a = largest acceleration. D: 45d (Tutorial 3) unless a drum is given (HW1 P8: 72 in).',
           vars: [
             { id: 'srope', label: 'Shigley rope class', kind: 'choice', type: 'text', options: [{ label: '6 × 7 haulage', value: '6x7' }, { label: '6 × 19 standard hoisting', value: '6x19' }, { label: '6 × 37 special flexible', value: '6x37' }], default: '6x19' },
             { id: 'W', symbol: 'W', label: 'Weight at the end of the rope', unit: 'lb', kind: 'input' },
             { id: 'm', symbol: 'm', label: 'Number of ropes', unit: '', kind: 'input', default: 1 },
             { id: 'L', symbol: 'L', label: 'Max suspended length', unit: 'ft', kind: 'input', default: 0 },
-            { id: 'a', symbol: 'a', label: 'Max acceleration', unit: 'ft/s²', kind: 'input', default: 0 },
+            { id: 'a', symbol: 'a', label: 'Max acceleration', unit: '\\(\\mathrm{ft/s^2}\\)', kind: 'input', default: 0 },
             { id: 'Dh', symbol: 'D', label: 'Sheave / drum diameter for the hoist equations', unit: 'in', kind: 'input', auto: v => (ROPE[v.srope] && H.has(v, 'd')) ? ROPE[v.srope].Dbet * v.d : undefined, hint: 'auto = "better" 45d (course Tutorial 3); enter the given drum (HW1 P8: 72 in)',
               check: v => (ROPE[v.srope] && H.has(v, 'Dh', 'd') && v.Dh < ROPE[v.srope].Dmin * v.d) ? 'Below the Table 17-27 minimum sheave (' + ROPE[v.srope].Dmin + 'd)' : null },
             { id: 'Ftin', symbol: 'F_t', label: 'Largest working tension if given directly (optional)', unit: 'lb', kind: 'input', hint: 'overrides the computed Ft' },
           ] },
         { id: 'hprop', title: 'Rope properties for the hoist equations (Shigley Tables 17-27 / 17-24)', fig: ['table17-27', 'table17-24', 'fig17-21'], when: hoist,
-          text: 'Properties as functions of d: w = 1.60d² lb/ft (no core — course: wl = 1.6(4)(480) = 3072 lb), d<sub>w</sub> = 0.067d, A<sub>m</sub> = 0.40d², E<sub>r</sub> = 12 Mpsi for 6×19. S<sub>u</sub> is the strength of the <i>wire</i> for Fig 17-21 — course: 240 kpsi (lower bound of IPS 240–280). (S<sub>u</sub>)<sub>nom</sub> is the Table 17-24 rope strength on the nominal area, used for F<sub>u</sub>.',
+          text: 'Table 17-27 in terms of d (6×19: \\(w = 1.60d^2\\), \\(d_w = 0.067d\\), \\(A_m = 0.40d^2\\), E_r = 12 Mpsi). S_u is the <i>wire</i> strength for Fig 17-21; \\((S_u)_{nom}\\) the rope strength for F_u.',
           vars: [
-            { id: 'ws', symbol: 'w', label: 'Weight per foot (Shigley, no core)', unit: 'lb/ft', kind: 'lookup', fig: 'table17-27', auto: v => (ROPE[v.srope] && H.has(v, 'd')) ? ROPE[v.srope].w * v.d * v.d : undefined, hint: 'Table 17-27: 1.50d², 1.60d², 1.55d² (Mott Table 7-25 w incl. core is slightly higher)' },
+            { id: 'ws', symbol: 'w', label: 'Weight per foot (Shigley, no core)', unit: 'lb/ft', kind: 'lookup', fig: 'table17-27', auto: v => (ROPE[v.srope] && H.has(v, 'd')) ? ROPE[v.srope].w * v.d * v.d : undefined, hint: 'Table 17-27: 1.50d^{2}, 1.60d^{2}, 1.55d^{2} (Mott Table 7-25 w incl. core is slightly higher)' },
             { id: 'dw', symbol: 'd_w', label: 'Wire diameter', unit: 'in', kind: 'lookup', fig: 'table17-27', auto: v => (ROPE[v.srope] && H.has(v, 'd')) ? ROPE[v.srope].dw * v.d : undefined, hint: 'Table 17-27: 0.111d, 0.067d, 0.048d' },
-            { id: 'Am', symbol: 'A_m', label: 'Metal area', unit: 'in²', kind: 'lookup', fig: 'table17-27', auto: v => (ROPE[v.srope] && H.has(v, 'd')) ? ROPE[v.srope].Am * v.d * v.d : undefined, hint: 'Table 17-27: 0.38d², 0.40d², 0.40d²' },
+            { id: 'Am', symbol: 'A_m', label: 'Metal area', unit: '\\(\\mathrm{in^2}\\)', kind: 'lookup', fig: 'table17-27', auto: v => (ROPE[v.srope] && H.has(v, 'd')) ? ROPE[v.srope].Am * v.d * v.d : undefined, hint: 'Table 17-27: 0.38d^{2}, 0.40d^{2}, 0.40d^{2}' },
             { id: 'Er', symbol: 'E_r', label: 'Rope modulus', unit: 'psi', kind: 'lookup', fig: 'table17-27', auto: v => ROPE[v.srope] ? ROPE[v.srope].Er : undefined, hint: 'Table 17-27: 13, 12, 12 Mpsi' },
             { id: 'Su', symbol: 'S_u', label: 'Wire ultimate strength (fatigue)', unit: 'kpsi', kind: 'lookup', fig: 'fig17-21', auto: v => SU[v.grade], hint: 'course: 240 kpsi (IPS lower bound; HW1 "plow steel"); PS 210; mild 180' },
             { id: 'Srope', symbol: '(S_u)_{nom}', label: 'Rope strength on nominal area (Table 17-24)', unit: 'kpsi', kind: 'lookup', fig: 'table17-24', auto: v => { const r = ROPE[v.srope]; const mt = SMAT[v.grade]; return (r && mt && r.S[mt] !== undefined) ? r.S[mt] : undefined; }, hint: '6×19: monitor/IPS 106, plow 93, mild 80 kpsi (course Tutorial 3: 106)' },
           ] },
-        { id: 'hten', title: 'Rope tension and ultimate load (Fu = (Su)nom × πd²/4, less the D/d strength loss)', eq: '17-47', fig: ['table17-24', 'fig17-20', 'wesco', 'table7-25', 'wesco-iwrc'], when: hoist,
+        { id: 'hten', title: 'Rope tension and ultimate load F_u', eq: '17-47', fig: ['table17-24', 'fig17-20', 'wesco', 'table7-25', 'wesco-iwrc'], when: hoist,
           formula: 'F_t = \\left(\\frac{W}{m} + wL\\right)\\left(1 + \\frac{a}{32.2}\\right),\\qquad F_u = (S_u)_{nom}\\,\\frac{\\pi d^2}{4}\\,(1 - \\text{loss})',
-          text: 'Mech bible (p.45, p.51) and Shigley p.920: reduce the rope strength by the Figure 17-20 strength loss at the actual D/d (auto = a read of the curve, ≈ 5 % at D/d ≥ 40). <b>Course:</b> Tutorial 3 uses no reduction — F<sub>u</sub> = 106 kpsi × π(2)²/4 = 333 kip — so enter 0 for the loss to match; compare with the Wesco catalogue (352 000 lb for 2-in EIPS) and Mott Table 7-25 (160 tons = 320 kip). If the question gives a catalogue breaking strength, enter it to override.',
+          text: 'Reduce the rope strength by the Fig 17-20 loss at D/d. Course (Tutorial 3): no loss, \\(F_u = 106(\\pi\\,2^2/4) = 333\\) kip — enter 0 to match (Wesco 352 kip, Table 7-25 320 kip as checks).',
           vars: [
             { id: 'Ft', symbol: 'F_t', label: 'Rope tension (largest working tension)', unit: 'lb', kind: 'calc', compute: v => H.has(v, 'Ftin') ? v.Ftin : (H.has(v, 'W', 'm', 'ws', 'L', 'a') ? (v.W / v.m + v.ws * v.L) * (1 + v.a / 32.2) : undefined),
               work: v => (H.has(v, 'Ft') && !H.has(v, 'Ftin')) ? '\\(F_t = \\left(\\frac{' + H.fmt(v.W) + '}{' + H.fmt(v.m) + '} + ' + H.fmt(v.ws) + '(' + H.fmt(v.L) + ')\\right)\\left(1 + \\frac{' + H.fmt(v.a) + '}{32.2}\\right) = ' + H.fmt(v.Ft) + '\\ \\text{lb}\\)' : null },
@@ -237,10 +232,10 @@
           ] },
         { id: 'hfat', title: 'Fatigue tension and bending load', eq: '17-44, 17-41', fig: ['fig17-21', 'table17-27'], when: hoist,
           formula: 'F_f = \\frac{(p/S_u)\\,S_u\\,D\\,d}{2},\\qquad F_b = \\frac{E_r d_w A_m}{D}',
-          text: 'Read 1000·p/S<sub>u</sub> from Fig 17-21 at the required number of bends and divide by 1000. Course standard: p/S<sub>u</sub> = 0.0014 for 6×19 at 10⁶ bends (0.004 at 10⁵ — Tutorial 3 part b, where the solution switched to the 72-in drum for D; see COURSE_CONVENTIONS §17). Full bending load F<sub>b</sub> applies when the departure angle exceeds 12°.',
+          text: 'Read \\(1000\\,p/S_u\\) from Fig 17-21 and divide by 1000 (6×19: 0.0014 at 10^6 bends, 0.004 at 10^5). Full bending load when the departure angle exceeds 12°.',
           vars: [
-            { id: 'bends', symbol: 'N_{bends}', label: 'Required life, bends to failure', unit: 'millions', kind: 'input', default: 1.0, hint: 'course: 10⁶ bends → p/Su = 0.0014; 10⁵ → 0.004' },
-            { id: 'psu', symbol: '1000\\,p/S_u', label: 'Pressure–strength ratio ×1000 (Fig 17-21)', unit: '', kind: 'lookup', fig: 'fig17-21', auto: v => H.has(v, 'bends') ? psuAt(v.srope, v.bends) : undefined, hint: 'course: 1.4 for 6×19 at 10⁶ bends, ≈ 4 at 10⁵ (ordinate ×10⁻³); 6×7 not plotted — auto uses the 6×12 curve' },
+            { id: 'bends', symbol: 'N_{bends}', label: 'Required life, bends to failure', unit: 'millions', kind: 'input', default: 1.0, hint: 'course: 10^{6} bends → p/Su = 0.0014; 10^{5} → 0.004' },
+            { id: 'psu', symbol: '1000\\,p/S_u', label: 'Pressure–strength ratio ×1000 (Fig 17-21)', unit: '', kind: 'lookup', fig: 'fig17-21', auto: v => H.has(v, 'bends') ? psuAt(v.srope, v.bends) : undefined, hint: 'course: 1.4 for 6×19 at 10^{6} bends, ≈ 4 at 10^{5} (ordinate ×10^{-3}); 6×7 not plotted — auto uses the 6×12 curve' },
             { id: 'Ff', symbol: 'F_f', label: 'Allowable fatigue tension', unit: 'lb', kind: 'calc', compute: v => H.has(v, 'psu', 'Su', 'Dh', 'd') ? v.psu * v.Su * v.Dh * v.d / 2 : undefined,
               work: v => H.has(v, 'Ff') ? '\\(F_f = \\frac{' + H.fmt(v.psu / 1000, 4) + '(' + H.fmt(v.Su * 1000) + ')(' + H.fmt(v.Dh) + ')(' + H.fmt(v.d) + ')}{2} = ' + H.fmt(v.Ff) + '\\ \\text{lb}\\)' : null },
             { id: 'Fb', symbol: 'F_b', label: 'Equivalent bending load', unit: 'lb', kind: 'calc', compute: v => H.has(v, 'Er', 'dw', 'Am', 'Dh') ? v.Er * v.dw * v.Am / v.Dh : undefined,
@@ -248,7 +243,7 @@
           ] },
         { id: 'hfos', title: 'Factors of safety', eq: '17-45, 17-46', fig: ['table17-25', 'wesco-wll'], when: hoist,
           formula: 'n = \\frac{F_u}{F_t},\\qquad n_s = \\frac{F_u - F_b}{F_t},\\qquad n_{f0} = \\frac{F_f}{F_t}\\ (\\text{no bending}),\\qquad n_f = \\frac{F_f - F_b}{F_t}',
-          text: 'Required minimum factors from Shigley Table 17-25 (mine shafts ≤ 500 ft 8.0, 1000–2000 ft 7.0, 2000–3000 ft 6.0; hoisting 5; haulage, cranes, derricks 6; electric hoists 7; Wesco slings 5:1). The course reports n<sub>f</sub> both without bending (HW1 P8: F<sub>f</sub>/F<sub>t</sub>, maximised over d) and with bending (Tutorial 3: 0.14 → not acceptable for infinite life).',
+          text: 'Minimum factors: Table 17-25 (hoisting 5, cranes 6, mine shafts 5–8, passenger elevators 7.6–11.9). HW1 P8: n_f without bending; Tutorial 3: with bending (0.14 → not acceptable).',
           vars: [
             { id: 'nreq', symbol: 'n_{req}', label: 'Required factor of safety', unit: '', kind: 'lookup', fig: 'table17-25', default: 5, hint: 'Table 17-25; hoisting 5 (Wesco slings 5:1); mine shaft ≤ 500 ft 8' },
             { id: 'n0', symbol: 'n', label: 'Simple static factor Fu/Ft', unit: '', kind: 'calc', digits: 4, compute: v => (H.has(v, 'Fu', 'Ft') && v.Ft > 0) ? v.Fu / v.Ft : undefined,
@@ -262,7 +257,7 @@
           ] },
         { id: 'hfit', title: 'End fitting efficiency and wire-rope clips (course, HW1 P8c)', fig: ['clips', 'wesco-eff'], when: hoist,
           formula: 'n_{f,fitting} = \\eta\\, n_f,\\qquad \\eta = 0.925\\ (\\text{Flemish eye, 1.625 in}),\\ 0.95\\ (\\text{Flemish eye, 0.75 in}),\\ 0.80\\ (\\text{clips, torqued})',
-          text: 'Canvas note / HW1 P8(c): multiply the fatigue factor by the termination efficiency. The clips table gives the minimum number of clips, rope turn-back and torque for the rope size (auto-filled for the nearest listed diameter).',
+          text: 'HW1 P8(c): multiply n_f by the termination efficiency; the clips table gives count, turn-back and torque.',
           vars: [
             { id: 'fit', label: 'End fitting', kind: 'choice', type: 'text', options: [{ label: 'None / ideal (η = 1)', value: 'none' }, { label: 'Flemish eye splice, large rope (92.5 %)', value: 'flemish_large' }, { label: 'Flemish eye splice, small rope (95 %)', value: 'flemish_small' }, { label: 'Wire-rope clips, torqued (80 %)', value: 'clips' }], default: 'none' },
             { id: 'eta', symbol: '\\eta', label: 'Termination efficiency', unit: '', kind: 'lookup', fig: 'wesco-eff', auto: v => ETA[v.fit], hint: 'Flemish eye 0.925 (1.625 in) / 0.95 (0.75 in); clips 0.80' },
@@ -286,7 +281,7 @@
           after: v => {
             if (!hoist(v) || !H.has(v, 'nf')) return '';
             const req = v.nreq || 5; const eta = H.has(v, 'eta') ? v.eta : 1; const okf = eta * v.nf >= req; const oks = !H.has(v, 'ns') || v.ns >= req; const okp = !H.has(v, 'pb', 'pallow') || v.pb <= v.pallow;
-            return ((okf && oks && okp) ? '<span class="result-ok">PASS</span>' : '<span class="result-bad">FAIL</span>') + ' — ' + H.fmt(v.m) + ' × ' + H.fmt(v.d) + ' in ' + (v.srope || '').replace('x', ' × ') + ' rope on a ' + H.fmt(v.Dh) + ' in sheave (D/d = ' + H.fmt(v.Dh / v.d) + '): F<sub>t</sub> = ' + H.fmt(v.Ft) + ' lb, F<sub>u</sub> = ' + H.fmt(v.Fu) + ' lb, F<sub>f</sub> = ' + H.fmt(v.Ff) + ' lb, F<sub>b</sub> = ' + H.fmt(v.Fb) + ' lb → n = ' + H.fmt(v.n0, 3) + ', n<sub>f0</sub> = ' + H.fmt(v.nf0, 3) + ' (no bending), n<sub>f</sub> = ' + H.fmt(v.nf, 3) + (H.has(v, 'ns') ? ', n<sub>s</sub> = ' + H.fmt(v.ns, 3) : '') + (eta !== 1 ? ', × η = ' + H.fmt(eta) + ' → ' + H.fmt(eta * v.nf0, 3) + ' / ' + H.fmt(eta * v.nf, 3) : '') + ' (required ' + H.fmt(req) + ')' + (H.has(v, 'pb', 'pallow') ? '; bearing pressure ' + H.fmt(v.pb) + ' psi vs ' + H.fmt(v.pallow) + ' psi on ' + v.sheave : '') + '. n<sub>f</sub> peaks at an intermediate d — try neighbouring standard sizes (Table 7-19).';
+            return ((okf && oks && okp) ? '<span class="result-ok">PASS</span>' : '<span class="result-bad">FAIL</span>') + ' — ' + H.fmt(v.m) + ' × ' + H.fmt(v.d) + ' in ' + (v.srope || '').replace('x', ' × ') + ' rope on a ' + H.fmt(v.Dh) + ' in sheave (D/d = ' + H.fmt(v.Dh / v.d) + '): F_{t} = ' + H.fmt(v.Ft) + ' lb, F_{u} = ' + H.fmt(v.Fu) + ' lb, F_{f} = ' + H.fmt(v.Ff) + ' lb, F_{b} = ' + H.fmt(v.Fb) + ' lb → n = ' + H.fmt(v.n0, 3) + ', n_{f0} = ' + H.fmt(v.nf0, 3) + ' (no bending), n_{f} = ' + H.fmt(v.nf, 3) + (H.has(v, 'ns') ? ', n_{s} = ' + H.fmt(v.ns, 3) : '') + (eta !== 1 ? ', × η = ' + H.fmt(eta) + ' → ' + H.fmt(eta * v.nf0, 3) + ' / ' + H.fmt(eta * v.nf, 3) : '') + ' (required ' + H.fmt(req) + ')' + (H.has(v, 'pb', 'pallow') ? '; bearing pressure ' + H.fmt(v.pb) + ' psi vs ' + H.fmt(v.pallow) + ' psi on ' + v.sheave : '') + '. n_{f} peaks at an intermediate d — try neighbouring standard sizes (Table 7-19).';
           } },
       ] },
     ],

@@ -11,6 +11,14 @@
 // were digitised from the cropped figures (pixel reads, ±0.1 hp / ±0.005); Gates NEMA Tables B2/B3 and D26/D27 typed from slides 33/39.
 //
 // Verified against (Playwright probes, inputs → answers; see final report):
+// Polish pass (past exams in v2/course/past, see v2/notes/past_exam_m1.md):
+// Midterm 2023 P1 [mott]: 50 hp 1160 → 600, Ks 1.5, CDmin 30, D1 13.9 (course pick), P_Tab 30, Cθ 0.94, CL 1.02 typed → Pdes 75, 5V, D2 27.7 (auto),
+//   VR 1.993, 582.1 rpm, CD 32 (auto), L 130.8 → 132 (auto), B 266.8, CD 32.61, θ1 155.6°/204.4°, ΔP 1.26 (auto), PA 29.97, 3 belts, nfs 1.20.
+//   Course slips: Lp written 134.5 (the (D2−D1)²/4CD term is 1.49, not 5.20) — same 132-in belt; boxed "593 rpm" is 582 rpm.
+// Midterm 2014 Q22 [shig]: 1.024 hp × 1.3 × 1.5 = 1.997 hp, A, 5-in sheave @ 1500 rpm → V 1963, Htab 2.0 (auto 1.999) → A is enough.
+// Midterm 2014 Q26 [shig, f = 0.5, Hd/Nb]: B, 2 hp, 2000 rpm, d 5, Nb 1 → Fc 6.61, ΔF 25.2, e^{0.5π} 4.81, F1 38.4, F2 13.2, Fi 19.2 lbf.
+// Midterm MC (2014/2016/2022/2023) [rate, N_b = 2]: per-belt power P_des/N_b = 1.41 / 1.24 / 1.41 / 0.94 hp → 1.5 / 1.4 / 1.5 / 1.1 hp belts.
+// Trial CD default: 32 in clamped into D2 < CD < 3(D1+D2) (course practice); 2025 all-auto → 112 in, CD 30.5, 3 belts, nfs 1.26.
 // Midterm 2025 P1 [mode mott]: 40 hp, 1150 → 590 rpm, Ks 1.3, 5V, D1 10.8 (chosen), PTab 23 (course read; chart auto 22.1), ΔP 1.26 (auto 1.25),
 //   CD 32, Lstd 125 → Pdes 52, D2 21.1 (auto), VR 1.954, 589 rpm, B 299.67, CD 37.10, θ1 164.0°, Cθ 0.960 (auto), CL 1.0 (auto 1.004),
 //   PA 23.29, 3 belts, nfs 1.344. Course slip: the solution writes Lp = 122.9 for CD 32 (2(32)+1.57(31.9)+0.83 = 114.9) and then takes 125.
@@ -282,7 +290,7 @@
   }
   function secTableHtml(v) {
     const s = secSel(v); if (!s) return '';
-    const cap = 'Select the belt section at P<sub>des</sub> = ' + f(v.Pdes) + ' hp, n<sub>1</sub> = ' + f(v.n1) + ' rpm';
+    const cap = 'Select the belt section at P_{des} = ' + f(v.Pdes) + ' hp, n_{1} = ' + f(v.n1) + ' rpm';
     const yes = b => b ? 'yes' : 'no';
     if (s.kind === 'shig') {
       const rows = ['A', 'B', 'C', 'D', 'E'].map(sec => {
@@ -291,7 +299,7 @@
           ok: s.inT(sec), pick: sec === s.pick, set: { sec } };
       });
       return H.table(['Section', 'hp range, one or more belts (Table 17-9)', 'P_des in range?', 'Min sheave (Table 17-9)', 'Course chart region at n_1 (slide 27)'], rows,
-        { caption: cap, note: 'Rule: Table 17-9 hp ranges overlap, so the course chart (slide 27, same axes as Mott Fig 7-13) decides; the minimum sheave applies to the small sheave. If the problem names the section (Tutorial 2 Q1: D360 belts; Ex 17-4: B112) use it — the table is then only a check (Tutorial 2 Q1: 84 hp at 400 rpm sits in the C region and in the C and D ranges of Table 17-9).' });
+        { caption: cap, note: 'Rule: Table 17-9 ranges overlap, so the course chart (slide 27) decides. A section named in the problem (Tutorial 2 Q1: D360) is used as given.' });
     }
     if (s.kind === 'gates') {
       const rows = [];
@@ -299,7 +307,7 @@
       if (s.b1) s.b1.rows.forEach((r, i) => add('Fig B1 narrow', r, i, s.b1.pick));
       if (s.b2) s.b2.rows.forEach((r, i) => add('Fig B2 classical', r, i, s.b2.pick));
       return H.table(['Chart', 'Section', 'Region at n_1', 'P_des inside?', 'NEMA min. driver sheave (B2/B3, motor hp)'], rows,
-        { caption: cap + ' — Gates Fig B1 / B2', note: 'Rule (Gates p.B3): the section whose region contains the point; one ★ per chart. The question normally names the family: HW1 P3b and the lecture use Super HC narrow belts (Fig B1 → 3V/3VX); Tutorial 2 Q2 uses Hi-Power/Predator classical belts (Fig B2 → CP at 90 hp, 400 rpm; the solution notes 8V/8VX as the narrow option). CP and C/CX both set the calculator\'s C section (Table D27 C row = CP). Lines read off the chart by pixel scan — near a line take the larger section.' });
+        { caption: cap + ' — Gates Fig B1 / B2', note: 'Rule (Gates p.B3): the region containing the point, one ★ per chart; near a line take the larger section. Super HC narrow belts → B1 (HW1 P3b: 3V); Hi-Power classical → B2 (Tutorial 2 Q2: CP, set as C).' });
     }
     if (!s.ch) return '';
     const rows = s.ch.rows.map((r, i) => {
@@ -307,7 +315,7 @@
       return { cells: [r.label + inUse(base(v.sec) === r.sec), hpR(r.hpLo, r.hpHi), yes(r.inR), dsm ? f(dsm) + ' in' : '—', f(d4, 3) + ' in' + (dsm && d4 < dsm ? ' (< smallest)' : '')], ok: r.inR, pick: i === s.ch.pick, set: { sec: r.sec } };
     });
     return H.table(['Section', 'Fig 7-13 region at n_1', 'P_des inside?', 'Smallest standard sheave (Fig 7-14/15/16)', 'D_1 for 4000 ft/min'], rows,
-      { caption: cap + ' — Mott Fig 7-13', note: (s.ch.nearLine ? '<b>The point lies within ≈10 % of a boundary line → the larger section is picked</b> (Fizz p.10). ' : '') + (s.ch.factory ? 'Outside the chart — refer to the manufacturer. ' : '') + 'Rule: the section whose region on Fig 7-13 contains (P<sub>des</sub>, rpm of the faster shaft); on a boundary take the larger (Fizz p.10). Course: midterm 52 hp at 1150 rpm → 5V; HW1 P2 56 hp at 1500 → 5V; HW1 P3a 6 hp at 1750 → 3V. Region limits read off the digitised chart (±5 %).' });
+      { caption: cap + ' — Mott Fig 7-13', note: (s.ch.nearLine ? '<b>Within ≈10 % of a line → larger section.</b> ' : '') + (s.ch.factory ? 'Outside the chart — refer to the manufacturer. ' : '') + 'Rule: the region containing (P_des, faster-shaft rpm); on a line take the larger (Fizz p.10). Midterm 2025 52 hp @ 1150 → 5V; 2023 75 hp @ 1160 → 5V.' });
   }
 
   // 2) Sheave pair. Mott: standard pitch diameters of Fig 7-14/15/16; Gates: stock sheaves (GSHEAVE) ≥ NEMA minimum.
@@ -351,8 +359,8 @@
         .map((c, i) => i === 0 ? c + inUse(H.has(v, 'D1', 'D2') && Math.abs(v.D1 - r.D1) < 1e-6 && Math.abs(v.D2 - r.D2) < 1e-6) : c),
       ok: r.ok, pick: r === s.pick, set: { D1: r.D1, D2: r.D2 } }));
     const rule = s.g
-      ? 'Rule (Gates drive tables, HW1 P3b, Tutorial 2 Q2): the <b>smallest stock driver sheave ≥ the NEMA minimum</b> (' + f(s.dmin) + ' in' + (s.bump ? '; n<sub>1</sub> is below the 575 rpm column, so the minimum must be <b>exceeded</b> — Tutorial 2 Q2 took 13 in over the 12-in minimum' : '') + ') whose closest stock driven sheave gives the output speed within ±' + f(s.tol) + ' %; belt speed ≤ 6500 ft/min. HW1 P3b → 3.35/8.00 in. Sheave lists read off Gates Tables B6 (3V), B21–B24 (A–D); 5V/8V use Mott\'s standard diameters + 2a — confirm the pair in the drive table, which also gives the CD and hp-correction factor.'
-      : 'Rule (Fizz p.11–14, Mech p.20–21, Mott Table 7-3 trials): for each standard driver D<sub>1</sub> take the closest standard D<sub>2</sub> to D<sub>1</sub>·VR; keep pairs whose output speed is within ±' + f(s.tol) + ' % of ' + f(v.n2) + ' rpm and belt speed 1000–5000 ft/min; pick the one whose belt speed is nearest ' + f(s.Vt) + ' ft/min. Course picks: midterm 10.8/21.1 (the 13.1-in sheave nearest 4000 ft/min gives an ≈8 % speed error), HW1 P2 10.2/27.7, HW1 P3a 7.95/18.95, Mott Ex 7-2 12.4/21.1. Last column = P<sub>Tab</sub> + ΔP<sub>R</sub> per belt from the digitised chart.';
+      ? 'Rule (Gates drive tables): the smallest stock driver ≥ the NEMA minimum (' + f(s.dmin) + ' in' + (s.bump ? '; below the 575-rpm column it must be <b>exceeded</b> — Tutorial 2 Q2: 13 in' : '') + ') whose closest driven sheave gives the output speed within ±' + f(s.tol) + ' %. HW1 P3b → 3.35/8.00 in.'
+      : 'Rule: closest standard D_2 to D_1·VR, output speed within ±' + f(s.tol) + ' %, belt speed 1000–5000 ft/min, nearest ' + f(s.Vt) + ' ft/min wins. Course picks: 2025 10.8/21.1, 2023 13.9/27.7 (either accepted), HW1 10.2/27.7 and 7.95/18.95. Last column = P_Tab + \\(\\Delta P_R\\) per belt.';
     return H.table(['D_1 (driver)', 'D_2 (closest to D_1·VR)', 'VR', 'n_2', 'speed error', 'v_b ft/min', s.g ? 'Note' : 'Rated hp/belt'], rows,
       { caption: 'Select the sheaves — ' + (s.g ? 'Gates stock ' + base(v.sec) + ' sheaves' : 'standard ' + base(v.sec) + ' sheaves (vertical lines of Fig 7-' + ({ '3V': 14, '5V': 15, '8V': 16 }[base(v.sec)]) + ')'), note: rule });
   }
@@ -363,18 +371,18 @@
     const Lc = H.has(v, 'Lc') ? v.Lc : 0, x = v.Lreq - Lc;
     let i = t.findIndex(a => a >= x); if (i < 0) i = t.length;
     const cand = t.slice(Math.max(0, i - 2), Math.min(t.length, i + 2));
-    const lo = Math.min(v.D1, v.D2), hi = Math.max(v.D1, v.D2);
+    const lo = Math.min(v.D1, v.D2), hi = Math.max(v.D1, v.D2), cmin = H.has(v, 'CDmin') ? v.CDmin : 0;
     const rows = cand.map(L => {
       const Lp = L + Lc, B = 4 * Lp - 4 * kL(v) * (lo + hi), r = B * B - 32 * (hi - lo) ** 2;
       const CD = r >= 0 ? (B + Math.sqrt(r)) / 16 : undefined;
       const th1 = CD ? 180 - 2 * H.deg(Math.asin((hi - lo) / (2 * CD))) : undefined;
-      const inR = CD !== undefined && CD > hi && CD < 3 * (lo + hi);
+      const inR = CD !== undefined && CD > hi && CD < 3 * (lo + hi) && CD >= cmin - 1e-9;
       const corr = K2T[base(v.sec)] ? k2(v.sec, L) : clM(v.sec, L);
       return { L, Lp, CD, th1, inR, ok: inR && th1 >= 120, dL: L - x, corr };
     });
     const pool = rows.filter(r => r.ok).length ? rows.filter(r => r.ok) : rows.filter(r => r.CD);
     const pick = pool.reduce((b, r) => (!b || Math.abs(r.dL) < Math.abs(b.dL) - 1e-9 || (Math.abs(Math.abs(r.dL) - Math.abs(b.dL)) < 1e-9 && r.L > b.L)) ? r : b, undefined);
-    return { rows, pick, x, Lc };
+    return { rows, pick, x, Lc, cmin };
   }
   function lenTableHtml(v) {
     const s = lenSel(v); if (!s) return '';
@@ -382,13 +390,24 @@
     const rows = s.rows.map(r => ({
       cells: [desig(v.sec, r.L) + inUse(H.has(v, 'Lstd') && Math.abs(v.Lstd - r.L) < 1e-6), f(r.L) + ' in' + (s.Lc ? ' (L_p ' + f(r.Lp) + ')' : ''), (r.dL >= 0 ? '+' : '') + f(r.dL, 3) + ' in', r.CD ? f(r.CD) + ' in' : '—', r.inR ? 'yes' : 'no', r.th1 ? f(r.th1) + '°' : '—', r.corr !== undefined ? f(r.corr, 3) : '—'],
       ok: r.ok, pick: r === s.pick, set: { Lstd: r.L } }));
-    let note = 'Rule: the standard length closest to the required ' + f(s.x) + ' in (Fizz p.15, Mech p.23; a tie goes to the longer belt). The course accepts either neighbour, as long as the actual CD stays in D<sub>2</sub> &lt; CD &lt; 3(D<sub>1</sub> + D<sub>2</sub>) and θ<sub>1</sub> ≥ 120°. ' + (v.mode === 'gates' ? 'Gates belt numbers: 3V400 = 40.0 in, CP330 = 330 in (Gates Tables B4, B17–B20 list more lengths; the drive table gives the CD directly). ' : '');
-    if (!s.rows.some(r => r.ok)) note += '<b>No candidate keeps the CD in the recommended range</b> — acceptable when the problem fixes the centre distance (Tutorial 2: "about 12 ft"); the closest length is picked. ';
-    if (s.pick && H.has(v, 'Lstd') && Math.abs(v.Lstd - s.pick.L) > 1e-6) note += '<b>You use ' + f(v.Lstd) + ' in; the rule picks ' + f(s.pick.L) + ' in</b> (keep yours if the problem gives the belt). ' + (v.mode === 'mott' && Math.abs(v.Lstd - 125) < 1e-6 && Math.abs(v.Lreq - 114.9) < 0.6 ? 'Midterm 2025 P1 took 125 in after writing L = 122.9 in for CD = 32 in (the sum is 114.9 in, between 112 and 118); its CD 37.10 in and 3 belts follow from 125 in. ' : '');
-    return H.table(['Belt', shig ? 'Inside length (Table 17-10)' : 'Length (' + (isNarrow(v.sec) ? 'Table 7-2' : 'Table 17-10') + ')', 'L − L_req', 'Actual CD', 'D_2 < CD < 3(D_1+D_2)?', 'θ_1', shig ? 'K_2 (Table 17-14)' : 'C_L (Fig 7-19)'], rows,
+    let note = 'Rule: the standard length closest to ' + f(s.x) + ' in (tie → longer); either neighbour is accepted if \\(D_2 \\lt CD \\lt 3(D_1 + D_2)\\)' + (s.cmin ? ', CD ≥ ' + f(s.cmin) + ' in (given minimum)' : '') + ' and \\(\\theta_1 \\ge 120^\\circ\\). ' + (v.mode === 'gates' ? 'Gates numbers: 3V400 = 40.0 in, CP330 = 330 in. ' : '');
+    if (!s.rows.some(r => r.ok)) note += '<b>No length keeps the CD in range</b> — fine when the problem fixes the CD. ';
+    if (s.pick && H.has(v, 'Lstd') && Math.abs(v.Lstd - s.pick.L) > 1e-6) note += '<b>You use ' + f(v.Lstd) + ' in; the rule picks ' + f(s.pick.L) + ' in.</b> ' + (v.mode === 'mott' && Math.abs(v.Lstd - 125) < 1e-6 && Math.abs(v.Lreq - 114.9) < 0.6 ? 'Midterm 2025 took 125 in after a 122.9-in slip (correct L = 114.9 in). ' : '');
+    return H.table(['Belt', shig ? 'Inside length (Table 17-10)' : 'Length (' + (isNarrow(v.sec) ? 'Table 7-2' : 'Table 17-10') + ')', 'L − L_req', 'Actual CD', 'CD in range?', 'θ_1', shig ? 'K_2 (Table 17-14)' : 'C_L (Fig 7-19)'], rows,
       { caption: 'Select the standard belt length (required ' + f(s.x) + ' in' + (s.Lc ? ' inside length' : '') + ')', note });
   }
   function lenPick(v) { const s = lenSel(v); return s && s.pick ? s.pick.L : undefined; }
+
+  // Trial centre distance: the course "often takes c–c ≈ 32–40 in and goes from there" — midterm 2023 (minimum 30 in → chose 32),
+  // midterm 2025 (given 32), HW1 P2 36, HW1 P3a 24/30. Default 32 in (or the given minimum), clamped into D_2 < CD < 3(D_1 + D_2).
+  function cdTrial(v) {
+    if (!H.has(v, 'D1', 'D2')) return undefined;
+    const lo = Math.max(v.D1, v.D2), hi = 3 * (v.D1 + v.D2);
+    let c = Math.max(32, H.has(v, 'CDmin') ? v.CDmin : 0);
+    if (c <= lo) c = Math.ceil(lo + 1);
+    if (c >= hi) c = Math.floor(hi - 1);
+    return c;
+  }
 
   // 4) Number of belts
   function nbTableHtml(v) {
@@ -398,7 +417,33 @@
     const rows = [];
     for (let N = 1; N <= top; N++) rows.push({ cells: [N + inUse(v.Nb === N), f(N * v.Pbelt) + ' hp', f(N * v.Pbelt / v.Pdes, 3), N * v.Pbelt >= v.Pdes - 1e-9 ? 'OK' : 'overloaded'], ok: N * v.Pbelt >= v.Pdes - 1e-9, pick: N === pickN, set: { Nb: N } });
     return H.table(['N_b', 'N_b·P_belt', 'n_fs = N_b·P_belt/P_des', 'vs P_des = ' + f(v.Pdes) + ' hp'], rows,
-      { caption: 'Select the number of belts (' + f(v.Pbelt) + ' hp per belt)', note: 'Rule: the smallest N<sub>b</sub> with n<sub>fs</sub> ≥ 1, i.e. P<sub>des</sub>/P<sub>belt</sub> rounded <b>up</b> ("2.01 → 3", Mech p.26). Course: midterm 52/23.29 = 2.23 → 3; HW1 P2 → 3; Tutorial 2 Q1 4.51 → 5; Q2 3.22 → 4. For an existing drive type the number it has.' });
+      { caption: 'Select the number of belts (' + f(v.Pbelt) + ' hp per belt)', note: 'Rule: the smallest N_b with n_fs ≥ 1 — always round <b>up</b> (midterm 2.23 → 3; Tutorial 2 Q1 4.51 → 5).' });
+  }
+
+  // 5) Standard sizes for the selected section (reference; the size in use is highlighted)
+  const FR = (a, b) => '\\(\\tfrac{' + a + '}{' + b + '}\\)';
+  const DIMS = {   // [top width a, thickness b (Shigley Table 17-9), thickness (Mott Fig 7-9/7-10), min sheave in, hp range]
+    '3V': [FR(3, 8), '—', FR(5, 16), 2.65, '—'], '5V': [FR(5, 8), '—', FR(17, 32), 7.1, '—'], '8V': ['1', '—', FR(29, 32), 12.5, '—'],
+    A: [FR(1, 2), FR(11, 32), FR(5, 16), 3.0, FR(1, 4) + '–10'], B: [FR(21, 32), FR(7, 16), FR(13, 32), 5.4, '1–25'], C: [FR(7, 8), FR(17, 32), FR(17, 32), 9.0, '15–100'],
+    D: ['1' + FR(1, 4), FR(3, 4), FR(3, 4), 13.0, '50–250'], E: ['1' + FR(1, 2), '1', FR(29, 32), 21.6, '100 and up'],
+  };
+  const hl = (x, on) => on ? '<b style="background:#fde68a;padding:0 4px;border-radius:3px">' + x + '</b>' : x;
+  function gridHtml(cap, list, isOn, note) {
+    let rows = '';
+    for (let i = 0; i < list.length; i += 12) rows += '<tr>' + list.slice(i, i + 12).map(x => '<td>' + hl(f(x), isOn(x)) + '</td>').join('') + '</tr>';
+    return '<div class="seltab-cap">' + cap + '</div><div class="seltab-wrap"><table class="seltab"><tbody>' + rows + '</tbody></table></div>' + (note ? '<div class="seltab-note">' + note + '</div>' : '');
+  }
+  const near = (a, b) => a !== undefined && Math.abs(a - b) < 1e-6;
+  function stdHtml(v) {
+    const sb = base(v.sec || '');
+    let out = H.table(['Section', 'Top width a (in)', 'Thickness b (in), Table 17-9', 'Thickness (in), Mott Fig 7-9/7-10', 'Min. sheave (in)', 'hp range'], Object.keys(DIMS).map(s => ({
+      cells: [s + inUse(s === sb), DIMS[s][0], DIMS[s][1], DIMS[s][2], f(DIMS[s][3]), DIMS[s][4]], pick: s === sb, set: { sec: s } })),
+      { caption: 'Section dimensions', note: 'Groove angle 40° (\\(2\\beta \\approx 36^\\circ\\) on the sheave). Min. sheave: Table 17-9 (A–E), Table 17-17 note (3V/5V/8V).' });
+    const L = LENG[sb];
+    if (L) out += gridHtml('Standard lengths, ' + sb + ' — ' + (isNarrow(sb) ? 'Mott Table 7-2 (pitch length, in)' : 'Shigley Table 17-10 (inside length, in); pitch length L_p = L + ' + f(SEC[sb].conv) + ' in (Table 17-11)'), L, x => near(v.Lstd, x));
+    const SH = isNarrow(sb) ? SHEAVES[sb] : GSHEAVE[sb];
+    if (SH) out += gridHtml('Standard sheave diameters, ' + sb + ' — ' + (isNarrow(sb) ? 'Mott Figs 7-14/15/16 (pitch diameter, in)' : 'Gates Tables B21–B24 stock (datum diameter, in)'), SH, x => near(v.D1, x) || near(v.D2, x), (v.mode === 'gates' && isNarrow(sb)) ? 'Gates outside diameters = pitch diameter + 2a (0.10 in 5V, 0.20 in 8V).' : '');
+    return out;
   }
 
   return window.makeTopic_v_belts = function (book) {
@@ -408,93 +453,92 @@
       title: 'V-Belts — Design, Analysis & Installation',
       subtitle: 'Mott Ch 7-4 · Shigley 17-3 · Gates catalogue (course slides 22–42) — pick the question type first',
       sibling: isM ? 'v_belts_shigley.html' : 'v_belts_mott.html',
-      intro: 'The course uses <b>three</b> V-belt methods: <b>Mott</b> to design a drive (midterm 2025 P1, HW1 P2/P3a), <b>Shigley</b> to analyse a given drive for tensions, n<sub>fs</sub> and life (Tutorial 2 Q1), and the <b>Gates catalogue</b> for the number of belts and installation tension/deflection (Tutorial 2 Q2, HW1 P3b, lecture slides 38–40). Both book pages offer all of them: choose what the question asks in step 1 and only the steps that question needs are shown, in the order the course solutions use. Yellow fields with an "auto" value are chart/table reads (digitised from the figures on the right) — check them against the chart and type your own reading. Switching the question type keeps your numbers, so a Mott design can be followed by its tensions (Shigley) or installation tension (Gates).',
+      intro: 'Three course methods: <b>Mott</b> designs a drive, <b>Shigley</b> analyses tensions and life, the <b>Gates catalogue</b> gives belts and installation tension. Pick the question type in step 1 — only its steps are shown. Yellow "auto" values are digitised chart reads; type your own reading over them.',
       figures: [],
       assumptions: [],
       sections: [],
     };
 
     T.figures = [
-      { id: 'table7-1', book: 'mott', ref: 'Table 7-1', title: 'V-belt service factors (driven machine × driver × hours/day)', src: 'figures/mott/table7-1.png', page: 273, note: 'Course primary table (slide 28). Factors are for speed reducers; ×1.2 for speed increasers (footnote 1). Midterm 2025: AC normal torque → textile machine, 10 h/day → 1.3.' },
-      { id: 'table17-15', book: 'shigley', ref: 'Table 17-15', title: 'Suggested service factors Ks for V-belt drives', src: 'figures/shigley/table17-15.png', page: 925, note: 'Ranges by shock level and driver torque. Tutorial 2 Q1 (IC engine → medium-shock brick machine) took 1.4.' },
-      { id: 'ks-hours', book: 'course', ref: 'Course Ks table', title: 'Slide 35 course table: driven-machine class × hours/day × driver (smooth / coarse starting torque)', src: 'figures/course/belt_service_factor_hours.png', note: 'Light 1.0/1.1/1.2 | 1.1/1.2/1.3; medium 1.1/1.2/1.3 | 1.2/1.3/1.4; heavy 1.2/1.3/1.4 | 1.3/1.4/1.6; very heavy 1.3/1.4/1.5 | 1.5/1.6/1.8 (<8, <16, >16 h).' },
-      { id: 'fig7-13', book: 'mott', ref: 'Figure 7-13', title: 'Narrow-section belt selection chart (design power vs speed of faster shaft)', src: 'figures/mott/fig7-13.png', page: 273, note: 'On a boundary choose the larger section (Fizz p.10).' },
-      { id: 'gates-b1', book: 'course', ref: 'Gates Fig B1', title: 'Slide 32 — Gates cross-section selection chart (Super HC 3V/5V/8V and 3VX/5VX)', src: 'figures/course/gates_section_chart_b1.png', note: 'Enter with design hp (hp × service factor) and the faster-shaft rpm.' },
-      { id: 'abcd', book: 'course', ref: 'A–D chart', title: 'Slide 27 — "Recommended Nominal V-Belt Selection" for the classical A/B/C/D sections', src: 'figures/course/vbelt_selection_chart_abcd.png' },
-      { id: 'table17-9', book: 'shigley', ref: 'Table 17-9', title: 'Standard V-belt sections A–E: width, thickness, minimum sheave diameter, hp range', src: 'figures/shigley/table17-9.png', page: 922 },
-      { id: 'gates-b2b3', book: 'course', ref: 'Gates B2/B3', title: 'Slide 33 — NEMA minimum driver-sheave diameters for electric motors (B2: Super HC 3V/5V/8V/3VX/5VX; B3: Hi-Power A–D, Tri-Power AX/BX/CX)', src: 'figures/course/gates_nema_min_sheave_b2_b3.png', note: 'Enter with the MOTOR hp and the motor-rpm column (Tutorial 2 Q2: 60 hp, 400 rpm → 575 column → 12 in; HW1 P3b: 5 hp @ 1750 → 3.0 in).' },
-      { id: 'fig7-14', book: 'mott', ref: 'Figure 7-14', title: 'Power rating per belt: 3V (solid VR = 1, dashed VR ≥ 3.38)', src: 'figures/mott/fig7-14.png', page: 274, note: 'Vertical lines are the standard sheave pitch diameters.' },
-      { id: 'fig7-15', book: 'mott', ref: 'Figure 7-15', title: 'Power rating per belt: 5V', src: 'figures/mott/fig7-15.png', page: 275, note: 'The printed y-axis label "10" should read 16 (gridlines every 4 hp).' },
-      { id: 'fig7-16', book: 'mott', ref: 'Figure 7-16', title: 'Power rating per belt: 8V (690 / 870 / 1160 rpm)', src: 'figures/mott/fig7-16.png', page: 275, note: 'The printed y-axis labels 96/107 should read 90/100.' },
-      { id: 'fig7-17', book: 'mott', ref: 'Figure 7-17', title: 'Power added vs speed ratio: 5V belts', src: 'figures/mott/fig7-17.png', page: 276, note: 'Step-wise catalogue data; nothing more is added above VR = 3.38. Slide 31: "Shigley does not include ΔP_R".' },
-      { id: 'fig7-18', book: 'mott', ref: 'Figure 7-18', title: 'Angle-of-wrap correction factor Cθ', src: 'figures/mott/fig7-18.png', page: 276 },
-      { id: 'fig7-19', book: 'mott', ref: 'Figure 7-19', title: 'Belt-length correction factor CL', src: 'figures/mott/fig7-19.png', page: 276 },
-      { id: 'table7-2', book: 'mott', ref: 'Table 7-2', title: 'Standard belt lengths for 3V, 5V and 8V belts (in)', src: 'figures/mott/table7-2.png', page: 277 },
+      { id: 'table7-1', book: 'mott', ref: 'Table 7-1', title: 'V-belt service factors (driven machine × driver × hours/day)', src: 'figures/mott/table7-1.png', page: 273, note: 'Course primary table. ×1.2 for a speed increaser (footnote 1).' },
+      { id: 'table17-15', book: 'shigley', ref: 'Table 17-15', title: 'Suggested service factors K_s', src: 'figures/shigley/table17-15.png', page: 925, note: 'Ranges by shock and driver torque (Tutorial 2 Q1: 1.4).' },
+      { id: 'ks-hours', book: 'course', ref: 'Course K_s table', title: 'Slide 35: K_s by driven class × hours/day × driver torque', src: 'figures/course/belt_service_factor_hours.png' },
+      { id: 'fig7-13', book: 'mott', ref: 'Figure 7-13', title: 'Narrow-section belt selection chart (design power vs faster-shaft rpm)', src: 'figures/mott/fig7-13.png', page: 273, note: 'On a boundary take the larger section (Fizz p.10).' },
+      { id: 'fig7-9', book: 'mott', ref: 'Figures 7-9 / 7-10', title: 'V-belt cross-sections: classical A–E and narrow 3V/5V/8V (top width × depth)', src: 'figures/mott/fig7-9_7-10.png', page: 271 },
+      { id: 'gates-b1', book: 'course', ref: 'Gates Fig B1', title: 'Slide 32: Gates section chart (3V/5V/8V, 3VX/5VX)', src: 'figures/course/gates_section_chart_b1.png', note: 'Enter with the design hp and the faster-shaft rpm.' },
+      { id: 'abcd', book: 'course', ref: 'A–D chart', title: 'Slide 27: classical A/B/C/D section chart', src: 'figures/course/vbelt_selection_chart_abcd.png' },
+      { id: 'table17-9', book: 'shigley', ref: 'Table 17-9', title: 'Standard V-belt sections A–E: width, thickness, minimum sheave, hp range', src: 'figures/shigley/table17-9.png', page: 922 },
+      { id: 'gates-b2b3', book: 'course', ref: 'Gates B2/B3', title: 'Slide 33: NEMA minimum driver sheaves (B2 narrow, B3 classical)', src: 'figures/course/gates_nema_min_sheave_b2_b3.png', note: 'Motor hp row × motor-rpm column (Tutorial 2 Q2: 60 hp @ 575 → 12 in).' },
+      { id: 'fig7-14', book: 'mott', ref: 'Figure 7-14', title: 'Power per belt, 3V (solid VR = 1, dashed VR ≥ 3.38)', src: 'figures/mott/fig7-14.png', page: 274, note: 'Vertical lines = standard sheave pitch diameters.' },
+      { id: 'fig7-15', book: 'mott', ref: 'Figure 7-15', title: 'Power per belt, 5V', src: 'figures/mott/fig7-15.png', page: 275, note: 'The printed y-label "10" should read 16.' },
+      { id: 'fig7-16', book: 'mott', ref: 'Figure 7-16', title: 'Power per belt, 8V (690 / 870 / 1160 rpm)', src: 'figures/mott/fig7-16.png', page: 275, note: 'The printed labels 96/107 should read 90/100.' },
+      { id: 'fig7-17', book: 'mott', ref: 'Figure 7-17', title: 'Power added for speed ratio, 5V', src: 'figures/mott/fig7-17.png', page: 276, note: 'Nothing more is added above VR = 3.38; Shigley has no \\(\\Delta P_R\\) (slide 31).' },
+      { id: 'fig7-18', book: 'mott', ref: 'Figure 7-18', title: 'Wrap correction factor \\(C_\\theta\\)', src: 'figures/mott/fig7-18.png', page: 276 },
+      { id: 'fig7-19', book: 'mott', ref: 'Figure 7-19', title: 'Length correction factor C_L', src: 'figures/mott/fig7-19.png', page: 276 },
+      { id: 'table7-2', book: 'mott', ref: 'Table 7-2', title: 'Standard lengths, 3V/5V/8V (in)', src: 'figures/mott/table7-2.png', page: 277 },
       { id: 'fig7-4', book: 'mott', ref: 'Figure 7-4', title: 'Belt drive geometry: wrap angles, span, centre distance', src: 'figures/mott/fig7-4.png', page: 265 },
-      { id: 'table17-10', book: 'shigley', ref: 'Table 17-10', title: 'Inside circumferences of standard V belts (A–E)', src: 'figures/shigley/table17-10.png', page: 922 },
-      { id: 'table17-11', book: 'shigley', ref: 'Table 17-11', title: 'Length conversion: pitch length = inside circumference + quantity', src: 'figures/shigley/table17-11.png', page: 922 },
+      { id: 'table17-10', book: 'shigley', ref: 'Table 17-10', title: 'Inside circumferences of standard A–E belts', src: 'figures/shigley/table17-10.png', page: 922 },
+      { id: 'table17-11', book: 'shigley', ref: 'Table 17-11', title: 'Length conversion: pitch length = inside length + L_c', src: 'figures/shigley/table17-11.png', page: 922 },
       { id: 'fig17-1', book: 'shigley', ref: 'Figure 17-1', title: 'Open-belt geometry: wrap angles and length', src: 'figures/shigley/fig17-1.png', page: 904 },
-      { id: 'table17-12', book: 'shigley', ref: 'Table 17-12', title: 'Horsepower ratings of standard V belts (Htab vs sheave pitch diameter and belt speed)', src: 'figures/shigley/table17-12.png', page: 924, note: 'Interpolate on belt speed; the last row of each section applies to all larger sheaves ("and up").' },
-      { id: 'table17-13', book: 'shigley', ref: 'Table 17-13', title: 'Angle-of-wrap correction factor K1', src: 'figures/shigley/table17-13.png', page: 925, note: 'VV column fit: K1 = 0.143543 + 0.007468φ − 0.000015052φ² (φ in degrees).' },
-      { id: 'table17-14', book: 'shigley', ref: 'Table 17-14', title: 'Belt-length correction factor K2', src: 'figures/shigley/table17-14.png', page: 925, note: 'Enter with the nominal (inside) length, e.g. B112 → 1.05, D360 → 1.10.' },
-      { id: 'gates-b10', book: 'course', ref: 'Gates B10', title: 'Slide 34 — Gates 3VX horsepower per belt + additional hp for speed ratio', src: 'figures/course/gates_3vx_power_rating_table_b10.png', note: 'Lecture example: 6.0 in @ 1750 rpm → 7.68 hp; VR ≈ 3 → +0.25 hp.' },
-      { id: 'gates-b4', book: 'course', ref: 'Gates B4', title: 'Slide 36 — Gates belt lengths (3VX800 = 80.0 in, 3V400 = 40.0 in …)', src: 'figures/course/gates_belt_sizes_table_b4.png' },
-      { id: 'gates-b6', book: 'course', ref: 'Gates B6', title: 'Slide 37 — Gates 3V/3VX drive table: sheave pair × belt → centre distance, colour key = hp correction factor', src: 'figures/course/gates_3v_centre_distance_table_b6.png', note: 'The hp correction combines the wrap AND length corrections (Cθ·CL or K1·K2).' },
-      { id: 'gates-ex', book: 'course', ref: 'Lecture s38', title: 'Slide 38 — Worked 3VX800 example: 6 / 19 in sheaves, 1750 rpm, 2 hp', src: 'figures/course/gates_3vx_example_slide38.png' },
-      { id: 'table17-16', book: 'shigley', ref: 'Table 17-16', title: 'V-belt parameters Kb (bending) and Kc (centrifugal)', src: 'figures/shigley/table17-16.png', page: 926 },
-      { id: 'fig17-14', book: 'shigley', ref: 'Figure 17-14', title: 'V-belt tensions around the drive (F1, F2, Fi, Fc, Fb, T1, T2)', src: 'figures/shigley/fig17-14.png', page: 926 },
-      { id: 'table17-17', book: 'shigley', ref: 'Table 17-17', title: 'Durability parameters K and b (belt life)', src: 'figures/shigley/table17-17.png', page: 927, note: 'Valid for 10^8–10^9 force peaks (3V/5V/8V also 10^9–10^10). Above 10^9 report "NP > 10^9".' },
-      { id: 'gates-d19', book: 'course', ref: 'Gates D19–D35', title: 'Slide 39 — Formula D19, Tables D26/D27, Formula D35: Static tension per strand Tst, arc factor Kφ, constants M and Y, span length t', src: 'figures/course/gates_tension_formula_d19.png', note: 'Use the MOTOR (nominal) hp in D19. The square-root span formula on the Gates page is marked "incorrect" — use D35.' },
-      { id: 'gates-d20', book: 'course', ref: 'Gates D20–D23', title: 'Slide 40 — Minimum / maximum force to deflect one belt 1/64 in per inch of span', src: 'figures/course/gates_deflection_formula_d20_d23.png' },
-      // ---- Full Gates catalogue pages (Gates Heavy Duty V-Belt Drive Design Manual), added by the course-table audit ----
-      { id: 'gates-tb1', book: 'course', ref: 'Gates Table B1', title: 'Gates service factors: driven machine × driver (normal / high torque) × service hours', src: 'figures/course/gates_table_b1_service_factors.png', note: 'Gates_vbelt_drive_design_manual.pdf p.14 (B2). Module 1 p16 / Tutorial 2 Q2 use this table for the Gates method. Footnote: deduct 0.2 for intermittent use (minimum 1.0).' },
-      { id: 'gates-fb1b2', book: 'course', ref: 'Gates Fig B1 / B2', title: 'Gates cross-section selection charts: B1 Super HC narrow (3V/3VX/5V/5VX/8V/8VX/xVP), B2 classical Hi-Power / Tri-Power / Predator (A/AX/B/BX/C/CX/CP/D)', src: 'figures/course/gates_fig_b1_b2_section_charts.png', note: 'Gates_vbelt_drive_design_manual.pdf p.15 (B3). Full page of the charts on slide 32 and Module 1 p17. Enter with design hp and faster-shaft rpm.' },
-      { id: 'gates-b2b3cat', book: 'course', ref: 'Gates Tables B2 / B3', title: 'NEMA minimum sheave diameters for general-purpose electric motors (B2 narrow: outside dia; B3 classical: datum dia), full table with footnotes', src: 'figures/course/gates_table_b2_b3_nema_min_sheave.png', note: 'Gates_vbelt_drive_design_manual.pdf p.16 (B4). Motor hp row × motor rpm column (60 Hz; 50 Hz rpm in the second header line).' },
-      { id: 'gates-b4cat', book: 'course', ref: 'Gates Table B4', title: 'Super HC and Super HC Molded Notch belt sizes: part no. → outside effective length (3V/3VX/5V/5VX/8V/8VX)', src: 'figures/course/gates_table_b4_super_hc_belt_lengths.png', note: 'Gates_vbelt_drive_design_manual.pdf p.19 (B7). 3VX800 = 80.0 in: narrow belt numbers are the effective length × 10.' },
-      { id: 'gates-b17', book: 'course', ref: 'Gates Table B17', title: 'A and B Hi-Power II V-belt sizes: belt number → outside circumference (in)', src: 'figures/course/gates_table_b17_a_b_belt_lengths.png', note: 'Gates_vbelt_drive_design_manual.pdf p.76 (B64). Classical belt numbers are the inside length; the outside circumference is listed beside each.' },
-      { id: 'gates-b18', book: 'course', ref: 'Gates Table B18', title: 'C, D and E Hi-Power II V-belt sizes: belt number → outside circumference (in)', src: 'figures/course/gates_table_b18_c_d_e_belt_lengths.png', note: 'Gates_vbelt_drive_design_manual.pdf p.77 (B65). Classical belt numbers are the inside length; the outside circumference is listed beside each.' },
-      { id: 'gates-b19', book: 'course', ref: 'Gates Table B19', title: 'AX/BX/CX Tri-Power Molded Notch V-belt sizes: belt number → outside circumference (in)', src: 'figures/course/gates_table_b19_ax_bx_cx_belt_lengths.png', note: 'Gates_vbelt_drive_design_manual.pdf p.78 (B66). Classical belt numbers are the inside length; the outside circumference is listed beside each.' },
-      { id: 'gates-b20', book: 'course', ref: 'Gates Table B20', title: 'AP/BP/CP Predator V-belt sizes: belt number → outside circumference (in)', src: 'figures/course/gates_table_b20_ap_bp_cp_belt_lengths.png', note: 'Gates_vbelt_drive_design_manual.pdf p.79 (B67). Classical belt numbers are the inside length; the outside circumference is listed beside each.' },
-      { id: 'gates-b6p1', book: 'course', ref: 'Gates Table B6 (p.B16)', title: '3V/3VX/3VP drive selection table: sheave pair (speed ratio 1.92–3.46) × belt no. → centre distance; colour = hp correction factor', src: 'figures/course/gates_table_b6_3v_drives_p_b16.png', note: 'Gates_vbelt_drive_design_manual.pdf p.28 (B16), the page on slide 37. Lecture example: 6.00/19.00 in (VR 3.17) with 3VX800. The colour key combines the wrap AND length corrections.' },
-      { id: 'gates-b6p2', book: 'course', ref: 'Gates Table B6 (p.B17)', title: '3V/3VX/3VP drive selection table continued (belts 560–1400)', src: 'figures/course/gates_table_b6_3v_drives_p_b17.png', note: 'Gates_vbelt_drive_design_manual.pdf p.29 (B17). Table B6 runs over pp. B10–B21 by speed ratio; B7 is 5V/5VX, B8 8V, B21–B24 A/B/C/D.' },
-      { id: 'gates-b23', book: 'course', ref: 'Gates Table B23 (p.B191)', title: 'C/CX/CP drive selection table, speed ratio 1.00–1.30: belt no. → centre distance, colour = hp correction factor', src: 'figures/course/gates_table_b23_c_cp_drives_p_b191.png', note: 'Gates_vbelt_drive_design_manual.pdf p.203 (B191), the page used in Module 1 p19 / Tutorial 2 Q2: VR 1.00, 13.0/13.0 in sheaves, C ≈ 144 in → CP330 at C = 145.0 in.' },
-      { id: 'gates-b9', book: 'course', ref: 'Gates Table B9', title: 'Rated hp per belt, 3V Super HC: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b9_3v_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.68 (B56).' },
-      { id: 'gates-b10', book: 'course', ref: 'Gates Table B10', title: 'Rated hp per belt, 3VX Super HC Molded Notch: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b10_3vx_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.69 (B57). Lecture example: 6.0 in @ 1750 rpm → 7.68 hp; VR 3.17 (“1.58 and over”) → +0.25 hp. HW1 P3b: 3VX.' },
-      { id: 'gates-b11', book: 'course', ref: 'Gates Table B11', title: 'Rated hp per belt, 5V Super HC: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b11_5v_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.70 (B58).' },
-      { id: 'gates-b12', book: 'course', ref: 'Gates Table B12', title: 'Rated hp per belt, 5VX Super HC Molded Notch: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b12_5vx_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.71 (B59).' },
-      { id: 'gates-b13', book: 'course', ref: 'Gates Table B13', title: 'Rated hp per belt, 5VP Predator: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b13_5vp_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.72 (B60).' },
-      { id: 'gates-b14', book: 'course', ref: 'Gates Table B14', title: 'Rated hp per belt, 8V Super HC: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b14_8v_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.73 (B61).' },
-      { id: 'gates-b15', book: 'course', ref: 'Gates Table B15', title: 'Rated hp per belt, 8VX Super HC Molded Notch: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b15_8vx_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.74 (B62).' },
-      { id: 'gates-b16', book: 'course', ref: 'Gates Table B16', title: 'Rated hp per belt, 8VP Predator: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b16_8vp_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.75 (B63).' },
-      { id: 'gates-b25', book: 'course', ref: 'Gates Table B25', title: 'Rated hp per belt, A Hi-Power II: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b25_a_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.234 (B222).' },
-      { id: 'gates-b26', book: 'course', ref: 'Gates Table B26', title: 'Rated hp per belt, AX Tri-Power Molded Notch: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b26_ax_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.235 (B223).' },
-      { id: 'gates-b27', book: 'course', ref: 'Gates Table B27', title: 'Rated hp per belt, AP Predator: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b27_ap_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.236 (B224).' },
-      { id: 'gates-b28', book: 'course', ref: 'Gates Table B28', title: 'Rated hp per belt, B Hi-Power II: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b28_b_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.237 (B225).' },
-      { id: 'gates-b29', book: 'course', ref: 'Gates Table B29', title: 'Rated hp per belt, BX Tri-Power Molded Notch: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b29_bx_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.238 (B226).' },
-      { id: 'gates-b30', book: 'course', ref: 'Gates Table B30', title: 'Rated hp per belt, BP Predator: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b30_bp_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.239 (B227).' },
-      { id: 'gates-b31', book: 'course', ref: 'Gates Table B31', title: 'Rated hp per belt, C Hi-Power II: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b31_c_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.240 (B228). The catalogue PDF has a damaged font on this page (some digits missing) — for C/CP drives use Table B33, the table the course uses.' },
-      { id: 'gates-b32', book: 'course', ref: 'Gates Table B32', title: 'Rated hp per belt, CX Tri-Power Molded Notch: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b32_cx_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.241 (B229).' },
-      { id: 'gates-b33', book: 'course', ref: 'Gates Table B33', title: 'Rated hp per belt, C/CP Predator: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b33_cp_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.242 (B230). Course table (Tutorial 2 Q2 / Module 1 p21): basic hp at the small sheave and rpm, plus the additional-hp column for the speed ratio (VR = 1.00 → 0).' },
-      { id: 'gates-b34', book: 'course', ref: 'Gates Table B34', title: 'Rated hp per belt, D Hi-Power II: basic hp by small-sheave diameter × rpm of the faster shaft, plus additional hp for speed ratio', src: 'figures/course/gates_table_b34_d_hp_rating.png', note: 'Gates_vbelt_drive_design_manual.pdf p.243 (B231).' },
-      { id: 'gates-d24', book: 'course', ref: 'Gates p.D24 (D19, D26, D27, D20–D23)', title: 'Regular V-belt tensioning method: Formula D19 static tension, Table D26 arc-of-contact factor Kφ, Table D27 constants M and Y for every section, Formulas D20–D23 deflection forces', src: 'figures/course/gates_d24_tensioning_d19_d26_d27.png', note: 'Gates_vbelt_drive_design_manual.pdf p.292 (D24). Full page behind slides 39–40 / Module 1 p23; Table D27 lists M and Y for all Super HC, Hi-Power, Tri-Power and Predator sections. New belts: min 1.0 × Tst, max 1.1 × Tst (used belts 0.7 / 0.8).' },
-      { id: 'gates-d35', book: 'course', ref: 'Gates Formula D35', title: 'Span length for a two-sheave drive: t = C[1 − 0.125((D − d)/C)^2]', src: 'figures/course/gates_formula_d35_span_length.png', note: 'Gates_vbelt_drive_design_manual.pdf p.313 (D45). D, d are outside diameters for Super HC, datum diameters for Hi-Power II / Tri-Power. Replaces the square-root formula marked “incorrect” on slide 39.' },
+      { id: 'table17-12', book: 'shigley', ref: 'Table 17-12', title: 'Rated power per belt H_tab (sheave pitch diameter × belt speed)', src: 'figures/shigley/table17-12.png', page: 924, note: 'Interpolate on belt speed; the last row applies to larger sheaves.' },
+      { id: 'table17-13', book: 'shigley', ref: 'Table 17-13', title: 'Wrap correction factor K_1', src: 'figures/shigley/table17-13.png', page: 925, note: 'VV fit: \\(K_1 = 0.143543 + 0.007468\\phi - 0.000015052\\phi^2\\), \\(\\phi\\) in degrees.' },
+      { id: 'table17-14', book: 'shigley', ref: 'Table 17-14', title: 'Length correction factor K_2', src: 'figures/shigley/table17-14.png', page: 925, note: 'Enter with the inside length: B112 → 1.05, D360 → 1.10.' },
+      { id: 'gates-b4', book: 'course', ref: 'Gates B4', title: 'Slide 36: Gates belt lengths (3VX800 = 80.0 in, 3V400 = 40.0 in)', src: 'figures/course/gates_belt_sizes_table_b4.png' },
+      { id: 'gates-b6', book: 'course', ref: 'Gates B6', title: 'Slide 37: Gates 3V/3VX drive table — CD and hp correction (colour key)', src: 'figures/course/gates_3v_centre_distance_table_b6.png', note: 'The hp correction combines wrap and length (\\(C_\\theta C_L\\) or \\(K_1K_2\\)).' },
+      { id: 'gates-ex', book: 'course', ref: 'Lecture s38', title: 'Slide 38: worked 3VX800 example (6/19 in, 1750 rpm, 2 hp)', src: 'figures/course/gates_3vx_example_slide38.png' },
+      { id: 'table17-16', book: 'shigley', ref: 'Table 17-16', title: 'V-belt parameters K_b (bending) and K_c (centrifugal)', src: 'figures/shigley/table17-16.png', page: 926 },
+      { id: 'fig17-14', book: 'shigley', ref: 'Figure 17-14', title: 'V-belt tensions around the drive (F_1, F_2, F_i, F_c, F_b, T_1, T_2)', src: 'figures/shigley/fig17-14.png', page: 926, note: 'Bending tension F_b — ignored for flat belts — governs V-belt life.' },
+      { id: 'table17-17', book: 'shigley', ref: 'Table 17-17', title: 'Durability parameters K and b (belt life)', src: 'figures/shigley/table17-17.png', page: 927, note: 'Valid for 10^8–10^9 force peaks; above 10^9 report \\(N_P \\gt 10^9\\).' },
+      { id: 'gates-d19', book: 'course', ref: 'Gates D19–D35', title: 'Slide 39: Formula D19 (T_st), Tables D26 (\\(K_\\phi\\)), D27 (M, Y), Formula D35 (span)', src: 'figures/course/gates_tension_formula_d19.png', note: 'Use the MOTOR hp in D19; the square-root span formula is marked "incorrect" — use D35.' },
+      { id: 'gates-d20', book: 'course', ref: 'Gates D20–D23', title: 'Slide 40: deflection force for 1/64 in per inch of span', src: 'figures/course/gates_deflection_formula_d20_d23.png' },
+      { id: 'gates-tb1', book: 'course', ref: 'Gates Table B1', title: 'Gates service factors (driven machine × driver torque × hours)', src: 'figures/course/gates_table_b1_service_factors.png', note: 'Gates manual p.14. Deduct 0.2 for intermittent use (min 1.0).' },
+      { id: 'gates-fb1b2', book: 'course', ref: 'Gates Fig B1 / B2', title: 'Gates section charts: B1 narrow (3V…8VX), B2 classical (A…D, CP)', src: 'figures/course/gates_fig_b1_b2_section_charts.png', note: 'Gates manual p.15.' },
+      { id: 'gates-b2b3cat', book: 'course', ref: 'Gates Tables B2 / B3', title: 'NEMA minimum sheave diameters for electric motors (full table)', src: 'figures/course/gates_table_b2_b3_nema_min_sheave.png', note: 'Gates manual p.16. B2 outside dia (narrow), B3 datum dia (classical).' },
+      { id: 'gates-b4cat', book: 'course', ref: 'Gates Table B4', title: 'Super HC belt numbers → outside length (narrow number = length × 10)', src: 'figures/course/gates_table_b4_super_hc_belt_lengths.png', note: 'Gates manual p.19.' },
+      { id: 'gates-b17', book: 'course', ref: 'Gates Table B17', title: 'A and B belt sizes → outside circumference', src: 'figures/course/gates_table_b17_a_b_belt_lengths.png', note: 'Gates manual p.76.' },
+      { id: 'gates-b18', book: 'course', ref: 'Gates Table B18', title: 'C, D and E belt sizes → outside circumference', src: 'figures/course/gates_table_b18_c_d_e_belt_lengths.png', note: 'Gates manual p.77.' },
+      { id: 'gates-b19', book: 'course', ref: 'Gates Table B19', title: 'AX/BX/CX belt sizes → outside circumference', src: 'figures/course/gates_table_b19_ax_bx_cx_belt_lengths.png', note: 'Gates manual p.78.' },
+      { id: 'gates-b20', book: 'course', ref: 'Gates Table B20', title: 'AP/BP/CP belt sizes → outside circumference', src: 'figures/course/gates_table_b20_ap_bp_cp_belt_lengths.png', note: 'Gates manual p.79.' },
+      { id: 'gates-b6p1', book: 'course', ref: 'Gates Table B6 (p.B16)', title: '3V/3VX drive table, VR 1.92–3.46: CD and hp correction by sheave pair × belt', src: 'figures/course/gates_table_b6_3v_drives_p_b16.png', note: 'Gates manual p.28 (slide 37). Lecture: 6.00/19.00 in with 3VX800.' },
+      { id: 'gates-b6p2', book: 'course', ref: 'Gates Table B6 (p.B17)', title: '3V/3VX drive table continued (belts 560–1400)', src: 'figures/course/gates_table_b6_3v_drives_p_b17.png', note: 'Gates manual p.29.' },
+      { id: 'gates-b23', book: 'course', ref: 'Gates Table B23 (p.B191)', title: 'C/CX/CP drive table, VR 1.00–1.30: CD and hp correction', src: 'figures/course/gates_table_b23_c_cp_drives_p_b191.png', note: 'Gates manual p.203. Tutorial 2 Q2: 13/13 in, CP330 at C = 145 in.' },
+      { id: 'gates-b9', book: 'course', ref: 'Gates Table B9', title: 'Gates rated hp per belt, 3V (+ hp for speed ratio)', src: 'figures/course/gates_table_b9_3v_hp_rating.png', note: 'Gates manual p.68.' },
+      { id: 'gates-b10', book: 'course', ref: 'Gates Table B10', title: 'Gates rated hp per belt, 3VX (+ hp for speed ratio)', src: 'figures/course/gates_table_b10_3vx_hp_rating.png', note: 'Gates manual p.69. Lecture: 6.0 in @ 1750 rpm → 7.68 hp, VR 3.17 → +0.25 hp.' },
+      { id: 'gates-b11', book: 'course', ref: 'Gates Table B11', title: 'Gates rated hp per belt, 5V', src: 'figures/course/gates_table_b11_5v_hp_rating.png', note: 'Gates manual p.70.' },
+      { id: 'gates-b12', book: 'course', ref: 'Gates Table B12', title: 'Gates rated hp per belt, 5VX', src: 'figures/course/gates_table_b12_5vx_hp_rating.png', note: 'Gates manual p.71.' },
+      { id: 'gates-b13', book: 'course', ref: 'Gates Table B13', title: 'Gates rated hp per belt, 5VP', src: 'figures/course/gates_table_b13_5vp_hp_rating.png', note: 'Gates manual p.72.' },
+      { id: 'gates-b14', book: 'course', ref: 'Gates Table B14', title: 'Gates rated hp per belt, 8V', src: 'figures/course/gates_table_b14_8v_hp_rating.png', note: 'Gates manual p.73.' },
+      { id: 'gates-b15', book: 'course', ref: 'Gates Table B15', title: 'Gates rated hp per belt, 8VX', src: 'figures/course/gates_table_b15_8vx_hp_rating.png', note: 'Gates manual p.74.' },
+      { id: 'gates-b16', book: 'course', ref: 'Gates Table B16', title: 'Gates rated hp per belt, 8VP', src: 'figures/course/gates_table_b16_8vp_hp_rating.png', note: 'Gates manual p.75.' },
+      { id: 'gates-b25', book: 'course', ref: 'Gates Table B25', title: 'Gates rated hp per belt, A', src: 'figures/course/gates_table_b25_a_hp_rating.png', note: 'Gates manual p.234.' },
+      { id: 'gates-b26', book: 'course', ref: 'Gates Table B26', title: 'Gates rated hp per belt, AX', src: 'figures/course/gates_table_b26_ax_hp_rating.png', note: 'Gates manual p.235.' },
+      { id: 'gates-b27', book: 'course', ref: 'Gates Table B27', title: 'Gates rated hp per belt, AP', src: 'figures/course/gates_table_b27_ap_hp_rating.png', note: 'Gates manual p.236.' },
+      { id: 'gates-b28', book: 'course', ref: 'Gates Table B28', title: 'Gates rated hp per belt, B', src: 'figures/course/gates_table_b28_b_hp_rating.png', note: 'Gates manual p.237.' },
+      { id: 'gates-b29', book: 'course', ref: 'Gates Table B29', title: 'Gates rated hp per belt, BX', src: 'figures/course/gates_table_b29_bx_hp_rating.png', note: 'Gates manual p.238.' },
+      { id: 'gates-b30', book: 'course', ref: 'Gates Table B30', title: 'Gates rated hp per belt, BP', src: 'figures/course/gates_table_b30_bp_hp_rating.png', note: 'Gates manual p.239.' },
+      { id: 'gates-b31', book: 'course', ref: 'Gates Table B31', title: 'Gates rated hp per belt, C', src: 'figures/course/gates_table_b31_c_hp_rating.png', note: 'Gates manual p.240 (damaged digits) — use Table B33 for C/CP.' },
+      { id: 'gates-b32', book: 'course', ref: 'Gates Table B32', title: 'Gates rated hp per belt, CX', src: 'figures/course/gates_table_b32_cx_hp_rating.png', note: 'Gates manual p.241.' },
+      { id: 'gates-b33', book: 'course', ref: 'Gates Table B33', title: 'Gates rated hp per belt, C/CP Predator', src: 'figures/course/gates_table_b33_cp_hp_rating.png', note: 'Gates manual p.242 — the course table (Tutorial 2 Q2: 23.3 hp, VR 1 → +0).' },
+      { id: 'gates-b34', book: 'course', ref: 'Gates Table B34', title: 'Gates rated hp per belt, D', src: 'figures/course/gates_table_b34_d_hp_rating.png', note: 'Gates manual p.243.' },
+      { id: 'gates-d24', book: 'course', ref: 'Gates p.D24', title: 'Gates tensioning page: D19, D26 (\\(K_\\phi\\)), D27 (M, Y for every section), D20–D23', src: 'figures/course/gates_d24_tensioning_d19_d26_d27.png', note: 'Gates manual p.292. New belts: 1.0–1.1 × T_st.' },
+      { id: 'gates-d35', book: 'course', ref: 'Gates Formula D35', title: 'Span length \\(t = C[1 - 0.125((D - d)/C)^2]\\)', src: 'figures/course/gates_formula_d35_span_length.png', note: 'Gates manual p.313.' },
     ];
 
     const modeOpts = [
-      { value: 'mott', label: 'Design a new drive — Mott (service factor → section → sheaves → length & CD → number of belts, n<sub>fs</sub>)' },
-      { value: 'gates', label: 'Design with the Gates catalogue (+ belt tensions and installation tension / deflection)' },
-      { value: 'shig', label: 'Analyse a given drive — Shigley (H<sub>a</sub>, number of belts, F<sub>1</sub>, F<sub>2</sub>, F<sub>i</sub>, n<sub>fs</sub>, life)' },
-      { value: 'rate', label: 'Power capacity of an existing drive — Mott charts (allowable hp, belts needed, n<sub>fs</sub>, max motor hp)' },
-      { value: 'tension', label: 'Installation tension & deflection only (Gates D19–D23)' },
-      { value: 'geom', label: 'Geometry only: belt length ↔ centre distance, wrap angles, speeds' },
+      { value: 'mott', label: 'Design a new drive — Mott (section → sheaves → length and CD → belts, n_fs)' },
+      { value: 'gates', label: 'Design with the Gates catalogue (+ tensions, installation tension and deflection)' },
+      { value: 'shig', label: 'Analyse a given drive — Shigley (H_a, belts, F_1, F_2, F_i, n_fs, life)' },
+      { value: 'rate', label: 'Capacity of an existing drive — Mott charts (allowable hp, belts, n_fs, largest motor)' },
+      { value: 'tension', label: 'Installation tension and deflection only (Gates D19–D23)' },
+      { value: 'geom', label: 'Geometry only — belt length ↔ centre distance, wrap angles, speeds' },
     ];
     const MODE_INFO = {
-      mott: 'Course solutions: Midterm 2025 P1, HW1 P2 (Mott 7-20), HW1 P3a (Mott 7-19); Mott Example 7-2. Order: Ks → P<sub>des</sub> → Fig 7-13 section → D<sub>1</sub> for ≈4000 ft/min → standard D<sub>2</sub> → P<sub>Tab</sub> + ΔP<sub>R</sub> → trial CD → L → Table 7-2 → actual CD → θ<sub>1</sub>, C<sub>θ</sub>, C<sub>L</sub> → belts, n<sub>fs</sub>.',
-      gates: 'Course solutions: Tutorial 2 Q2, HW1 P3b, lecture slides 38–40. Order: Ks (Gates Table B1) → design hp → Fig B1 section → NEMA minimum sheave (B2/B3) → sheaves + belt from the drive table (CD) → hp correction × (H<sub>tab</sub> + ΔP) → belts, n<sub>fs</sub> → F<sub>1</sub>, F<sub>2</sub>, F<sub>i</sub> (Shigley eqs) → T<sub>st</sub> (D19) → span, deflection and force (D35, D20–D23).',
-      shig: 'Course solutions: Tutorial 2 Q1 (Shigley 17-19); Shigley Example 17-4. Order (slide 42): geometry (L<sub>p</sub>, C, φ, V) → H<sub>d</sub>, H<sub>a</sub> = K<sub>1</sub>K<sub>2</sub>H<sub>tab</sub> → N<sub>b</sub> → F<sub>c</sub>, ΔF, F<sub>1</sub>, F<sub>2</sub>, F<sub>i</sub> → n<sub>fs</sub> → life (passes, hours, years).',
-      rate: 'Exam variant ("what power can this drive carry?", "how many belts does it need?", "what happens if the speed / CD changes?"). Type the given section, sheaves, belt length (or CD) and number of belts; the answer is the allowable power N<sub>b</sub>P<sub>A</sub> and the largest motor power N<sub>b</sub>P<sub>A</sub>/(K<sub>s</sub>n<sub>d</sub>).',
-      tension: 'Lecture slides 39–40 (and part (c) of Tutorial 2 Q2 / HW1 P3b): section → M, Y (Table D27); sheaves, belt or CD, speed → (D − d)/C → K<sub>φ</sub> (Table D26) → T<sub>st</sub> (D19, motor hp) → span t (D35) → deflection t/64 → force range (D20/D21 for ≥ 2 belts, D22/D23 for one belt).',
-      geom: 'Speeds (VR, output rpm, belt speed), L for a chosen CD (Mott 7-12 / Shigley 17-16a), CD for a stocked belt (Mott 7-13 / Shigley 17-16b), wrap angles (7-14 / 17-1) and the course limits (V 1000–5000 ft/min, ratio ≤ 6, θ<sub>1</sub> > 120°, D<sub>2</sub> < CD < 3(D<sub>1</sub> + D<sub>2</sub>)).',
+      mott: 'Midterms 2023/2025 P1, HW1 P2/P3a, Mott Ex 7-2.',
+      gates: 'Tutorial 2 Q2, HW1 P3b, lecture slides 38–40.',
+      shig: 'Tutorial 2 Q1, Shigley Ex 17-4, midterm 2014 Q22/Q26.',
+      rate: 'Exam variants: "what power can this drive carry?", "which catalogue belt is enough for N_b belts?" (midterm MC 2014–2023).',
+      tension: 'Lecture slides 39–40; part (c) of Tutorial 2 Q2 / HW1 P3b.',
+      geom: 'L for a chosen CD, CD for a stocked belt, wrap angles, speeds.',
     };
 
     // ---------------- result line ----------------
@@ -505,21 +549,21 @@
       const ok = x => x ? '<span class="result-ok">ANSWER</span> — ' : '<span class="result-bad">CHECK</span> — ';
       if (m === 'mott' || m === 'gates' || m === 'shig') {
         if (!H.has(v, 'Nb', 'nfs')) return '';
-        out.push(ok(v.nfs >= 1) + 'Use <b>' + v.Nb + ' × ' + (dz || v.sec || '?') + '</b> belts' + (H.has(v, 'Lstd') ? ' (' + f(v.Lstd) + ' in)' : '') + ' on ' + sheaves + (H.has(v, 'CD') ? ' at CD = <b>' + f(v.CD) + ' in</b>' : '') + ' — n<sub>fs</sub> = <b>' + f(v.nfs, 3) + '</b>.');
-        out.push('Design power ' + f(v.Pdes) + ' hp (K<sub>s</sub> = ' + f(v.Ks) + '); ' + f(v.Pbelt) + ' hp per belt; actual VR ' + f(v.VR) + ', output ' + f(v.n2a) + ' rpm, belt speed ' + f(v.vb) + ' ft/min, θ<sub>1</sub> = ' + f(v.th1) + '°.');
-        if ((m === 'shig' || m === 'gates') && H.has(v, 'F1', 'F2', 'Fi')) out.push('Per belt: F<sub>1</sub> = ' + f(v.F1) + ' lbf, F<sub>2</sub> = ' + f(v.F2) + ' lbf, F<sub>i</sub> = ' + f(v.Fi) + ' lbf (F<sub>c</sub> = ' + f(v.Fc) + ' lbf).');
-        if (m === 'shig' && H.has(v, 'NP', 'thr')) out.push('Life: N<sub>P</sub> ' + (v.NP > 1e9 ? '> 10^9 passes, t > ' : '= ' + f(v.NP, 3) + ' passes, t = ') + f(v.thr) + ' h' + (H.has(v, 'yrs') ? ' (' + f(v.yrs, 3) + ' years at ' + f(v.hpd) + ' h/day)' : '') + '.');
-        if (m === 'gates' && H.has(v, 'Tst', 'Fmin', 'Fmax')) out.push('Installation: T<sub>st</sub> = <b>' + f(v.Tst) + ' lbf</b> per strand; a mid-span force of <b>' + f(v.Fmin, 3) + '–' + f(v.Fmax, 3) + ' lbf</b> should deflect one belt ' + f(v.defl, 3) + ' in (span ' + f(v.tspan) + ' in).');
+        out.push(ok(v.nfs >= 1) + 'Use <b>' + v.Nb + ' × ' + (dz || v.sec || '?') + '</b> belts' + (H.has(v, 'Lstd') ? ' (' + f(v.Lstd) + ' in)' : '') + ' on ' + sheaves + (H.has(v, 'CD') ? ' at CD = <b>' + f(v.CD) + ' in</b>' : '') + ' — n_{fs} = <b>' + f(v.nfs, 3) + '</b>.');
+        out.push('Design power ' + f(v.Pdes) + ' hp (K_{s} = ' + f(v.Ks) + '); ' + f(v.Pbelt) + ' hp per belt; actual VR ' + f(v.VR) + ', output ' + f(v.n2a) + ' rpm, belt speed ' + f(v.vb) + ' ft/min, \\(\\theta_{1}\\) = ' + f(v.th1) + '°.');
+        if ((m === 'shig' || m === 'gates') && H.has(v, 'F1', 'F2', 'Fi')) out.push('Per belt: F_{1} = ' + f(v.F1) + ' lbf, F_{2} = ' + f(v.F2) + ' lbf, F_{i} = ' + f(v.Fi) + ' lbf (F_{c} = ' + f(v.Fc) + ' lbf).');
+        if (m === 'shig' && H.has(v, 'NP', 'thr')) out.push('Life: N_{P} ' + (v.NP > 1e9 ? '> 10^9 passes, t > ' : '= ' + f(v.NP, 3) + ' passes, t = ') + f(v.thr) + ' h' + (H.has(v, 'yrs') ? ' (' + f(v.yrs, 3) + ' years at ' + f(v.hpd) + ' h/day)' : '') + '.');
+        if (m === 'gates' && H.has(v, 'Tst', 'Fmin', 'Fmax')) out.push('Installation: T_{st} = <b>' + f(v.Tst) + ' lbf</b> per strand; a mid-span force of <b>' + f(v.Fmin, 3) + '–' + f(v.Fmax, 3) + ' lbf</b> should deflect one belt ' + f(v.defl, 3) + ' in (span ' + f(v.tspan) + ' in).');
       } else if (m === 'rate') {
         if (!H.has(v, 'Pcap', 'Nb')) return '';
-        out.push('<span class="result-ok">ANSWER</span> — ' + v.Nb + ' × ' + (dz || v.sec || '?') + ' on ' + sheaves + (H.has(v, 'CD') ? ', CD ' + f(v.CD) + ' in' : '') + ' can carry <b>' + f(v.Pcap) + ' hp</b> of design power (' + f(v.Pbelt) + ' hp/belt)' + (H.has(v, 'Pmax') ? ' → largest motor power <b>' + f(v.Pmax) + ' hp</b> at K<sub>s</sub> = ' + f(v.Ks) + ', n<sub>d</sub> = ' + f(v.nd) : '') + '.');
-        if (H.has(v, 'Pdes', 'nfs')) out.push('For ' + f(v.P) + ' hp: design power ' + f(v.Pdes) + ' hp → needs ' + Math.ceil(v.Nreq - 1e-9) + ' belt(s); with ' + v.Nb + ': n<sub>fs</sub> = <b>' + f(v.nfs, 3) + '</b> ' + (v.nfs >= 1 ? '(OK)' : '(<span class="result-bad">overloaded</span>)') + '.');
+        out.push('<span class="result-ok">ANSWER</span> — ' + v.Nb + ' × ' + (dz || v.sec || '?') + ' on ' + sheaves + (H.has(v, 'CD') ? ', CD ' + f(v.CD) + ' in' : '') + ' can carry <b>' + f(v.Pcap) + ' hp</b> of design power (' + f(v.Pbelt) + ' hp/belt)' + (H.has(v, 'Pmax') ? ' → largest motor power <b>' + f(v.Pmax) + ' hp</b> at K_{s} = ' + f(v.Ks) + ', n_{d} = ' + f(v.nd) : '') + '.');
+        if (H.has(v, 'Pdes', 'nfs')) out.push('For ' + f(v.P) + ' hp: design power ' + f(v.Pdes) + ' hp → needs ' + Math.ceil(v.Nreq - 1e-9) + ' belt(s); with ' + v.Nb + ': n_{fs} = <b>' + f(v.nfs, 3) + '</b> ' + (v.nfs >= 1 ? '(OK)' : '(<span class="result-bad">overloaded</span>)') + '.');
       } else if (m === 'tension') {
         if (!H.has(v, 'Tst', 'Fmin', 'Fmax')) return '';
-        out.push('<span class="result-ok">ANSWER</span> — tension each strand to <b>T<sub>st</sub> = ' + f(v.Tst) + ' lbf</b>: a force of <b>' + f(v.Fmin, 3) + '–' + f(v.Fmax, 3) + ' lbf</b> at mid-span should deflect one belt <b>' + f(v.defl, 3) + ' in</b> (span t = ' + f(v.tspan) + ' in, ' + (v.Ng >= 2 ? 'D20/D21' : 'single belt D22/D23') + ').');
+        out.push('<span class="result-ok">ANSWER</span> — tension each strand to <b>T_{st} = ' + f(v.Tst) + ' lbf</b>: a force of <b>' + f(v.Fmin, 3) + '–' + f(v.Fmax, 3) + ' lbf</b> at mid-span should deflect one belt <b>' + f(v.defl, 3) + ' in</b> (span t = ' + f(v.tspan) + ' in, ' + (v.Ng >= 2 ? 'D20/D21' : 'single belt D22/D23') + ').');
       } else if (m === 'geom') {
         if (!H.has(v, 'D1', 'D2')) return '';
-        out.push('<span class="result-ok">ANSWER</span> — VR = ' + f(v.VR) + (H.has(v, 'n2a') ? ', output ' + f(v.n2a) + ' rpm' : '') + (H.has(v, 'vb') ? ', belt speed ' + f(v.vb) + ' ft/min' : '') + (H.has(v, 'Lreq') ? '; for CD = ' + f(v.CDt) + ' in the belt must be L = ' + f(v.Lreq) + ' in' : '') + (H.has(v, 'CD') ? '; with the ' + (dz || f(v.Lstd) + ' in') + ' belt CD = <b>' + f(v.CD) + ' in</b>, θ<sub>1</sub> = ' + f(v.th1) + '°, θ<sub>2</sub> = ' + f(v.th2) + '°' : '') + '.');
+        out.push('<span class="result-ok">ANSWER</span> — VR = ' + f(v.VR) + (H.has(v, 'n2a') ? ', output ' + f(v.n2a) + ' rpm' : '') + (H.has(v, 'vb') ? ', belt speed ' + f(v.vb) + ' ft/min' : '') + (H.has(v, 'Lreq') ? '; for CD = ' + f(v.CDt) + ' in the belt must be L = ' + f(v.Lreq) + ' in' : '') + (H.has(v, 'CD') ? '; with the ' + (dz || f(v.Lstd) + ' in') + ' belt CD = <b>' + f(v.CD) + ' in</b>, \\(\\theta_{1}\\) = ' + f(v.th1) + '°, \\(\\theta_{2}\\) = ' + f(v.th2) + '°' : '') + '.');
       }
       return out.join('<br>');
     }
@@ -527,53 +571,58 @@
     T.sections = [
       { title: 'What does the question ask?', steps: [
         { id: 'mode', title: 'Choose the question type',
-          text: 'Pick the method the question names (Mott / Gates manual / Shigley) or the quantity it asks for. Inputs the question gives are white; yellow fields are chart or table reads (an "auto" grey value is pre-filled and can be overwritten).',
+          text: 'Pick the method the question names, or the quantity it asks for. Switching keeps your numbers.',
           vars: [
             { id: 'mode', label: 'Question type', kind: 'choice', type: 'text', options: modeOpts, default: isM ? 'mott' : 'shig' },
           ],
-          after: v => MODE_INFO[v.mode] ? '<span style="color:#475569">' + MODE_INFO[v.mode] + '</span>' : '' },
+          after: v => MODE_INFO[v.mode] ? '<span style="color:#475569">Course questions: ' + MODE_INFO[v.mode] + '</span>' : '' },
       ] },
 
       { title: 'Problem data', steps: [
         { id: 'in', title: 'Power and speeds', formula: 'VR = \\frac{n_1}{n_2}\\quad (n_1 = \\text{faster shaft})',
-          text: 'The faster (driving) shaft is n<sub>1</sub>; for a speed reducer the small sheave is on it. n<sub>2</sub> is the desired (nominal) output speed — leave blank if the driven sheave is given.',
+          text: 'n_1 is the faster (driving) shaft; n_2 the nominal output speed (blank if the driven sheave is given).',
           vars: [
-            { id: 'P', symbol: 'P', label: 'Nominal (motor) power', unit: 'hp', kind: 'input', hint: 'rated power of the prime mover — not needed for geometry only' },
+            { id: 'P', symbol: 'P', label: 'Nominal (motor) power', unit: 'hp', kind: 'input', hint: 'not needed for geometry only' },
             { id: 'n1', symbol: 'n_1', label: 'Speed of the faster (driver) shaft', unit: 'rpm', kind: 'input' },
             { id: 'n2', symbol: 'n_2', label: 'Desired output speed (nominal)', unit: 'rpm', kind: 'input', hint: 'mid-point if a range is given' },
-            { id: 'VRn', symbol: 'VR_{nom}', label: 'Nominal speed ratio n1/n2', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'n1', 'n2') ? v.n1 / v.n2 : undefined,
-              check: v => !H.has(v, 'VRn') ? null : v.VRn < 1 ? 'n2 > n1: speed INCREASER — Table 7-1 factors × 1.2 (footnote 1)' : v.VRn > 7 ? 'Ratio above 7:1 — beyond the cogged-belt limit (slide 25)' : v.VRn > 6 ? 'Ratio above 6:1 — only cogged belts (≤ 7:1) (slide 25)' : null },
+            { id: 'VRn', symbol: 'VR_{nom}', label: 'Nominal speed ratio', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'n1', 'n2') ? v.n1 / v.n2 : undefined,
+              check: v => !H.has(v, 'VRn') ? null : v.VRn < 1 ? 'Speed increaser: Table 7-1 factors × 1.2' : v.VRn > 7 ? 'Ratio above 7:1 — beyond the cogged-belt limit' : v.VRn > 6 ? 'Ratio above 6:1 — cogged belts only (≤ 7:1)' : null },
           ] },
         { id: 'sf', title: 'Service factor and design power', when: M('mott', 'gates', 'shig', 'rate'), fig: ['table7-1', 'table17-15', 'ks-hours', 'gates-tb1'], eq: isM ? undefined : '17-19',
           formula: 'P_{des} = H_d = P\\,K_s\\,n_d',
-          text: 'Always multiply the nominal power by the service factor first (slide 28/41). Mott Table 7-1 is the course\'s primary table (driven-machine row × driver column × hours/day); Gates questions use Gates Table B1 (Tutorial 2 Q2: multi-cylinder engine, brick machine, > 10 h → 1.5; HW1 P3b: AC motor, fan, 22 h → 1.3); the course also gives its own hours table (slide 35) and accepts the Shigley Table 17-15 range (midterm: "1.2 < K<sub>s</sub> < 1.4").',
+          text: 'Always multiply the nominal power by K_s first. Mott Table 7-1 is the course table (Gates questions: Gates Table B1; Shigley Table 17-15 accepted as a range).',
           vars: [
             { id: 'Ks', symbol: 'K_s', label: 'Service factor', unit: '', kind: 'lookup', fig: isM ? 'table7-1' : 'table17-15', default: 1.3,
-              hint: 'Midterm 1.3 · HW1 P2 1.4 · HW1 P3a 1.2 · Tut 2 Q1 1.4 · Gates: Tut 2 Q2 1.5, HW1 P3b 1.3',
+              hint: 'midterm 2025 1.3, 2023 1.5 · HW1 1.4 / 1.2 · Tut 2 Q1 1.4 · Gates: Tut 2 Q2 1.5',
               check: v => H.has(v, 'Ks') && (v.Ks < 1 || v.Ks > 2.4) ? 'Service factors are 1.0–2.0 (× 1.2 for a speed increaser)' : null },
-            { id: 'nd', symbol: 'n_d', label: 'Design factor', unit: '', kind: 'input', default: 1.0, hint: 'course: n_d = 1.0 unless the problem states one' },
+            { id: 'nd', symbol: 'n_d', label: 'Design factor', unit: '', kind: 'input', default: 1.0, hint: '1.0 unless the problem states one' },
             { id: 'Pdes', symbol: 'P_{des}', label: 'Design power', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'P', 'Ks') ? v.P * v.Ks * (H.has(v, 'nd') ? v.nd : 1) : undefined,
               work: v => H.has(v, 'Pdes') ? '\\(P_{des} = ' + f(v.P) + '(' + f(v.Ks) + ')(' + f(H.has(v, 'nd') ? v.nd : 1) + ') = ' + f(v.Pdes) + '\\ \\text{hp}\\)' : null },
           ] },
-        { id: 'sec', title: 'Belt cross-section', fig: ['fig7-13', 'gates-b1', 'gates-fb1b2', 'table17-9', 'abcd'],
-          text: 'Narrow sections 3V/5V/8V (Mott Fig 7-13, Gates Fig B1; 3VX/5VX are the cogged Gates versions) or the classical A–E sections (Shigley Table 17-9 hp ranges, course chart slide 27). Enter the chart with the <b>design</b> power and the faster-shaft speed; the section whose region contains the point is the pick, and on a boundary take the larger section (Fizz p.10). The table below lists every candidate section with its region at your speed — click <b>Use</b> to set it. For the Gates tension step the section also sets M and Y (3V = Super HC PowerBand row as in HW1 P3b; C = Hi-Power CP as in Tutorial 2 Q2).',
+      ] },
+
+      { title: 'Belt section and standard sizes', steps: [
+        { id: 'sec', title: 'Belt cross-section', fig: ['fig7-13', 'gates-b1', 'gates-fb1b2', 'table17-9', 'abcd', 'fig7-9'],
+          text: 'Enter the chart with the <b>design</b> power and the faster-shaft rpm; on a boundary take the larger section. The table below lists every section — <b>Use</b> sets it.',
           vars: [
-            { id: 'sec', label: 'Belt section', kind: 'choice', type: 'text', auto: v => { const s = secSel(v); return s ? s.pick : undefined; }, hint: 'leave on auto to use the ★ section from the table below, or pick one', options: [
-              { value: '3V', label: '3V — narrow (Mott Fig 7-14)' }, { value: '5V', label: '5V — narrow (Mott Fig 7-15, 7-17)' }, { value: '8V', label: '8V — narrow (Mott Fig 7-16)' },
+            { id: 'sec', label: 'Belt section', kind: 'choice', type: 'text', auto: v => { const s = secSel(v); return s ? s.pick : undefined; }, hint: 'auto = ★ section of the table below', options: [
+              { value: '3V', label: '3V — narrow (Mott Fig 7-14)' }, { value: '5V', label: '5V — narrow (Mott Figs 7-15, 7-17)' }, { value: '8V', label: '8V — narrow (Mott Fig 7-16)' },
               { value: '3VX', label: '3VX — Gates cogged narrow' }, { value: '5VX', label: '5VX — Gates cogged narrow' },
               { value: 'A', label: 'A — classical (Shigley Table 17-12)' }, { value: 'B', label: 'B — classical' }, { value: 'C', label: 'C — classical / Gates Hi-Power CP' }, { value: 'D', label: 'D — classical' }, { value: 'E', label: 'E — classical' },
               { value: 'AX', label: 'AX — Gates Tri-Power cogged' }, { value: 'BX', label: 'BX — Gates Tri-Power cogged' }, { value: 'CX', label: 'CX — Gates Tri-Power cogged' }],
-              check: v => (M('mott', 'rate')(v) && v.sec && !PTAB[v.sec]) ? 'Mott\'s rating charts cover 3V, 5V and 8V only — use the Gates (3VX/5VX/AX…) or Shigley (A–E) question type' : null },
-            { id: 'secHint', symbol: '', label: 'Chart suggestion for P_des and n_1', unit: '', kind: 'calc',
-              compute: v => secHintText(v) },
+              check: v => (M('mott', 'rate')(v) && v.sec && !PTAB[v.sec]) ? 'Mott\'s charts cover 3V/5V/8V only — use the Gates or Shigley question type' : null },
+            { id: 'secHint', symbol: '', label: 'Chart suggestion for P_des and n_1', unit: '', kind: 'calc', compute: v => secHintText(v) },
           ],
           after: v => secTableHtml(v) },
+        { id: 'std', title: 'Standard sizes for this section', fig: ['fig7-9', 'table17-9', 'table7-2', 'table17-10', 'table17-11', 'fig7-15'],
+          text: 'Reference: section dimensions, stocked belt lengths and sheave diameters. The size in use is highlighted.',
+          after: v => v.sec ? stdHtml(v) : '' },
       ] },
 
-      { title: 'Solution — steps for the chosen question type', steps: [
+      { title: 'Sheaves and basic rating', steps: [
         { id: 'd1', title: 'Driver sheave for ≈ 4000 ft/min (limit 5000 ft/min)', when: M('mott'), eq: 'Mott 7-2', fig: ['fig7-14', 'fig7-15', 'fig7-16'],
           formula: 'D_1 = \\frac{12\\,v_b}{\\pi n_1},\\qquad D_{1,max} = \\frac{12(5000)}{\\pi n_1}',
-          text: 'Size the driver for the target belt speed (4000 ft/min), then pick a standard pitch diameter from the vertical lines of Fig 7-14/15/16 (next step). Smaller trial sizes are fine as long as the output speed is close — Mott Table 7-3 lists trials; the midterm worked from V &lt; 5000 (D ≤ 16.6 in) and chose 10.8 in.',
+          text: 'Size the driver for about 4000 ft/min, then take a standard diameter (next step). The midterms worked from \\(v_b \\lt 5000\\) ft/min (2025: \\(D \\le 16.6\\) in).',
           vars: [
             { id: 'Vt', symbol: 'v_{b,target}', label: 'Target belt speed', unit: 'ft/min', kind: 'input', default: 4000, hint: 'Fizz p.11, Mech p.20, slide 25' },
             { id: 'D1calc', symbol: 'D_{1,calc}', label: 'Driver diameter for the target speed', unit: 'in', kind: 'calc', compute: v => H.has(v, 'n1', 'Vt') ? 12 * v.Vt / (Math.PI * v.n1) : undefined,
@@ -581,76 +630,83 @@
             { id: 'D1max', symbol: 'D_{1,max}', label: 'Largest driver for 5000 ft/min', unit: 'in', kind: 'calc', compute: v => H.has(v, 'n1') ? 60000 / (Math.PI * v.n1) : undefined },
           ] },
         { id: 'nema', title: 'Gates: minimum driver sheave (NEMA Table B2 / B3)', when: M('gates'), fig: ['gates-b2b3', 'gates-b2b3cat', 'gates-b1'],
-          text: 'Motors need a minimum sheave to limit the belt pull on their bearings. Use the <b>motor</b> hp row (next larger) and the motor-rpm column nearest n<sub>1</sub> — Table B2 for Super HC narrow belts, B3 for Hi-Power/Tri-Power classical belts. Then choose a stock sheave at least this large from the Gates drive table.',
+          text: 'Use the <b>motor</b> hp row and the motor-rpm column nearest n_1 (B2 narrow, B3 classical). Motors need it to limit the belt pull on their bearings.',
           vars: [
-            { id: 'dminN', symbol: 'd_{min}', label: 'NEMA minimum driver sheave', unit: 'in', kind: 'lookup', fig: 'gates-b2b3cat', auto: v => nema(v.sec, v.P, v.n1), hint: 'auto = Table B2/B3 at motor hp and nearest rpm column' },
+            { id: 'dminN', symbol: 'd_{min}', label: 'NEMA minimum driver sheave', unit: 'in', kind: 'lookup', fig: 'gates-b2b3cat', auto: v => nema(v.sec, v.P, v.n1), hint: 'auto = Table B2/B3 at the motor hp and nearest rpm column' },
           ] },
-        { id: 'sheave', title: 'Sheaves: standard sizes, actual ratio and speeds', when: v => true, fig: ['fig7-14', 'fig7-15', 'fig7-16', 'table17-9', 'gates-b6'],
+        { id: 'sheave', title: 'Sheaves: standard sizes, actual ratio and speeds', fig: ['fig7-14', 'fig7-15', 'fig7-16', 'table17-9', 'gates-b6'],
           formula: 'D_2 \\approx D_1\\,VR_{nom},\\quad VR = \\frac{D_2}{D_1},\\quad n_{2} = \\frac{n_1}{VR},\\quad v_b = \\frac{\\pi D_1 n_1}{12}',
-          text: 'Type the sheaves the problem gives. Otherwise select the pair from the table below: Mott — each standard D<sub>1</sub> with the closest standard D<sub>2</sub> = D<sub>1</sub>·VR (the course solutions take the closest size: 21.1, 27.7, 18.95 in; slide 29 says "round up"), keep the pairs whose output speed is within the tolerance, take the belt speed nearest 4000 ft/min; Gates — the smallest stock sheave ≥ the NEMA minimum that gives the ratio. Course limits: 1000 &lt; v<sub>b</sub> &lt; 5000 ft/min (6500 absolute).',
+          text: 'Type the sheaves the problem gives; otherwise pick a pair from the table below (closest standard D_2 to D_1·VR). Keep 1000 < v_b < 5000 ft/min (6500 absolute).',
           vars: [
-            { id: 'tolN2', symbol: '\\pm', label: 'Allowed output-speed error (sheave table)', unit: '%', kind: 'input', default: 2, hint: 'course solutions land within 0.2–1.3 %; use the tolerance the problem states' },
-            { id: 'dminS', symbol: 'd_{min}', label: 'Minimum sheave for the section', unit: 'in', kind: 'lookup', fig: 'table17-9', auto: v => sd(v) ? sd(v).dmin : undefined, hint: 'Table 17-9 (A–E) / Table 17-17 (3V 2.65, 5V 7.1, 8V 12.5)' },
+            { id: 'tolN2', symbol: '\\pm', label: 'Allowed output-speed error (sheave table)', unit: '%', kind: 'input', default: 2, hint: 'course picks land within 0.2–1.3 % (2023 accepted −3 %)' },
+            { id: 'dminS', symbol: 'd_{min}', label: 'Minimum sheave for the section', unit: 'in', kind: 'lookup', fig: 'table17-9', auto: v => sd(v) ? sd(v).dmin : undefined, hint: 'Table 17-9 (A–E); 3V 2.65, 5V 7.1, 8V 12.5' },
             { id: 'D1', symbol: 'D_1', label: 'Driver (small) sheave pitch diameter', unit: 'in', kind: 'lookup', fig: isM ? 'fig7-15' : 'table17-12',
               auto: v => { const s = sheaveSel(v); if (s && s.pick) return s.pick.D1; return v.mode === 'gates' ? v.dminN : !H.has(v, 'D1calc') ? undefined : SHEAVES[base(v.sec)] ? nearest(v.D1calc, SHEAVES[base(v.sec)]) : Math.round(v.D1calc * 10) / 10; },
-              hint: 'auto = the ★ pair of the table below (Mott: within the speed tolerance, belt speed nearest 4000 ft/min; Gates: first stock size ≥ NEMA minimum) — type the sheave the problem gives',
-              check: v => H.has(v, 'D1', 'dminS') && v.D1 < v.dminS - 1e-9 ? 'Below the minimum sheave diameter for this section' : (v.mode === 'gates' && H.has(v, 'D1', 'dminN') && v.D1 < v.dminN - 1e-9) ? 'Below the NEMA minimum for this motor' : null },
+              hint: 'auto = ★ pair of the table below — type the sheave the problem gives',
+              check: v => H.has(v, 'D1', 'dminS') && v.D1 < v.dminS - 1e-9 ? 'Below the minimum sheave for this section' : (v.mode === 'gates' && H.has(v, 'D1', 'dminN') && v.D1 < v.dminN - 1e-9) ? 'Below the NEMA minimum for this motor' : null },
             { id: 'D2calc', symbol: 'D_1 VR_{nom}', label: 'Ideal driven sheave', unit: 'in', kind: 'calc', compute: v => H.has(v, 'D1', 'VRn') ? v.D1 * v.VRn : undefined },
             { id: 'D2', symbol: 'D_2', label: 'Driven (large) sheave pitch diameter', unit: 'in', kind: 'lookup', fig: isM ? 'fig7-15' : 'table17-12',
               auto: v => !H.has(v, 'D2calc') ? undefined : (v.mode === 'mott' || v.mode === 'gates') ? d2For(v, v.D1) : SHEAVES[base(v.sec)] ? nearest(v.D2calc, SHEAVES[base(v.sec)]) : Math.round(v.D2calc * 100) / 100,
               hint: 'auto = closest standard (Mott) / stock (Gates) size to D_1·VR' },
-            { id: 'VR', symbol: 'VR', label: 'Actual speed ratio D2/D1', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'D1', 'D2') ? v.D2 / v.D1 : undefined,
-              check: v => H.has(v, 'VR') && v.VR > 6 ? 'VR > 6 (7 for cogged belts) — slide 25' : null },
+            { id: 'VR', symbol: 'VR', label: 'Actual speed ratio', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'D1', 'D2') ? v.D2 / v.D1 : undefined,
+              check: v => H.has(v, 'VR') && v.VR > 6 ? 'VR > 6 (7 for cogged belts)' : null },
             { id: 'n2a', symbol: 'n_{2,act}', label: 'Actual output speed', unit: 'rpm', kind: 'calc', compute: v => H.has(v, 'n1', 'VR') ? v.n1 / v.VR : undefined,
               work: v => H.has(v, 'n2a') ? '\\(n_2 = ' + f(v.n1) + '\\,\\frac{' + f(v.D1) + '}{' + f(v.D2) + '} = ' + f(v.n2a) + '\\ \\text{rpm}\\)' : null,
-              check: v => { const tol = H.has(v, 'tolN2') ? v.tolN2 : 5; return H.has(v, 'n2a', 'n2') && Math.abs(v.n2a / v.n2 - 1) * 100 > tol + 1e-9 ? 'More than ' + f(tol) + ' % from the nominal output speed — try another sheave pair (see the table)' : null; } },
+              check: v => { const tol = H.has(v, 'tolN2') ? v.tolN2 : 5; return H.has(v, 'n2a', 'n2') && Math.abs(v.n2a / v.n2 - 1) * 100 > tol + 1e-9 ? 'More than ' + f(tol) + ' % from the nominal output speed' : null; } },
             { id: 'vb', symbol: 'v_b', label: 'Belt speed', unit: 'ft/min', kind: 'calc', compute: v => H.has(v, 'D1', 'n1') ? Math.PI * v.D1 * v.n1 / 12 : undefined,
               work: v => H.has(v, 'vb') ? '\\(v_b = \\frac{\\pi(' + f(v.D1) + ')(' + f(v.n1) + ')}{12} = ' + f(v.vb) + '\\ \\text{ft/min}\\)' : null,
-              check: v => !H.has(v, 'vb') ? null : v.vb > 6500 ? 'Above the 6500 ft/min absolute maximum' : v.vb > 5000 ? 'Above 5000 ft/min — course limit (consult the sheave supplier)' : v.vb < 1000 ? 'Below 1000 ft/min — consider a chain, gear or timing belt (Mott p.255)' : null },
+              check: v => !H.has(v, 'vb') ? null : v.vb > 6500 ? 'Above the 6500 ft/min absolute maximum' : v.vb > 5000 ? 'Above 5000 ft/min (course limit)' : v.vb < 1000 ? 'Below 1000 ft/min — consider a chain, gears or a timing belt' : null },
           ],
           after: v => sheaveTableHtml(v) },
-        { id: 'prate', title: 'Basic rating P_Tab and power added for speed ratio ΔP_R', when: M('mott', 'rate'), fig: ['fig7-14', 'fig7-15', 'fig7-16', 'fig7-17'],
+        { id: 'prate', title: 'Basic rating P_Tab and power added for speed ratio', when: M('mott', 'rate'), fig: ['fig7-14', 'fig7-15', 'fig7-16', 'fig7-17'],
           formula: 'P_{rated} = P_{Tab} + \\Delta P_R',
-          text: 'Read the <b>solid</b> curve (VR = 1) at D<sub>1</sub> and n<sub>1</sub>, interpolating between the rpm curves (midterm: 10.8 in at 1160 rpm → 23 hp). 5V: ΔP<sub>R</sub> from the steps of Fig 7-17 (midterm 1.26, Mott Ex 7-2 1.15). 3V/8V: the dashed curve is the rating at VR ≥ 3.38, so ΔP<sub>R</sub> is part of the dashed − solid gap (Mott: "a rough interpolation between the two curves"; Mech p.23 interpolates linearly in VR). The auto value applies the Fig 7-17 step pattern to that gap.',
+          text: 'Read the <b>solid</b> curve (VR = 1) at D_1 and n_1, interpolating between rpm curves; \\(\\Delta P_R\\) from Fig 7-17 (5V). 3V/8V: \\(\\Delta P_R\\) is a share of the dashed − solid gap (auto).',
           vars: [
-            { id: 'P1', symbol: 'P_{Tab}', label: 'Basic rated power per belt (solid curve)', unit: 'hp', kind: 'lookup', fig: 'fig7-15', auto: v => chartP(v.sec, v.D1, v.n1), hint: 'auto = digitised solid curve, linear in rpm between curves — check your chart reading' },
-            { id: 'Padd', symbol: '\\Delta P_R', label: 'Power added for speed ratio', unit: 'hp', kind: 'lookup', fig: 'fig7-17', auto: v => dPR(v.sec, v.n1, v.VR), hint: 'Fig 7-17 (5V); 3V/8V: share of the dashed − solid gap' },
+            { id: 'P1', symbol: 'P_{Tab}', label: 'Basic rated power per belt (solid curve)', unit: 'hp', kind: 'lookup', fig: 'fig7-15', auto: v => chartP(v.sec, v.D1, v.n1), hint: 'auto = digitised curve — midterm 2025 read 23 hp (auto 22.1), 2023 30 hp' },
+            { id: 'Padd', symbol: '\\Delta P_R', label: 'Power added for speed ratio', unit: 'hp', kind: 'lookup', fig: 'fig7-17', auto: v => dPR(v.sec, v.n1, v.VR), hint: 'Fig 7-17 (5V): 1.26 at 1160 rpm, VR ≈ 2' },
             { id: 'Prated', symbol: 'P_{rated}', label: 'Rated power per belt', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'P1', 'Padd') ? v.P1 + v.Padd : undefined,
               work: v => H.has(v, 'Prated') ? '\\(P_{rated} = ' + f(v.P1) + ' + ' + f(v.Padd) + ' = ' + f(v.Prated) + '\\ \\text{hp}\\)' : null },
           ] },
+      ] },
+
+      { title: 'Belt length and centre distance', steps: [
         { id: 'trial', title: 'Trial centre distance → required belt length', when: M('mott', 'gates', 'shig', 'rate', 'geom'), fig: ['fig7-4', 'fig17-1'], eq: 'Mott 7-12, 7-17 · Shigley 17-16a',
           formula: 'D_2 < CD < 3(D_2 + D_1),\\qquad L = 2\\,CD + 1.57(D_2 + D_1) + \\frac{(D_2 - D_1)^2}{4\\,CD}',
-          text: 'Use the centre distance the problem gives (midterm 32 in, Tutorial 2 "about 12 ft" = 144 in); otherwise choose one in the range — Mech: "try being closer to D". Skip this step if the belt itself is given (type it in the next step).',
+          text: 'Use the CD the problem gives; otherwise start near 32 in (course practice: 32–40 in) inside the range. Skip if the belt itself is given.',
           vars: [
-            { id: 'CDt', symbol: 'CD_{trial}', label: 'Trial (nominal) centre distance', unit: 'in', kind: 'input', auto: v => H.has(v, 'D2', 'D1') ? Math.ceil(1.15 * Math.max(v.D2, v.D1)) : undefined, hint: 'auto = 1.15·D2 rounded up (a calculator choice near the lower limit) — type the CD the problem gives',
-              check: v => H.has(v, 'CDt', 'D1', 'D2') && (v.CDt <= v.D2 || v.CDt >= 3 * (v.D1 + v.D2)) ? 'Outside the recommended D2 < CD < 3(D2 + D1) (Mott Eq 7-17) — acceptable only if the problem fixes the CD (Tutorial 2: 12 ft)' : null },
+            { id: 'CDmin', symbol: 'CD_{min}', label: 'Minimum CD, if the problem gives one', unit: 'in', kind: 'input', hint: 'midterm 2023: 30 in' },
+            { id: 'CDt', symbol: 'CD_{trial}', label: 'Trial (nominal) centre distance', unit: 'in', kind: 'input', auto: cdTrial, hint: 'auto = 32 in (or the minimum) inside the range — type the CD the problem gives',
+              check: v => H.has(v, 'CDt', 'D1', 'D2') && (v.CDt <= Math.max(v.D1, v.D2) || v.CDt >= 3 * (v.D1 + v.D2)) ? 'Outside \\(D_2 \\lt CD \\lt 3(D_1 + D_2)\\) — fine only if the problem fixes the CD' : (H.has(v, 'CDt', 'CDmin') && v.CDt < v.CDmin) ? 'Below the given minimum CD' : null },
             { id: 'CDlo', symbol: 'D_2', label: 'Lower limit', unit: 'in', kind: 'calc', compute: v => H.has(v, 'D2') ? v.D2 : undefined },
             { id: 'CDhi', symbol: '3(D_1+D_2)', label: 'Upper limit', unit: 'in', kind: 'calc', compute: v => H.has(v, 'D1', 'D2') ? 3 * (v.D1 + v.D2) : undefined },
             { id: 'Lreq', symbol: 'L', label: 'Required belt (pitch) length', unit: 'in', kind: 'calc', compute: v => H.has(v, 'CDt', 'D1', 'D2') ? 2 * v.CDt + kL(v) * (v.D1 + v.D2) + (v.D2 - v.D1) ** 2 / (4 * v.CDt) : undefined,
               work: v => H.has(v, 'Lreq') ? '\\(L = 2(' + f(v.CDt) + ') + ' + (v.mode === 'shig' ? '\\tfrac{\\pi}{2}' : '1.57') + '(' + f(v.D2) + ' + ' + f(v.D1) + ') + \\frac{(' + f(v.D2) + ' - ' + f(v.D1) + ')^2}{4(' + f(v.CDt) + ')} = ' + f(v.Lreq) + '\\ \\text{in}\\)' : null },
           ] },
-        { id: 'belt', title: 'Standard belt → actual centre distance and wrap angles', when: v => true, fig: ['table7-2', 'table17-10', 'table17-11', 'gates-b4', 'gates-b4cat', 'gates-b17', 'gates-b18', 'gates-b19', 'gates-b20'], eq: 'Mott 7-13, 7-14 · Shigley 17-16b, 17-1',
+        { id: 'belt', title: 'Standard belt → actual centre distance and wrap angles', fig: ['table7-2', 'table17-10', 'table17-11', 'gates-b4', 'gates-b4cat', 'gates-b17', 'gates-b18', 'gates-b19', 'gates-b20'], eq: 'Mott 7-13, 7-14 · Shigley 17-16b, 17-1',
           formula: '\\begin{gathered} L_p = L + L_c,\\quad B = 4L_p - 6.28(D_2 + D_1),\\quad CD = \\frac{B + \\sqrt{B^2 - 32(D_2 - D_1)^2}}{16} \\\\ \\theta_{1,2} = 180^\\circ \\mp 2\\sin^{-1}\\frac{D_2 - D_1}{2\\,CD} \\end{gathered}',
-          text: 'Standard length: Mott Table 7-2 for 3V/5V/8V (the length is the pitch length, L<sub>c</sub> = 0), Shigley Table 17-10 for A–E (inside circumference; add L<sub>c</sub> from Table 17-11 to get L<sub>p</sub>), or the number in the Gates belt name (3V400 = 40.0 in, 3VX800 = 80.0 in, CP330 = 330 in). The guides take the closest length; the course accepts either neighbour. Shigley\'s Eq 17-16b is the same equation written with π/2. Wrap on the small sheave must exceed 120°.',
+          text: 'Take the closest standard length (table below; either neighbour is accepted). Narrow belts list pitch length (L_c = 0); A–E list the inside length, so add L_c (Table 17-11). Wrap on the small sheave must exceed 120°.',
           vars: [
-            { id: 'Lc', symbol: 'L_c', label: 'Length conversion (Table 17-11)', unit: 'in', kind: 'lookup', fig: 'table17-11', auto: v => (sd(v) && v.mode !== 'gates') ? sd(v).conv : (v.sec ? 0 : undefined), hint: 'A 1.3, B 1.8, C 2.9, D 3.3, E 4.5; 0 for 3V/5V/8V and Gates belt numbers' },
+            { id: 'Lc', symbol: 'L_c', label: 'Length conversion (Table 17-11)', unit: 'in', kind: 'lookup', fig: 'table17-11', auto: v => (sd(v) && v.mode !== 'gates') ? sd(v).conv : (v.sec ? 0 : undefined), hint: 'A 1.3, B 1.8, C 2.9, D 3.3, E 4.5; 0 for 3V/5V/8V and Gates numbers' },
             { id: 'Lstd', symbol: 'L', label: 'Standard belt length (belt number)', unit: 'in', kind: 'lookup', fig: isM ? 'table7-2' : 'table17-10',
               auto: v => { const p = lenPick(v); if (p !== undefined) return p; const t = LENG[base(v.sec)]; return (t && H.has(v, 'Lreq')) ? nearest(v.Lreq - (H.has(v, 'Lc') ? v.Lc : 0), t) : undefined; },
-              hint: 'auto = the ★ length of the table below (closest standard length); belt name = section + length (5V1250, B112, D360)' },
+              hint: 'auto = ★ length of the table below; belt name = section + length (5V1320, B112, D360)' },
             { id: 'Lp', symbol: 'L_p', label: 'Pitch length', unit: 'in', kind: 'calc', compute: v => H.has(v, 'Lstd') ? v.Lstd + (H.has(v, 'Lc') ? v.Lc : 0) : undefined },
             { id: 'B', symbol: 'B', label: 'B = 4L_p − 6.28(D_2 + D_1)', unit: 'in', kind: 'calc', compute: v => H.has(v, 'Lp', 'D1', 'D2') ? 4 * v.Lp - 4 * kL(v) * (v.D1 + v.D2) : undefined },
             { id: 'CD', symbol: 'CD', label: 'Actual centre distance', unit: 'in', kind: 'calc', compute: v => { if (!H.has(v, 'B', 'D1', 'D2')) return undefined; const r = v.B * v.B - 32 * (v.D2 - v.D1) ** 2; return r >= 0 ? (v.B + Math.sqrt(r)) / 16 : undefined; },
               work: v => H.has(v, 'CD') ? '\\(B = 4(' + f(v.Lp) + ') - ' + (v.mode === 'shig' ? '2\\pi' : '6.28') + '(' + f(v.D2) + ' + ' + f(v.D1) + ') = ' + f(v.B) + ',\\quad CD = \\frac{' + f(v.B) + ' + \\sqrt{' + f(v.B) + '^2 - 32(' + f(v.D2) + ' - ' + f(v.D1) + ')^2}}{16} = ' + f(v.CD) + '\\ \\text{in}\\)' : null,
-              check: v => H.has(v, 'CD', 'D1', 'D2') && (v.CD <= v.D2 || v.CD >= 3 * (v.D1 + v.D2)) ? 'Actual CD outside the recommended D2 < CD < 3(D2 + D1)' : null },
+              check: v => H.has(v, 'CD', 'D1', 'D2') && (v.CD <= v.D2 || v.CD >= 3 * (v.D1 + v.D2)) ? 'Actual CD outside \\(D_2 \\lt CD \\lt 3(D_1 + D_2)\\)' : (H.has(v, 'CD', 'CDmin') && v.CD < v.CDmin - 1e-9) ? 'Actual CD below the given minimum — take a longer belt' : null },
             { id: 'th1', symbol: '\\theta_1', label: 'Wrap angle on the small sheave', unit: '°', kind: 'calc', compute: v => H.has(v, 'D1', 'D2', 'CD') ? 180 - 2 * H.deg(Math.asin(Math.abs(v.D2 - v.D1) / (2 * v.CD))) : undefined,
               work: v => H.has(v, 'th1') ? '\\(\\theta_1 = 180^\\circ - 2\\sin^{-1}\\frac{' + f(v.D2) + ' - ' + f(v.D1) + '}{2(' + f(v.CD) + ')} = ' + f(v.th1) + '^\\circ = ' + f(H.rad(v.th1)) + '\\ \\text{rad}\\)' : null,
-              check: v => H.has(v, 'th1') && v.th1 < 120 ? 'θ1 < 120° — increase the centre distance or use an idler (slide 25)' : null },
+              check: v => H.has(v, 'th1') && v.th1 < 120 ? '\\(\\theta_1 \\lt 120^\\circ\\) — increase the CD or add an idler' : null },
             { id: 'th2', symbol: '\\theta_2', label: 'Wrap angle on the large sheave', unit: '°', kind: 'calc', compute: v => H.has(v, 'th1') ? 360 - v.th1 : undefined },
           ],
           after: v => lenTableHtml(v) },
+      ] },
+
+      { title: 'Power per belt and number of belts', steps: [
         { id: 'mcorr', title: 'Mott: wrap and length corrections → P_A', when: M('mott', 'rate'), fig: ['fig7-18', 'fig7-19'],
           formula: 'P_A = C_\\theta\\,C_L\\,(P_{Tab} + \\Delta P_R)',
-          text: 'C<sub>θ</sub> from Fig 7-18 at θ<sub>1</sub>; C<sub>L</sub> from Fig 7-19 at the standard length for the section (midterm 164° → 0.96, 5V 125 in → 1.0; HW1 3V 90 in → 1.07). Slide 30.',
+          text: '\\(C_\\theta\\) from Fig 7-18 at \\(\\theta_1\\); C_L from Fig 7-19 at the standard length (midterm 2025: 164° → 0.96, 5V125 → 1.0).',
           vars: [
             { id: 'Cth', symbol: 'C_\\theta', label: 'Angle-of-wrap correction', unit: '', kind: 'lookup', fig: 'fig7-18', auto: v => cth(v.th1), hint: 'auto = digitised Fig 7-18' },
             { id: 'CL', symbol: 'C_L', label: 'Belt-length correction', unit: '', kind: 'lookup', fig: 'fig7-19', auto: v => clM(v.sec, v.Lstd), hint: 'auto = digitised Fig 7-19 curve for the section' },
@@ -659,43 +715,47 @@
           ] },
         { id: 'gcorr', title: 'Gates: hp per belt × hp correction factor', when: M('gates'), fig: ['gates-b6', 'gates-b6p1', 'gates-b6p2', 'gates-b23', 'gates-ex', 'gates-b9', 'gates-b10', 'gates-b11', 'gates-b12', 'gates-b13', 'gates-b14', 'gates-b15', 'gates-b16', 'gates-b25', 'gates-b26', 'gates-b27', 'gates-b28', 'gates-b29', 'gates-b30', 'gates-b31', 'gates-b32', 'gates-b33', 'gates-b34'],
           formula: 'H_{all} = (\\text{hp correction})\\,(H_{tab} + \\Delta P)',
-          text: 'From the Gates drive table for the section (B6 for 3V/3VX…): the sheave pair and belt give the CD and the colour-keyed <b>hp correction factor</b>, which already combines the wrap and length corrections (slide 37). H<sub>tab</sub> and the additional hp for speed ratio ΔP come from the rating table (B9 3V, B10 3VX, B33 CP …). Course values: lecture 0.9(7.68 + 0.25); HW1 P3b 0.9(2.8 + 0.36); Tutorial 2 Q2 1.2(23.3 + 0).',
+          text: 'The drive table gives the CD and the colour-keyed hp correction (wrap × length); H_tab and \\(\\Delta P\\) come from the section\'s rating table. Lecture: 0.9(7.68 + 0.25); HW1 P3b: 0.9(2.8 + 0.36).',
           vars: [
-            { id: 'KG', symbol: 'K_{corr}', label: 'Gates hp correction factor', unit: '', kind: 'lookup', fig: 'gates-b6p1', auto: v => isClassic(v.sec) ? (k1(v.th1) && k2(v.sec, v.Lstd) ? k1(v.th1) * k2(v.sec, v.Lstd) : undefined) : (cth(v.th1) && clM(v.sec, v.Lstd) ? cth(v.th1) * clM(v.sec, v.Lstd) : undefined), hint: 'auto ≈ Cθ·CL (narrow) or K1·K2 (classical) — read the table\'s colour key' },
-            { id: 'HtabG', symbol: 'H_{tab}', label: 'Gates rated hp per belt (VR = 1)', unit: 'hp', kind: 'lookup', fig: 'gates-b10', hint: 'rating table for the section (chips above: B9 3V, B10 3VX, B11 5V, B12 5VX, B14 8V, B25 A, B26 AX, B28 B, B29 BX, B33 C/CP, B32 CX, B34 D) at the small sheave and rpm' },
-            { id: 'dPG', symbol: '\\Delta P', label: 'Additional hp for speed ratio', unit: 'hp', kind: 'lookup', fig: 'gates-b10', auto: v => H.has(v, 'VR') && v.VR < 1.015 ? 0 : undefined, hint: '0 for VR = 1.00; else the "additional hp" column' },
+            { id: 'KG', symbol: 'K_{corr}', label: 'Gates hp correction factor', unit: '', kind: 'lookup', fig: 'gates-b6p1', auto: v => isClassic(v.sec) ? (k1(v.th1) && k2(v.sec, v.Lstd) ? k1(v.th1) * k2(v.sec, v.Lstd) : undefined) : (cth(v.th1) && clM(v.sec, v.Lstd) ? cth(v.th1) * clM(v.sec, v.Lstd) : undefined), hint: 'auto ≈ \\(C_\\theta C_L\\) (narrow) or \\(K_1K_2\\) (classical) — read the colour key' },
+            { id: 'HtabG', symbol: 'H_{tab}', label: 'Gates rated hp per belt (VR = 1)', unit: 'hp', kind: 'lookup', fig: 'gates-b10', hint: 'section\'s rating table at the small sheave and rpm (B9 3V, B10 3VX, B33 C/CP …)' },
+            { id: 'dPG', symbol: '\\Delta P', label: 'Additional hp for speed ratio', unit: 'hp', kind: 'lookup', fig: 'gates-b10', auto: v => H.has(v, 'VR') && v.VR < 1.015 ? 0 : undefined, hint: '0 for VR = 1.00' },
             { id: 'Hall', symbol: 'H_{all}', label: 'Allowable power per belt', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'KG', 'HtabG', 'dPG') ? v.KG * (v.HtabG + v.dPG) : undefined,
               work: v => H.has(v, 'Hall') ? '\\(H_{all} = ' + f(v.KG) + '(' + f(v.HtabG) + ' + ' + f(v.dPG) + ') = ' + f(v.Hall) + '\\ \\text{hp}\\)' : null },
           ] },
         { id: 'scorr', title: 'Shigley: H_a = K_1 K_2 H_tab', when: M('shig'), fig: ['table17-12', 'table17-13', 'table17-14'], eq: '17-17',
           formula: 'H_a = K_1 K_2 H_{tab}',
-          text: 'H<sub>tab</sub> from Table 17-12 at the small-sheave diameter and the belt speed (interpolate on V; Tutorial 2 Q1: D, 26 in, 2723 ft/min → 16.94 hp). K<sub>1</sub> (Table 17-13) at the wrap angle, K<sub>2</sub> (Table 17-14) at the nominal length. No speed-ratio bonus in Shigley (slide 31). For 3V/5V/8V the auto H<sub>tab</sub> uses Mott\'s solid curve.',
+          text: 'H_tab from Table 17-12 at the small sheave and belt speed (interpolate on V); K_1 at the wrap, K_2 at the inside length. No speed-ratio bonus in Shigley.',
           vars: [
-            { id: 'Htab', symbol: 'H_{tab}', label: 'Tabulated power per belt', unit: 'hp', kind: 'lookup', fig: 'table17-12', auto: v => HP[base(v.sec)] ? htab17(base(v.sec), v.D1, v.vb) : chartP(v.sec, v.D1, v.n1), hint: 'auto = Table 17-12 interpolated on V and d' },
-            { id: 'K1', symbol: 'K_1', label: 'Angle-of-wrap correction', unit: '', kind: 'lookup', fig: 'table17-13', auto: v => k1(v.th1), hint: 'auto = VV curve fit (180° → 1.00, 175° → 0.99)' },
-            { id: 'K2', symbol: 'K_2', label: 'Belt-length correction', unit: '', kind: 'lookup', fig: 'table17-14', auto: v => k2(v.sec, v.Lstd) || clM(v.sec, v.Lstd), hint: 'Table 17-14 (A–E); 3V/5V/8V auto uses Mott Fig 7-19' },
+            { id: 'Htab', symbol: 'H_{tab}', label: 'Tabulated power per belt', unit: 'hp', kind: 'lookup', fig: 'table17-12', auto: v => HP[base(v.sec)] ? htab17(base(v.sec), v.D1, v.vb) : chartP(v.sec, v.D1, v.n1), hint: 'auto = Table 17-12 interpolated (3V/5V/8V: Mott solid curve)' },
+            { id: 'K1', symbol: 'K_1', label: 'Angle-of-wrap correction', unit: '', kind: 'lookup', fig: 'table17-13', auto: v => k1(v.th1), hint: 'auto = VV fit (180° → 1.00)' },
+            { id: 'K2', symbol: 'K_2', label: 'Belt-length correction', unit: '', kind: 'lookup', fig: 'table17-14', auto: v => k2(v.sec, v.Lstd) || clM(v.sec, v.Lstd), hint: 'Table 17-14 (A–E); 3V/5V/8V: Mott Fig 7-19' },
             { id: 'Ha', symbol: 'H_a', label: 'Allowable power per belt', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'K1', 'K2', 'Htab') ? v.K1 * v.K2 * v.Htab : undefined,
               work: v => H.has(v, 'Ha') ? '\\(H_a = ' + f(v.K1, 3) + '(' + f(v.K2, 3) + ')(' + f(v.Htab) + ') = ' + f(v.Ha) + '\\ \\text{hp}\\)' : null },
           ] },
         { id: 'nb', title: 'Number of belts and factor of safety', when: M('mott', 'gates', 'shig', 'rate'), eq: isM ? undefined : '17-20, 17-26',
           formula: 'N_b = \\left\\lceil \\frac{P_{des}}{P_{belt}} \\right\\rceil,\\qquad n_{fs} = \\frac{N_b P_{belt}}{P_{des}},\\qquad P_{max} = \\frac{N_b P_{belt}}{K_s n_d}',
-          text: 'Always round the number of belts <b>up</b> ("2.01 → 3", Mech p.26). n<sub>fs</sub> = allowable / design power (midterm 3 × 23.29 / 52 = 1.34). For an existing drive type the number of belts it has.',
+          text: 'Always round N_b <b>up</b>. For an existing drive type its number of belts; with N_b given, each belt must carry \\(P_{des}/N_b\\).',
           vars: [
             { id: 'Pbelt', symbol: 'P_{belt}', label: 'Allowable power per belt', unit: 'hp', kind: 'calc', compute: v => v.mode === 'gates' ? v.Hall : v.mode === 'shig' ? v.Ha : v.PA },
             { id: 'Nreq', symbol: 'P_{des}/P_{belt}', label: 'Belts required (unrounded)', unit: '', kind: 'calc', digits: 3, compute: v => H.has(v, 'Pdes', 'Pbelt') ? v.Pdes / v.Pbelt : undefined },
             { id: 'Nb', symbol: 'N_b', label: 'Number of belts', unit: '', kind: 'input', auto: v => H.has(v, 'Nreq') ? Math.max(1, Math.ceil(v.Nreq - 1e-9)) : undefined, hint: 'auto = round up; type the given number for an existing drive',
               check: v => H.has(v, 'Nb', 'Nreq') && v.Nb < v.Nreq - 1e-9 ? 'Fewer belts than required — drive overloaded' : null },
+            { id: 'Pper', symbol: 'P_{des}/N_b', label: 'Power each belt must carry', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'Pdes', 'Nb') ? v.Pdes / v.Nb : undefined, hint: 'pick the smallest catalogue belt with \\(H_a \\ge\\) this (midterm MC: 0.75 × 2.5 × 1.5/2 = 1.41 → 1.5 hp)' },
             { id: 'Pcap', symbol: 'N_b P_{belt}', label: 'Allowable power of the drive', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'Nb', 'Pbelt') ? v.Nb * v.Pbelt : undefined },
             { id: 'nfs', symbol: 'n_{fs}', label: 'Factor of safety', unit: '', kind: 'calc', digits: 3, compute: v => H.has(v, 'Pcap', 'Pdes') ? v.Pcap / v.Pdes : undefined,
               work: v => H.has(v, 'nfs') ? '\\(N_b = ' + f(v.Pdes) + '/' + f(v.Pbelt) + ' = ' + f(v.Nreq, 3) + ' \\rightarrow ' + v.Nb + ',\\qquad n_{fs} = \\frac{' + v.Nb + '(' + f(v.Pbelt) + ')}{' + f(v.Pdes) + '} = ' + f(v.nfs, 3) + '\\)' : null },
             { id: 'Pmax', symbol: 'P_{max}', label: 'Largest motor power (n_fs = 1)', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'Pcap', 'Ks') ? v.Pcap / (v.Ks * (H.has(v, 'nd') ? v.nd : 1)) : undefined },
           ],
           after: v => nbTableHtml(v) },
+      ] },
+
+      { title: 'Belt tensions and life (Shigley)', steps: [
         { id: 'dF', title: 'Torque and tension difference per belt', when: M('shig', 'gates'), fig: ['fig17-14'], eq: '17-22',
-          formula: '\\Delta F = \\frac{63\\,025\\,H_{belt}}{n_1 (D_1/2)},\\qquad H_{belt} = H_a\\ \\text{(Tut. 2 Q1)}\\ \\text{or}\\ \\frac{H_d}{N_b}\\ \\text{(Ex. 17-4, Tut. 2 Q2)}',
-          text: 'Course Tutorial 2 Q1 loads each belt to its allowable power H<sub>a</sub>; Shigley Ex 17-4 and the Tutorial 2 Q2 comparison (F<sub>i</sub> = 409 lbf) use the actual share H<sub>d</sub>/N<sub>b</sub>. Choose what the question expects. The small sheave is taken as the driver.',
+          formula: '\\Delta F = \\frac{63\\,025\\,H_{belt}}{n_1 (D_1/2)},\\qquad H_{belt} = H_a\\ \\text{or}\\ H_d/N_b',
+          text: 'Tutorial 2 Q1 loads each belt to H_a; Shigley Ex 17-4, Tutorial 2 Q2 and midterm 2014 use the actual share H_d/N_b.',
           vars: [
-            { id: 'dFbasis', label: 'Power per belt used for ΔF', kind: 'choice', type: 'text', default: 'Ha', options: [{ value: 'Ha', label: 'H<sub>a</sub> — allowable per belt (course Tutorial 2 Q1)' }, { value: 'HdNb', label: 'H<sub>d</sub>/N<sub>b</sub> — actual share (Shigley Ex 17-4, Tut 2 Q2)' }] },
+            { id: 'dFbasis', label: 'Power per belt used for \\(\\Delta F\\)', kind: 'choice', type: 'text', default: 'Ha', options: [{ value: 'Ha', label: 'H_a — allowable per belt (Tutorial 2 Q1)' }, { value: 'HdNb', label: 'H_d/N_b — actual share (Ex 17-4, Tut 2 Q2, midterm 2014)' }] },
             { id: 'Hbelt', symbol: 'H_{belt}', label: 'Power per belt for tensions', unit: 'hp', kind: 'calc', compute: v => v.dFbasis === 'HdNb' ? (H.has(v, 'Pdes', 'Nb') ? v.Pdes / v.Nb : undefined) : v.Pbelt },
             { id: 'Tb', symbol: 'T', label: 'Torque per belt', unit: 'lbf·in', kind: 'calc', compute: v => H.has(v, 'Hbelt', 'n1') ? 63025 * v.Hbelt / v.n1 : undefined },
             { id: 'dF', symbol: '\\Delta F', label: 'Tension difference per belt', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'Tb', 'D1') ? 2 * v.Tb / v.D1 : undefined,
@@ -703,9 +763,10 @@
           ] },
         { id: 'tens', title: 'F_c, F_1, F_2, F_i', when: M('shig', 'gates'), fig: ['table17-16', 'fig17-14'], eq: '17-21, 17-23 … 17-25',
           formula: 'F_c = K_c\\left(\\frac{V}{1000}\\right)^2,\\quad F_1 = F_c + \\frac{\\Delta F\\,e^{f\\phi}}{e^{f\\phi} - 1},\\quad F_2 = F_1 - \\Delta F,\\quad F_i = \\frac{F_1 + F_2}{2} - F_c',
-          text: 'Gates\' effective friction f = 0.5123 for V grooves (Shigley), i.e. F<sub>1</sub>/F<sub>2</sub> ≈ 5 at 180° (slide 25). The friction is fully developed by construction, so the slide-42 check f/sin(β/2) &gt; f′ is met.',
+          text: 'Effective friction f = 0.5123 (\\(F_1/F_2 \\approx 5\\) at 180°); midterm 2014 used f = 0.5. \\(\\phi\\) is the small-sheave wrap.',
           vars: [
-            { id: 'efp', symbol: 'e^{0.5123\\phi}', label: 'Friction term at the small-sheave wrap', unit: '', kind: 'calc', compute: v => H.has(v, 'th1') ? Math.exp(0.5123 * H.rad(v.th1)) : undefined },
+            { id: 'fV', symbol: 'f', label: 'Effective friction coefficient (V groove)', unit: '', kind: 'lookup', fig: 'fig17-14', default: 0.5123, hint: 'Shigley Eq 17-17 note: 0.5123; midterm 2014: 0.5' },
+            { id: 'efp', symbol: 'e^{f\\phi}', label: 'Friction term at the small-sheave wrap', unit: '', kind: 'calc', compute: v => H.has(v, 'th1', 'fV') ? Math.exp(v.fV * H.rad(v.th1)) : undefined },
             { id: 'Kc', symbol: 'K_c', label: 'Centrifugal parameter (Table 17-16)', unit: '', kind: 'lookup', fig: 'table17-16', auto: v => sd(v) ? sd(v).Kc : undefined },
             { id: 'Fc', symbol: 'F_c', label: 'Centrifugal tension', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'Kc', 'vb') ? v.Kc * (v.vb / 1000) ** 2 : undefined,
               work: v => H.has(v, 'Fc') ? '\\(F_c = ' + f(v.Kc) + '\\left(\\frac{' + f(v.vb) + '}{1000}\\right)^2 = ' + f(v.Fc) + '\\ \\text{lbf}\\)' : null },
@@ -725,23 +786,26 @@
           ] },
         { id: 'life', title: 'Life in passes, hours and years', when: M('shig'), fig: ['table17-17'],
           formula: 'N_P = \\left[\\left(\\frac{K}{T_1}\\right)^{-b} + \\left(\\frac{K}{T_2}\\right)^{-b}\\right]^{-1},\\qquad t = \\frac{N_P L_p}{720\\,V}',
-          text: 'Table 17-17 constants are valid for 10<sup>8</sup>–10<sup>9</sup> force peaks: if N<sub>P</sub> &gt; 10<sup>9</sup>, report N<sub>P</sub> &gt; 10<sup>9</sup> and t as a lower bound (Ex 17-4, Tutorial 2 Q1).',
+          text: 'Table 17-17 is valid for 10^8–10^9 peaks: above that report \\(N_P \\gt 10^9\\) and t as a lower bound.',
           vars: [
             { id: 'K', symbol: 'K', label: 'Durability constant', unit: '', kind: 'lookup', fig: 'table17-17', auto: v => sd(v) ? sd(v).K : undefined },
             { id: 'bexp', symbol: 'b', label: 'Durability exponent', unit: '', kind: 'lookup', fig: 'table17-17', auto: v => sd(v) ? sd(v).b : undefined },
             { id: 'NP', symbol: 'N_P', label: 'Life in belt passes', unit: 'passes', kind: 'calc', digits: 3, compute: v => H.has(v, 'K', 'bexp', 'T1', 'T2') ? 1 / ((v.K / v.T1) ** (-v.bexp) + (v.K / v.T2) ** (-v.bexp)) : undefined,
               work: v => H.has(v, 'NP') ? '\\(N_P = \\left[\\left(\\frac{' + f(v.K) + '}{' + f(v.T1) + '}\\right)^{-' + f(v.bexp) + '} + \\left(\\frac{' + f(v.K) + '}{' + f(v.T2) + '}\\right)^{-' + f(v.bexp) + '}\\right]^{-1} = ' + f(v.NP, 3) + '\\)' : null,
-              check: v => H.has(v, 'NP') && v.NP > 1e9 ? 'N_P > 10^9: outside Table 17-17 — report N_P > 10^9 and t as a lower bound' : null },
+              check: v => H.has(v, 'NP') && v.NP > 1e9 ? 'Above 10^9: report \\(N_P \\gt 10^9\\) and t as a lower bound' : null },
             { id: 'thr', symbol: 't', label: 'Life in hours', unit: 'h', kind: 'calc', compute: v => H.has(v, 'NP', 'Lp', 'vb') ? Math.min(v.NP, 1e9) * v.Lp / (720 * v.vb) : undefined,
-              work: v => H.has(v, 'thr') ? '\\(t ' + (v.NP > 1e9 ? '>' : '=') + ' \\frac{' + f(Math.min(v.NP, 1e9), 3) + '(' + f(v.Lp) + ')}{720(' + f(v.vb) + ')} = ' + f(v.thr) + '\\ \\text{h}\\)' : null },
+              work: v => H.has(v, 'thr') ? '\\(t ' + (v.NP > 1e9 ? '\\gt' : '=') + ' \\frac{' + f(Math.min(v.NP, 1e9), 3) + '(' + f(v.Lp) + ')}{720(' + f(v.vb) + ')} = ' + f(v.thr) + '\\ \\text{h}\\)' : null },
             { id: 'hpd', symbol: '', label: 'Operating hours per day', unit: 'h/day', kind: 'input', hint: '2 shifts = 16 h/day (Tutorial 2 Q1)' },
             { id: 'yrs', symbol: '', label: 'Life in years', unit: 'yr', kind: 'calc', compute: v => H.has(v, 'thr', 'hpd') ? v.thr / v.hpd / 365.25 : undefined },
           ] },
+      ] },
+
+      { title: 'Installation tension and deflection (Gates)', steps: [
         { id: 'tst', title: 'Static tension per strand (Formula D19)', when: M('gates', 'tension'), fig: ['gates-d19', 'gates-d24', 'gates-ex'],
           formula: 'T_{st} = 15\\left(\\frac{2.5 - K_\\phi}{K_\\phi}\\right)\\frac{(\\text{Motor hp})(10^3)}{N\\,V} + \\frac{M V^2}{10^6}\\ \\text{lbf}',
-          text: 'K<sub>φ</sub> from Table D26 at (D − d)/C (180° → 1.00; lecture 0.67 → 0.90); M from Table D27. Use the <b>motor (nominal) hp</b>, not the design hp — Tutorial 2 Q2: 251 lbf with 60 hp vs 375 lbf with 90 hp (Module 1 p24). The Mech guide says to look in Shigley for T<sub>st</sub>; the course uses this Gates formula.',
+          text: '\\(K_\\phi\\) from Table D26 at (D − d)/C, M from Table D27. Use the <b>motor</b> hp, not the design hp (Tutorial 2 Q2: 251 lbf with 60 hp, not 375 lbf with 90 hp).',
           vars: [
-            { id: 'M', symbol: 'M', label: 'Constant M (Table D27)', unit: '', kind: 'lookup', fig: 'gates-d24', auto: v => GMY[v.sec] ? GMY[v.sec][0] : undefined, hint: '3VX 0.29 · 5VX 0.78 · 3V 0.46 · 5V 1.0 · 8V 2.6 · AX 0.47 · BX 0.76 · CX 1.31 · CP (C) 1.6' },
+            { id: 'M', symbol: 'M', label: 'Constant M (Table D27)', unit: '', kind: 'lookup', fig: 'gates-d24', auto: v => GMY[v.sec] ? GMY[v.sec][0] : undefined, hint: '3VX 0.29 · 5VX 0.78 · 3V 0.46 · 5V 1.0 · 8V 2.6 · AX 0.47 · BX 0.76 · CX 1.31 · CP 1.6' },
             { id: 'Hmot', symbol: 'H_{mot}', label: 'Motor (nominal) power', unit: 'hp', kind: 'input', auto: v => v.P, hint: 'auto = P (not the design power)' },
             { id: 'Ng', symbol: 'N', label: 'Number of belts (strands)', unit: '', kind: 'input', auto: v => v.Nb, hint: 'auto = N_b from the design' },
             { id: 'Cten', symbol: 'C', label: 'Centre distance', unit: 'in', kind: 'input', auto: v => v.CD, hint: 'auto = actual CD above (or type the given C)' },
@@ -752,9 +816,9 @@
           ] },
         { id: 'defl', title: 'Span length, deflection and deflection force (D35, D20–D23)', when: M('gates', 'tension'), fig: ['gates-d20', 'gates-d19', 'gates-d24', 'gates-d35'],
           formula: '\\begin{gathered} t = C\\left[1 - 0.125\\left(\\frac{D-d}{C}\\right)^2\\right],\\quad \\delta = \\frac{t}{64} \\\\ F = \\frac{(1.4 \\text{ to } 1.5)\\,T_{st} + Y}{16}\\ (\\ge 2\\ \\text{belts}),\\quad F = \\frac{(1.4 \\text{ to } 1.5)\\,T_{st} + (t/L)\\,Y}{16}\\ (1\\ \\text{belt}) \\end{gathered}',
-          text: 'Push one belt at mid-span until it deflects 1/64 in per inch of span; the force should lie between the minimum and maximum. The square-root span formula printed on the Gates page is marked "incorrect" on slide 39 — Formula D35 is used.',
+          text: 'Push one belt at mid-span until it deflects 1/64 in per inch of span; the force should lie between the minimum and maximum.',
           vars: [
-            { id: 'Y', symbol: 'Y', label: 'Constant Y (Table D27)', unit: '', kind: 'lookup', fig: 'gates-d24', auto: v => GMY[v.sec] ? GMY[v.sec][1] : undefined, hint: '3VX/3V 4 · 5VX 13 · 5V 11 · 8V 22 · AX 7 · BX 8 · CX 15 · CP (C) 87' },
+            { id: 'Y', symbol: 'Y', label: 'Constant Y (Table D27)', unit: '', kind: 'lookup', fig: 'gates-d24', auto: v => GMY[v.sec] ? GMY[v.sec][1] : undefined, hint: '3VX/3V 4 · 5VX 13 · 5V 11 · 8V 22 · AX 7 · BX 8 · CX 15 · CP 87' },
             { id: 'tspan', symbol: 't', label: 'Span length (D35)', unit: 'in', kind: 'calc', compute: v => H.has(v, 'Cten', 'ddc') ? v.Cten * (1 - 0.125 * v.ddc * v.ddc) : undefined,
               work: v => H.has(v, 'tspan') ? '\\(t = ' + f(v.Cten) + '\\left[1 - 0.125(' + f(v.ddc, 3) + ')^2\\right] = ' + f(v.tspan) + '\\ \\text{in}\\)' : null },
             { id: 'defl', symbol: '\\delta', label: 'Deflection to apply (t/64)', unit: 'in', kind: 'calc', digits: 3, compute: v => H.has(v, 'tspan') ? v.tspan / 64 : undefined },
@@ -766,38 +830,33 @@
       ] },
 
       { title: 'Answer', steps: [
-        { id: 'answer', title: 'Answer to the question', when: v => true,
-          text: 'The line below states what the chosen question type asks for. Red warnings above (speed, ratio, wrap, CD range, minimum sheave) must be resolved before quoting it.',
+        { id: 'answer', title: 'Answer to the question',
+          text: 'Resolve any red warning above (speed, ratio, wrap, CD range, minimum sheave) before quoting it.',
           after: answer },
       ] },
     ];
 
     T.assumptions = [
-      { text: 'Service factor K_s = 1.3 until you read your own: Mott Table 7-1 is the course\'s primary table (midterm: AC normal torque → textile machine, 10 h/day); Gates questions use Gates Table B1; Shigley Table 17-15 accepted as a range', src: 'Fizz p.9–10 · Mech p.19 · Flat&V s28, s35 · Midterm P1', var: 'Ks' },
-      { text: 'Table 7-1 factors are for speed reducers — multiply by 1.2 for a speed increaser (flagged when n_2 > n_1)', src: 'Fizz p.10 · Mech p.19 (table footnote)' },
-      { text: 'Design factor n_d = 1.0 unless the problem states one; design power = P·K_s·n_d', src: 'Flat&V s41 · Fizz p.10', var: 'nd' },
-      { text: 'Section from the chart at the design power and faster-shaft rpm; on a boundary take the larger section (the auto suggestion flags points within ≈10 % of a line)', src: 'Fizz p.10 · Mott Fig 7-13 · Gates Fig B1 (s32)' },
-      { text: 'Section tables: chart regions digitised from the crops (Mott Fig 7-13, Gates Fig B1/B2, course A–D chart slide 27) to about ±5 % in hp; Shigley Table 17-9 hp ranges overlap, so the course chart decides between them', src: 'Mott p.272 · Gates p.B3 · Flat&V s26–27, s32 (calculator digitisation)' },
-      { text: 'Sheave-pair table (Mott): output speed within ±2 % of the nominal, then the belt speed nearest 4000 ft/min (course picks 10.8/21.1, 10.2/27.7, 7.95/18.95 are within 0.2–1.3 %; the guides give no number — the midterm alternative 13.9/27.7 is −2.2 %)', src: 'Fizz p.11–14 · Mech p.20–21 · Mott Table 7-3 (calculator tolerance)', var: 'tolN2' },
-      { text: 'Gates sheaves: the smallest stock sheave ≥ the NEMA minimum giving the ratio; below the 575 rpm column the minimum must be exceeded (Tutorial 2 Q2: 12 in minimum → 13 in). Stock lists read from Gates Tables B6, B21–B24; 5V/8V from Mott\'s standard diameters + 2a', src: 'Tut 2 Q2 (Module 1 p17) · HW1 P3b · Gates Tables B6, B21–B24' },
-      { text: 'Mott design: driver sized for a belt speed of 4000 ft/min, then the closest standard sheave', src: 'Fizz p.11 · Mech p.20 · Flat&V s25', var: 'Vt' },
-      { text: 'Belt speed 1000–5000 ft/min (6500 absolute). Mech\'s "within 5 % of 4000 ft/min" is not used — the course solutions run at 3252 (midterm) and 3642 ft/min', src: 'Fizz p.11 · Mott p.255 · Flat&V s25 · Mech p.21 (not followed)' },
-      { text: 'Driven sheave: closest standard size to D_1·VR, as in every course solution (21.1, 27.7, 18.95 in) — slide 29 says "round up"; output speed flagged if more than 5 % off (calculator check)', src: 'Fizz p.14 · Mech p.20 · HW1 P2/P3a · Flat&V s29', var: 'D2' },
-      { text: 'Speed ratio ≤ 6:1 (7:1 cogged); wrap on the small sheave > 120°', src: 'Flat&V s25, s28 · Mott p.255' },
-      { text: 'P_Tab auto = Mott Fig 7-14/15/16 solid curve digitised at the standard sheaves, linear between rpm curves (midterm read 23 hp where the curve gives 22.1 — type your reading)', src: 'Mott p.257 · Midterm P1', var: 'P1' },
-      { text: 'ΔP_R: 5V steps of Fig 7-17 (∝ rpm); 3V/8V the same step pattern applied to the dashed − solid gap. Mech\'s linear formula P_2 + (VR − 3.38)/(3.38 − 1)(P_2 − P_1) is the accepted rough alternative; nothing more above VR 3.38', src: 'Mott p.257 · Fizz p.14–15 · Mech p.22–23', var: 'Padd' },
-      { text: 'Trial CD in D_2 < CD < 3(D_2 + D_1), "closer to D"; the given CD if the problem has one (auto 1.15·D_2 is a calculator choice)', src: 'Mott Eq 7-17 · Fizz p.15 · Mech p.23 · Flat&V s29', var: 'CDt' },
-      { text: 'Standard length: closest Table 7-2 / Table 17-10 length (course accepts either neighbour — midterm took the larger); length and CD from Mott 7-12/7-13 with 1.57 and 6.28 (Shigley 17-16a/b with π/2 in the Shigley question type — same to 0.01 in)', src: 'Fizz p.15–16 · Mech p.23–24 · Midterm P1', var: 'Lstd' },
-      { text: 'C_θ and C_L auto = digitised Mott Fig 7-18 / 7-19 (reproduce Mott Ex 7-2, the midterm and HW1 reads to ±0.01)', src: 'Fizz p.16–17 · Mech p.24–25', var: 'CL' },
-      { text: 'Number of belts always rounded up; n_fs = N_b·P_belt / P_des', src: 'Fizz p.18 · Mech p.26 · Flat&V s41 · Midterm P1', var: 'Nb' },
-      { text: 'Gates hp correction combines wrap and length (auto ≈ C_θ·C_L or K_1·K_2 — read the drive table\'s colour key); Gates CD ≈ Mott Eq 7-13 with the belt number as length (reproduces 19.3, 10.8, 145 in)', src: 'Flat&V s37–38 · Tut 2 Q2 · HW1 P3b', var: 'KG' },
-      { text: 'NEMA minimum driver sheave from Gates Table B2 (narrow) / B3 (classical) at the motor hp (next larger row) and the nearest motor-rpm column', src: 'Flat&V s33 · Tut 2 Q2 · HW1 P3b', var: 'dminN' },
-      { text: 'Shigley: effective friction 0.5123 (F_1/F_2 ≈ 5 at 180°); the small sheave is the driver; no speed-ratio bonus in H_a', src: 'Shigley Eq 17-17 · Flat&V s25, s31' },
-      { text: 'ΔF from H_a per belt (course Tutorial 2 Q1); switch to H_d/N_b for Shigley Ex 17-4 or the Tutorial 2 Q2 comparison (F_i = 409 lbf)', src: 'Module 1 p12, p20 · Shigley Ex 17-4', var: 'dFbasis' },
-      { text: 'Life constants K, b for 10^8–10^9 peaks; N_P > 10^9 reported as "> 10^9" with t a lower bound', src: 'Shigley Table 17-17 · Tut 2 Q1' },
-      { text: 'Installation tension: Gates D19 with the MOTOR hp (not design hp); Mech p.19 says "look in Shigley" — the course uses the Gates manual', src: 'Flat&V s39 · Module 1 p24 · Mech p.19 (not followed)', var: 'Hmot' },
-      { text: 'K_φ by linear interpolation of Table D26; M, Y from Table D27 (3V = Super HC PowerBand row 0.46/4 as HW1 P3b; C = Hi-Power CP 1.6/87 as Tut 2 Q2)', src: 'Flat&V s39 · HW1 P3b · Tut 2 Q2', var: 'M' },
-      { text: 'Span t = C[1 − 0.125((D − d)/C)^2] (D35; the sqrt formula is marked incorrect); deflection t/64; D20/D21 for ≥ 2 belts, D22/D23 for one belt', src: 'Flat&V s39–40' },
+      { text: 'Course units: hp, rpm, in, ft/min; \\(T = 63\\,025\\,P/n\\) lbf·in; 1 hp = 550 ft·lbf/s = 33 000 ft·lbf/min', src: 'Flat&V s12 · midterm MC 13', general: true },
+      { text: 'K_s = 1.3 until you read your own (Mott Table 7-1; Gates questions: Table B1); Table 7-1 is for reducers — × 1.2 for a speed increaser', src: 'Fizz p.9–10 · Mech p.19 · Flat&V s28, s35', var: 'Ks' },
+      { text: 'Design factor n_d = 1.0 unless stated; design power = P·K_s·n_d', src: 'Flat&V s41 · Fizz p.10', var: 'nd' },
+      { text: 'Section from the chart at the design power and faster-shaft rpm; on a boundary take the larger section (chart regions digitised, ±5 % in hp)', src: 'Fizz p.10 · Mott Fig 7-13 · Gates Fig B1 (s32)', var: 'sec' },
+      { text: 'Mott design: driver sized for ≈ 4000 ft/min, then the closest standard sheave; belt speed 1000–5000 ft/min (6500 absolute)', src: 'Fizz p.11 · Mech p.20 · Flat&V s25', var: 'Vt' },
+      { text: 'Driven sheave: closest standard size to D_1·VR (21.1, 27.7, 18.95 in in the solutions); output speed within ±2 % for the table pick', src: 'Fizz p.14 · Mech p.20 · HW1 P2/P3a', var: 'tolN2' },
+      { text: 'Gates sheaves: smallest stock sheave ≥ the NEMA minimum (must exceed it below the 575-rpm column; Tutorial 2 Q2: 12 → 13 in)', src: 'Tut 2 Q2 · HW1 P3b · Gates Tables B6, B21–B24', var: 'dminN' },
+      { text: 'Speed ratio ≤ 6:1 (7:1 cogged); wrap on the small sheave > 120°', src: 'Flat&V s25, s28 · Mott p.255', step: 'belt' },
+      { text: 'P_Tab auto = digitised Mott Fig 7-14/15/16 solid curve, linear between rpm curves (midterm 2025 read 23 hp where the curve gives 22.1)', src: 'Mott p.257 · Midterm 2025 P1', var: 'P1' },
+      { text: '\\(\\Delta P_R\\): 5V steps of Fig 7-17 (∝ rpm); 3V/8V: same pattern on the dashed − solid gap; nothing more above VR 3.38', src: 'Mott p.257 · Fizz p.14–15 · Mech p.22–23', var: 'Padd' },
+      { text: 'Trial CD ≈ 32 in (course "often takes c–c ≈ 32–40 in and goes from there"; midterm 2023 chose 32 over a 30-in minimum, 2025 gave 32, HW1 used 24/36), inside \\(D_2 \\lt CD \\lt 3(D_1 + D_2)\\); the given CD if there is one', src: 'Mott Eq 7-17 · Midterms 2023/2025 P1 · HW1 P2/P3a', var: 'CDt' },
+      { text: 'Standard length: the closest Table 7-2 / 17-10 length (either neighbour accepted); L and CD from Mott 7-12/7-13 with 1.57 and 6.28 (Shigley 17-16 with \\(\\pi/2\\) in the Shigley type — same to 0.01 in)', src: 'Fizz p.15–16 · Mech p.23–24 · Midterm 2025 P1', var: 'Lstd' },
+      { text: '\\(C_\\theta\\) and C_L auto = digitised Mott Figs 7-18/7-19 (reproduce Mott Ex 7-2, the midterms and HW1 to ±0.01)', src: 'Fizz p.16–17 · Mech p.24–25', var: 'CL' },
+      { text: 'Gates hp correction combines wrap and length (auto ≈ \\(C_\\theta C_L\\) or \\(K_1K_2\\) — read the colour key); Gates CD ≈ Mott Eq 7-13 with the belt number as length', src: 'Flat&V s37–38 · Tut 2 Q2 · HW1 P3b', var: 'KG' },
+      { text: 'Number of belts always rounded up; n_fs = N_b·P_belt/P_des', src: 'Fizz p.18 · Mech p.26 · Flat&V s41', var: 'Nb' },
+      { text: 'Shigley: f = 0.5123 (\\(F_1/F_2 \\approx 5\\) at 180°), the small sheave drives, no speed-ratio bonus in H_a', src: 'Shigley Eq 17-17 · Flat&V s25, s31', var: 'fV' },
+      { text: '\\(\\Delta F\\) from H_a per belt (Tutorial 2 Q1); H_d/N_b for Ex 17-4, Tutorial 2 Q2 and midterm 2014', src: 'Module 1 p12, p20 · Shigley Ex 17-4', var: 'dFbasis' },
+      { text: 'Life constants K, b valid for 10^8–10^9 peaks; above that report "> 10^9" and t as a lower bound', src: 'Shigley Table 17-17 · Tut 2 Q1', step: 'life' },
+      { text: 'Installation tension: Gates D19 with the MOTOR hp; \\(K_\\phi\\) interpolated in Table D26, M and Y from Table D27', src: 'Flat&V s39 · Module 1 p24', var: 'Hmot' },
+      { text: 'Span \\(t = C[1 - 0.125((D - d)/C)^2]\\) (D35; the square-root form is marked incorrect); deflection t/64; D20/D21 for ≥ 2 belts, D22/D23 for one', src: 'Flat&V s39–40', step: 'defl' },
     ];
 
     // ---------------- examples (course cases) ----------------

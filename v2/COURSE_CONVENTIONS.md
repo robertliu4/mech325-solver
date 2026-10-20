@@ -441,3 +441,10 @@ the textbook crops in `v2/figures/shigley` and `v2/figures/mott`.
 - HW1 P3b: deflection force 7.23 lbf divides by 6 instead of 16 (correct 2.71–2.89 lbf).
 - Lecture s38–40: slide states Ks = 1.2 but computes with 1.1.
 - Tutorial 1 (S 17-2): typed θ = 3.132 rad is a slip for 3.123 rad.
+
+### Added during the Module 1 polish — past midterms 2014–2024 (v2/notes/past_exam_m1.md)
+- Midterm 2023 P1 (V-belts): L = 134.5 in for CD 32 in — the (D2 − D1)²/4CD term is 1.49, not 5.20 (L = 130.8 in); same 132-in belt. Boxed "593 rpm" is 582 rpm.
+- Midterm 2021 P1 (chains, Shigley): Htab written 7.33 hp after reading 7.73 hp; its nfs 1.19 uses 7.73.
+- Midterm 2024 P1 (chains): lengths rounded to odd 129 / 147 pitches "so odd links mesh with even teeth" — contradicts the course rule (even pitches, odd teeth); calculators give 128 / 148.
+- Midterm 2022 P1 (timing): 22 T @ 1160 rpm quoted as 8.86 hp (Table 7-9: 8.06); the solution skips the Gates Table No. 4 minimum (6 hp @ 1160 → 3.4 in > 28 T PD 2.807 in).
+- Trial CD practice for V-belts: 32 in (midterms 2023/2025), HW1 24–36 in; calculators default to 32 in inside D2 < CD < 3(D1 + D2).

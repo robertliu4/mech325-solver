@@ -32,6 +32,8 @@
 //           A-2…A-5 and leather, ★ A-5 3.94 in, the problem's A-3 needs 8.40 in), standard width (whole inches ≥ b_min: Ex 17-2 ★ 9 in,
 //           Shigley took the catalogue's 10 in — both lines shown), Habasit type (catalogue mode, fits by min pulley mm, b_min per type).
 //  geometry crossed d=6, D=18, C=96 → φ = 3.3922 rad (194.4°) on both pulleys, L 231.2 in; open belt L 230.1 in → C from L = 96.0 in.
+// Polish pass: Ex 17-1, HW1 P1 (2024 = same) and Tutorial 1 re-run unchanged; midterm 2016/2022 short answers (Fig 17-8 labels, effective
+//   friction f′) are stated in the Fig 17-8 note and the friction-check step. Standard sizes step: Table 17-2 thickness/plies/widths.
 (function () {
   'use strict';
   // Shigley Table 17-2 — flat/round belt materials: t in, γ lbf/in³, Fa lbf/in at 600 ft/min, f, dmin in.
@@ -75,7 +77,7 @@
   const HAB_GROUP = c => /^TCF?-/.test(c) ? 'polyester' : /^S-/.test(c) ? 'polyamide S' : /^A-/.test(c) ? 'polyamide A' : 'aramide (Kevlar)';
   const HAB_TABLE17_2 = { 'A-2': 'Polyamide A-2 (t = 0.11 in)', 'A-3': 'Polyamide A-3 (t = 0.13 in)', 'A-4': 'Polyamide A-4 (t = 0.20 in)', 'A-5': 'Polyamide A-5 (t = 0.25 in)' };
   const NMM = 25.4 / 4.44822;   // 1 N/mm = 5.710 lbf/in
-  const G = 32.17;              // ft/s² (course, Fizz p.6, Shigley)
+  const G = 32.17;              // ft/s^{2} (course, Fizz p.6, Shigley)
 
   const M = v => v.mode || 'analyse';
   const on = (...ms) => v => ms.indexOf(M(v)) >= 0;
@@ -139,9 +141,9 @@
     const sh = H.has(v, 'Hd', 'V', 'phi');
     const rows = R.rows.map(r => ({ cells: [r.k + inUse(v.spec === r.k), F(r.dmin) + ' in' + (r.fits ? ' ✔' : ' ✘'), isNaN(r.cp) || r.cp === undefined ? '— ✘' : F(r.cp), F(r.s.Fa), F(r.s.g, 3), F(r.s.f), r.a0 !== undefined ? F(r.a0, 3) : '—', sh ? (r.bmin !== undefined ? F(r.bmin, 3) + ' in' + (r.s.b ? (r.bmin <= r.s.b ? ' ≤ ' : ' > ') + F(r.s.b) + ' (fixed)' : '') : 'cannot carry') : '—'],
       ok: r.ok, pick: R.pick === r, set: { spec: r.k, Fa: '', dmin: '', Cp: '', Cv: '', t: '', gamma: '', f: '' } }));
-    return H.table(['Belt (Table 17-2)', 'd_min vs d = ' + F(v.d) + ' in', 'C_p (Table 17-4)', 'F_a lbf/in', 'γ lbf/in³', 'f', 'a_0 = F_a·C_p·C_v lbf/in', 'b_min' + (H.has(v, 'Hd') ? ' (H_d ' + F(v.Hd) + ' hp)' : '')], rows,
+    return H.table(['Belt (Table 17-2)', 'd_min vs d = ' + F(v.d) + ' in', 'C_p (Table 17-4)', 'F_a lbf/in', '\\(\\gamma\\) (\\(\\mathrm{lbf/in^3}\\))', 'f', 'a_0 = F_a·C_p·C_v lbf/in', 'b_min' + (H.has(v, 'Hd') ? ' (H_d ' + F(v.Hd) + ' hp)' : '')], rows,
       { caption: 'Select the belt — Table 17-2 belts that fit the ' + F(v.d) + '-in small pulley',
-        note: 'A belt fits when d ≥ d<sub>min</sub> (Table 17-2; urethane Table 17-3 by rpm per foot of belt; leather 2-ply 20/64 and 23/64 add 2 in for belts ≥ 8 in wide) and Table 17-4 has a C<sub>p</sub> for the small pulley (not "—"). b<sub>min</sub> = ΔF/(a<sub>0</sub> − a<sub>2</sub>) · e<sup>fφ</sup>/(e<sup>fφ</sup> − 1) is the narrowest belt that carries H<sub>d</sub> without slipping (Shigley Ex 17-2). ★ = the fitting belt that needs the narrowest width — a calculator choice (Shigley gives no single rule; Mech p.15 only says "choose a belt yourself"). It reproduces the belts of Tutorial 1 (F-1, 2-in pulley), Ex 17-1 and HW1 P1 (A-3, 5–6-in pulleys); on the 16-in pulley of Ex 17-2 it stars A-5, while the problem names A-3 (b<sub>min</sub> 8.40 in). Use also clears the typed table reads (F<sub>a</sub>, C<sub>p</sub>, t, γ, f).' });
+        note: 'A belt fits when \\(d \\ge d_{min}\\) and Table 17-4 lists a C_p. b_min = narrowest width carrying H_d without slip (Ex 17-2). ★ = fitting belt needing the narrowest width (calculator choice; Tutorial 1 F-1, Ex 17-1 and HW1 A-3). Use also clears typed table reads.' });
   }
   // standard widths: whole inches from b_min up (Shigley Ex 17-2 took the catalogue's 10 in)
   function widthRows(v, bmin, F1aPerIn) {
@@ -158,10 +160,10 @@
     const cat = mode === 'catalogue', bmin = cat ? bminCat(v) : v.bmin, perIn = cat ? v.ka : (H.has(v, 'Fa', 'Cp', 'Cv') ? v.Fa * v.Cp * v.Cv : undefined);
     const rows = widthRows(v, bmin, perIn); if (!rows) return '';
     const field = cat ? 'b' : 'bsel';
-    return H.table(['Width b', '(F_1)_a', 'F_c', 'F_2', 'F_i', "f′ vs f = " + F(v.f), 'dip'], rows.map(r => ({
+    return H.table(['Width b', '(F_1)_a', 'F_c', 'F_2', 'F_i', "\\(f^{\\prime}\\) vs f = " + F(v.f), 'dip'], rows.map(r => ({
       cells: [F(r.b) + ' in' + inUse(H.has(v, field) && Math.abs(v[field] - r.b) < 1e-9 || (!H.has(v, field) && !cat && r.pick)), F(r.F1a) + ' lbf', F(r.Fc) + ' lbf', F(r.F2) + ' lbf', F(r.Fi) + ' lbf', r.fp !== undefined ? F(r.fp, 3) + (r.fp < v.f - 1e-9 ? ' < f' : ' ≥ f ✘') : 'F_2 ≤ F_c ✘', r.dip !== undefined ? F(r.dip, 3) + ' in' : '—'],
       ok: r.ok, pick: r.pick, set: { [field]: r.b } })),
-      { caption: 'Select a standard width — b<sub>min</sub> = ' + F(bmin, 4) + ' in', note: 'Rule: the next available width ≥ b<sub>min</sub>; whole inches here. Shigley Ex 17-2 took the catalogue\'s next width, 10 in (b<sub>min</sub> 8.40 in) — the 9-in line is also shown in the example. A width below b<sub>min</sub> slips (f′ ≥ f) at the design power.' + (cat ? ' Habasit belts are made to width; whole inches are shown for comparison with Shigley.' : '') });
+      { caption: 'Select a standard width — b_{min} = ' + F(bmin, 4) + ' in', note: 'Rule: the next available width ≥ b_{min}; whole inches here. Shigley Ex 17-2 took the catalogue\'s next width, 10 in (b_{min} 8.40 in) — the 9-in line is also shown in the example. A width below b_{min} slips (\\(f^{\\prime}\\) ≥ f) at the design power.' + (cat ? ' Habasit belts are made to width; whole inches are shown for comparison with Shigley.' : '') });
   }
   function habTableHtml(v) {
     if (!H.has(v, 'd')) return '';
@@ -175,11 +177,19 @@
     return H.table(['Code', 'Type', 't mm', 'min pulley mm vs ' + F(dmm, 3), "F_a' N/mm", '(F_1)_a per inch', 'b_min at H_d'], rows.map(r => ({
       cells: [r.c + inUse(v.hab === r.c), HAB_GROUP(r.c), F(r.h[0]), F(r.h[1]) + (r.fits ? ' ✔' : ' ✘'), F(r.h[3]), F(r.ka, 3) + ' lbf/in', r.bmin !== undefined ? F(r.bmin, 3) + ' in' : '—'],
       ok: r.ok, pick: r === pick, set: { hab: r.c, kN: '', tmm: '', dminmm: '' } })),
-      { caption: 'Select the Habasit belt type (slide 21 / catalogue p.9)', note: 'A type fits when the small pulley is at least the catalogue minimum. (F<sub>1</sub>)<sub>a</sub> = nominal peripheral force per unit width × b (1 N/mm = 5.710 lbf/in); b<sub>min</sub> as in Shigley Ex 17-2 with Table 17-2 γ and f for the A-codes, else γ = 0.042 lbf/in³, f = 0.5. ★ = the fitting type needing the narrowest belt (calculator choice); the course highlights S-250H, A-3 and TF-22.' });
+      { caption: 'Select the Habasit belt type (slide 21 / catalogue p.9)', note: 'A type fits when the small pulley ≥ the catalogue minimum. (F_1)_a = force per unit width × b (1 N/mm = 5.710 lbf/in). ★ = narrowest fitting belt (calculator choice); course highlights S-250H, A-3, TF-22.' });
+  }
+
+  // Standard sizes (Shigley Table 17-2): thickness / plies of every belt; widths as used in the course and Shigley
+  function stdFlat(v) {
+    const rows = Object.keys(SPECS).map(k => { const sp = SPECS[k], ply = /(\d) ply/.exec(k);
+      return { cells: [k.replace(/ \(t = .*\)$/, '').replace(/, t = .*$/, '') + inUse(v.spec === k), sp.mat === 'leather' ? (ply ? ply[1] : '—') : '—', F(sp.t, 3) + ' in (' + F(sp.t * 25.4, 3) + ' mm)', sp.b ? F(sp.b) + ' in (fixed)' : 'to order', F(sp.dmin) + ' in', F(sp.Fa) + ' lbf/in'], pick: v.spec === k, set: { spec: k, Fa: '', dmin: '', Cp: '', Cv: '', t: '', gamma: '', f: '' } }; });
+    return H.table(['Belt', 'Plies', 'Thickness t', 'Width', 'd_min', 'F_a'], rows,
+      { caption: 'Standard flat-belt sizes — Shigley Table 17-2', note: 'Widths: polyamide and leather belts are cut to width — the course and Shigley use whole inches (Ex 17-1 6 in, Ex 17-2 10 in, HW1 P1 12 in); Habasit lists (F_1)_a per mm of width.' });
   }
 
   const MODES = [
-    { value: 'analyse', label: 'Analyse a given drive at the tension limit — F_c, (F_1)_a, F_2, F_i, H_a, n_fs, f′, L, dip (course 9 steps)' },
+    { value: 'analyse', label: 'Analyse a given drive at the tension limit — F_c, (F_1)_a, F_2, F_i, H_a, n_fs, \\(f^{\\prime}\\), L, dip (course 9 steps)' },
     { value: 'width', label: 'Size the belt — minimum width b for a given power (Shigley Ex 17-2)' },
     { value: 'capacity', label: 'Power capacity of a given belt — most torque/power before it slips' },
     { value: 'tension', label: 'Initial tension & dip — minimum F_i for no slip, the tensions it gives, the dip to set it' },
@@ -187,15 +197,15 @@
     { value: 'geometry', label: 'Geometry only — wrap angles and belt length, open or crossed; C from a belt length' },
   ];
   const HELP = {
-    analyse: '<b>Given</b> belt material and width, pulleys, C, power, speed, K<sub>s</sub>, n<sub>d</sub>. <b>Asked</b> F<sub>c</sub>, F<sub>i</sub>, (F<sub>1</sub>)<sub>a</sub>, F<sub>2</sub>, H<sub>a</sub>, n<sub>fs</sub>, f′ (slip?), L, dip. The steps below follow slide 17 in order (Tutorial 1, HW1 P1, Shigley Ex 17-1, Tutorial 3 Q2).',
-    width: '<b>Given</b> power, speed, pulleys, C, belt material. <b>Asked</b> the narrowest belt that carries H<sub>d</sub> without slipping (f′ = f), then the tensions for the width you pick (Shigley Ex 17-2, Tutorial 2 Q3 c–d).',
-    capacity: '<b>Given</b> a drive and belt (material, width). <b>Asked</b> the largest torque/power it can carry: tight side at (F<sub>1</sub>)<sub>a</sub> and friction fully developed (f′ = f), the F<sub>i</sub> that needs, and the largest nominal power H<sub>nom</sub> = H<sub>a</sub>/(K<sub>s</sub>n<sub>d</sub>) (Tutorial 2 Q3 a).',
-    tension: '<b>Given</b> drive, belt and power. <b>Asked</b> the smallest initial tension that avoids slip (Eq. 17-9), the tensions and f′ at the F<sub>i</sub> you set, and the catenary dip that sets it — or F<sub>i</sub> from a measured dip (S 17-6 a, Tutorial 3 Q2 e "reduce the pre-tension").',
-    catalogue: '<b>Given</b> a catalogue belt (code, width) and the drive. <b>Asked</b> the same analysis as the course 9 steps, with (F<sub>1</sub>)<sub>a</sub> = catalogue force per unit width × b instead of bF<sub>a</sub>C<sub>p</sub>C<sub>v</sub>, plus the minimum catalogue width (slide 21).',
-    geometry: '<b>Given</b> d, D (or the ratio), C and open/crossed — or a stocked belt length instead of C. <b>Asked</b> wrap angles φ<sub>d</sub>, φ<sub>D</sub>, belt length L, or C for a given L (Eq. 17-1 … 17-4).',
+    analyse: 'Course 9 steps (slide 17): Tutorial 1, HW1 P1, Ex 17-1, Tutorial 3 Q2. Asked: F_c, F_i, \\((F_1)_a\\), F_2, H_a, n_fs, \\(f^{\\prime}\\), L, dip.',
+    width: 'Narrowest belt that carries H_d without slip (\\(f^{\\prime} = f\\)), then the tensions for the width you pick (Ex 17-2, Tutorial 2 Q3 c–d).',
+    capacity: 'Largest torque/power of a given belt: tight side at \\((F_1)_a\\), friction fully developed, and the F_i that needs (Tutorial 2 Q3 a).',
+    tension: 'Smallest F_i for no slip (Eq 17-9), the tensions at the F_i you set, and the dip that sets it (S 17-6 a, Tutorial 3 Q2 e).',
+    catalogue: 'Course 9 steps with \\((F_1)_a\\) = Habasit force per unit width × b (slide 21).',
+    geometry: 'Wrap angles \\(\\phi_d\\), \\(\\phi_D\\) and length L (open or crossed), or C for a stocked belt (Eqs 17-1 … 17-4).',
   };
 
-  function bminCat(v) {   // narrowest catalogue width with f′ = f at the design torque (same algebra as Ex 17-2, a0 = catalogue force per width)
+  function bminCat(v) {   // narrowest catalogue width with \\(f^{\\prime}\\) = f at the design torque (same algebra as Ex 17-2, a0 = catalogue force per width)
     if (!H.has(v, 'dF', 'efp', 'ka', 'gamma', 't', 'V')) return undefined;
     const a2 = 12 * v.gamma * v.t / G * (v.V / 60) ** 2;
     return v.ka > a2 ? v.dF / (v.ka - a2) * v.efp / (v.efp - 1) : undefined;
@@ -206,28 +216,28 @@
     if (m === 'geometry') {
       if (!H.has(v, 'phi', 'L')) return '';
       return ok + (cr(v) ? 'Crossed' : 'Open') + ' belt' + e + ' — d = ' + F(v.d) + ' in, D = ' + F(v.Dg) + ' in, C = ' + F(Cof(v)) + ' in' + (!H.has(v, 'C') && H.has(v, 'Cfound') ? ' (from L = ' + F(v.Lgiven) + ' in)' : '') +
-        ': φ<sub>d</sub> = ' + F(v.phi, 4) + ' rad (' + F(v.phideg) + '°), φ<sub>D</sub> = ' + F(v.phiD, 4) + ' rad; belt length L = ' + F(v.L) + ' in.';
+        ': \\(\\phi_{d}\\) = ' + F(v.phi, 4) + ' rad (' + F(v.phideg) + '°), \\(\\phi_{D}\\) = ' + F(v.phiD, 4) + ' rad; belt length L = ' + F(v.L) + ' in.';
     }
     if (m === 'capacity') {
       if (!H.has(v, 'Hcap', 'Tcap')) return '';
-      return ok + 'Capacity' + e + ' — with F<sub>1</sub> = (F<sub>1</sub>)<sub>a</sub> = ' + F(v.F1a) + ' lbf and f′ = f = ' + F(v.f) + ': F<sub>2</sub> = ' + F(v.F2s) + ' lbf, T<sub>max</sub> = ' + F(v.Tcap) + ' lbf·in, H<sub>a,max</sub> = ' + F(v.Hcap) +
-        ' hp → largest nominal power H<sub>nom</sub> = ' + F(v.Hnmax) + ' hp (K<sub>s</sub> = ' + F(v.Ks) + ', n<sub>d</sub> = ' + F(v.nd) + '). Needs F<sub>i</sub> = ' + F(v.Fis) + ' lbf (dip ' + F(v.dipC, 3) + ' in).' +
-        (H.has(v, 'nfsC') ? ' For H<sub>nom</sub> = ' + F(v.Hnom) + ' hp: n<sub>fs</sub> = ' + F(v.nfsC, 3) + (v.nfsC >= (v.nd || 1) ? ' — OK.' : ' — ' + bad + 'below n<sub>d</sub>' + e + '.') : '');
+      return ok + 'Capacity' + e + ' — with F_{1} = \\((F_{1})_{a}\\) = ' + F(v.F1a) + ' lbf and \\(f^{\\prime}\\) = f = ' + F(v.f) + ': F_{2} = ' + F(v.F2s) + ' lbf, T_{max} = ' + F(v.Tcap) + ' lbf·in, H_{a,max} = ' + F(v.Hcap) +
+        ' hp → largest nominal power H_{nom} = ' + F(v.Hnmax) + ' hp (K_{s} = ' + F(v.Ks) + ', n_{d} = ' + F(v.nd) + '). Needs F_{i} = ' + F(v.Fis) + ' lbf (dip ' + F(v.dipC, 3) + ' in).' +
+        (H.has(v, 'nfsC') ? ' For H_{nom} = ' + F(v.Hnom) + ' hp: n_{fs} = ' + F(v.nfsC, 3) + (v.nfsC >= (v.nd || 1) ? ' — OK.' : ' — ' + bad + 'below n_{d}' + e + '.') : '');
     }
     if (m === 'tension') {
       if (!H.has(v, 'Fimin', 'Fiset', 'F1t', 'F2t')) return '';
       const slip = H.has(v, 'fpt', 'f') && v.fpt > v.f + 1e-6, over = H.has(v, 'F1a') && v.F1t > v.F1a + 1e-6, neg = v.F2t <= v.Fc;
-      return (slip || over || neg ? bad + 'CHECK' + e : ok + 'OK' + e) + ' — minimum initial tension for no slip F<sub>i,min</sub> = ' + F(v.Fimin) + ' lbf. At F<sub>i</sub> = ' + F(v.Fiset) + ' lbf: F<sub>1</sub> = ' + F(v.F1t) + ' lbf' +
-        (H.has(v, 'F1a') ? (over ? ' &gt; ' : ' ≤ ') + '(F<sub>1</sub>)<sub>a</sub> = ' + F(v.F1a) + ' lbf' : '') + ', F<sub>2</sub> = ' + F(v.F2t) + ' lbf, f′ = ' + F(v.fpt, 3) + (slip ? ' &gt; ' : ' ≤ ') + 'f = ' + F(v.f) +
-        (slip ? ' (slips — raise F<sub>i</sub>)' : '') + '; set it with a dip of ' + F(v.dipt, 3) + ' in over C = ' + F(Cof(v)) + ' in. A lower F<sub>i</sub> (down to F<sub>i,min</sub>) lowers F<sub>1</sub> and lengthens belt life.';
+      return (slip || over || neg ? bad + 'CHECK' + e : ok + 'OK' + e) + ' — minimum initial tension for no slip F_{i,min} = ' + F(v.Fimin) + ' lbf. At F_{i} = ' + F(v.Fiset) + ' lbf: F_{1} = ' + F(v.F1t) + ' lbf' +
+        (H.has(v, 'F1a') ? (over ? ' &gt; ' : ' ≤ ') + '\\((F_{1})_{a}\\) = ' + F(v.F1a) + ' lbf' : '') + ', F_{2} = ' + F(v.F2t) + ' lbf, \\(f^{\\prime}\\) = ' + F(v.fpt, 3) + (slip ? ' &gt; ' : ' ≤ ') + 'f = ' + F(v.f) +
+        (slip ? ' (slips — raise F_{i})' : '') + '; set it with a dip of ' + F(v.dipt, 3) + ' in over C = ' + F(Cof(v)) + ' in. A lower F_{i} (down to F_{i,min}) lowers F_{1} and lengthens belt life.';
     }
-    if (!H.has(v, 'fp', 'f', 'nfs')) return (m === 'width' && H.has(v, 'bmin')) ? 'Minimum width b<sub>min</sub> = ' + F(v.bmin) + ' in — pick a width ≥ b<sub>min</sub> in the width step.' : '';
+    if (!H.has(v, 'fp', 'f', 'nfs')) return (m === 'width' && H.has(v, 'bmin')) ? 'Minimum width b_{min} = ' + F(v.bmin) + ' in — pick a width ≥ b_{min} in the width step.' : '';
     const slip = v.fp >= v.f, low = v.nfs < (v.nd || 1) - 1e-3;
     let s = (slip || low ? bad + 'FAIL' + e : ok + 'PASS' + e) + ' — ';
-    if (m === 'width') s += 'use b = ' + F(bw(v)) + ' in (b<sub>min</sub> = ' + F(v.bmin) + ' in). ';
-    if (m === 'catalogue') { const bc = bminCat(v); s += 'Habasit ' + (v.hab || '') + ': (F<sub>1</sub>)<sub>a</sub> = ' + F(v.kN) + ' N/mm × ' + F(bw(v)) + ' in = ' + F(v.F1a) + ' lbf' + (bc !== undefined ? '; narrowest catalogue belt that carries H<sub>d</sub> without slipping: b<sub>min</sub> = ' + F(bc) + ' in' : '') + '. '; }
-    s += 'At the tension limit: F<sub>c</sub> = ' + F(v.Fc) + ' lbf, (F<sub>1</sub>)<sub>a</sub> = ' + F(v.F1a) + ' lbf, F<sub>2</sub> = ' + F(v.F2) + ' lbf, F<sub>i</sub> = ' + F(v.Fi) + ' lbf; H<sub>a</sub> = ' + F(v.Ha) + ' hp, n<sub>fs</sub> = ' + F(v.nfs, 3) +
-      '; f′ = ' + F(v.fp, 3) + (slip ? ' ≥ ' : ' &lt; ') + 'f = ' + F(v.f) + (slip ? ' — the belt slips: widen it or increase wrap' : ' (no slip)') + '; L = ' + F(v.L) + ' in; dip = ' + F(v.dip, 3) + ' in.';
+    if (m === 'width') s += 'use b = ' + F(bw(v)) + ' in (b_{min} = ' + F(v.bmin) + ' in). ';
+    if (m === 'catalogue') { const bc = bminCat(v); s += 'Habasit ' + (v.hab || '') + ': \\((F_{1})_{a}\\) = ' + F(v.kN) + ' N/mm × ' + F(bw(v)) + ' in = ' + F(v.F1a) + ' lbf' + (bc !== undefined ? '; narrowest catalogue belt that carries H_{d} without slipping: b_{min} = ' + F(bc) + ' in' : '') + '. '; }
+    s += 'At the tension limit: F_{c} = ' + F(v.Fc) + ' lbf, \\((F_{1})_{a}\\) = ' + F(v.F1a) + ' lbf, F_{2} = ' + F(v.F2) + ' lbf, F_{i} = ' + F(v.Fi) + ' lbf; H_{a} = ' + F(v.Ha) + ' hp, n_{fs} = ' + F(v.nfs, 3) +
+      '; \\(f^{\\prime}\\) = ' + F(v.fp, 3) + (slip ? ' ≥ ' : ' &lt; ') + 'f = ' + F(v.f) + (slip ? ' — the belt slips: widen it or increase wrap' : ' (no slip)') + '; L = ' + F(v.L) + ' in; dip = ' + F(v.dip, 3) + ' in.';
     return s;
   }
 
@@ -239,33 +249,31 @@
       title: 'Flat Belts — Analysis & Design',
       subtitle: mott ? 'Mott has no flat-belt design: Shigley Ch. 17-2 method (course), Mott Fig. 7-4 kinematics' : 'Shigley Ch. 17-2 · course 9-step procedure (Flat&V slide 17)',
       sibling: mott ? 'flat_belts_shigley.html' : 'flat_belts_mott.html',
-      intro: (mott ? '<b>Mott does not cover flat-belt design</b> (§7-2) and the course, Fizz and Mech all use Shigley Ch. 17 — so this page is the Shigley method, with Mott\'s Fig. 7-4 belt geometry for reference. ' : '') +
-        'Pick what the question asks in step 1; only the steps that question needs are shown, in the order of the course\'s <b>Flat Belt Analysis Procedure</b> (slide 17): e<sup>fφ</sup> → F<sub>c</sub> → T → (F<sub>1</sub>)<sub>a</sub> − F<sub>2</sub> = 2T/d → (F<sub>1</sub>)<sub>a</sub> = bF<sub>a</sub>C<sub>p</sub>C<sub>v</sub> → F<sub>2</sub> → F<sub>i</sub> → f′ &lt; f → n<sub>fs</sub>. ' +
-        'Yellow fields fill from Shigley Table 17-2/17-4 (or the Habasit catalogue) once you pick the belt; type over them to use a chart reading. The answer to the question is the last step.',
+      intro: (mott ? '<b>Mott has no flat-belt design</b>; the course uses Shigley Ch 17, with Mott Fig 7-4 for geometry. ' : '') +
+        'Pick the question type in step 1; the steps follow the course <b>Flat Belt Analysis Procedure</b> (slide 17). Yellow fields fill from Table 17-2/17-4 once you pick the belt.',
       example: { mode: 'analyse', d: 2, D: 4, VRin: '', C: 108, cfg: 'open', Hnom: 2, n: 1750, Ks: 1.25, nd: 1, spec: 'Polyamide F-1 (t = 0.05 in)', b: 6 },
 
       assumptions: [
-        { text: 'Belt runs at its tension limit, F_1 = (F_1)_a, so ΔF = (F_1)_a − F_2 = 2T/d (analysis and sizing questions)', src: 'Flat&V s17 step 4 · Fizz p.6 · Mech p.17' },
-        { text: 'K_s = 1.25 unless the problem gives one — the guides give no number ("usually given to you"); 1.25 is the value in Tutorial 1, HW1 P1 and Ex 17-1; ranges in Table 17-15 ("use this table for flat belts")', src: 'Mech p.16 · Flat&V s14 · Tutorial 1 · HW1 P1', var: 'Ks' },
-        { text: 'Design factor n_d = 1.0 unless stated (implied by T = 63 025 H_nom K_s n_d/n)', src: 'Flat&V s13 · Fizz p.6', var: 'nd' },
-        { text: 'Open belt unless the question says crossed/reversing; a crossed belt has φ = π + 2 sin^{-1}[(D + d)/2C] on both pulleys', src: 'Mech p.16 fn 12–13 · Shigley Eq. 17-3/17-4', var: 'cfg' },
-        { text: 'The SMALL-pulley wrap φ_d is used in e^{fφ} and f′ (it slips first)', src: 'Fizz p.6 · Mech p.18 · Flat&V s16' },
-        { text: 'g = 32.17 ft/s^2 in F_c = (w/g)(V/60)^2 — course and Shigley value; Mech writes 32.2 (0.1 % different)', src: 'Flat&V s12 · Fizz p.6 · Mech p.17' },
-        { text: 'f, t, γ, F_a, d_min from Table 17-2 for the chosen belt; course range f = 0.4–0.8. Leather and urethane γ are ranges — mid values 0.040 and 0.042 lbf/in^3 are used', src: 'Flat&V s15–s16 · Fizz p.8 · Mech p.15', var: 'f' },
-        { text: 'C_p from Table 17-4 with the SMALL-pulley diameter (between columns the column to the left is used); C_p = 1 for urethane', src: 'Flat&V s13 · Mech p.17', var: 'Cp' },
-        { text: 'C_v = 1 for polyamide and urethane; only leather uses Fig. 17-9', src: 'Flat&V s13 · Fizz p.9 · Mech p.17', var: 'Cv' },
-        { text: 'n_fs = H_a/(H_nom K_s); at the tension limit H_a = H_d so n_fs returns n_d ("confirm n_d")', src: 'Flat&V s17 step 9 · Fizz p.6 · Mech p.18' },
-        { text: 'dip = C^2w/(96 F_i) with C in inches (Mech writes 12(C/12)^2w/(8F_i), the same thing)', src: 'Shigley Eq. 17-13 · Fizz p.6 · Mech p.18' },
-        { text: 'Minimum width: friction fully developed (f′ = f) at the design power, then the next available width — the calculator rounds up to a whole inch; Shigley Ex 17-2 used the catalogue\'s next width (10 in)', src: 'Shigley Ex 17-2 · Prob 17-5', var: 'bsel' },
-        { text: 'Smallest initial tension for no slip F_i = (T/d)(e^{fφ}+1)/(e^{fφ}−1). Fizz writes this equal to (F_1+F_2)/2 − F_c, which is only true at the point of slip — the textbook relation F_1 = F_i + F_c + T/d is used for any other F_i', src: 'Shigley Eq. 17-9, Fig. 17-7 · Fizz p.6 · Tutorial 3 Q2 e', var: 'Fiset' },
-        { text: 'Catalogue (F_1)_a = nominal peripheral force per unit width × b, 1 N/mm = 5.710 lbf/in. The catalogue page gives no weight or friction: Table 17-2 polyamide values are used (A-codes: the same belt; others γ = 0.042 lbf/in^3, f = 0.5)', src: 'Flat&V s21 (Habasit)', var: 'kN' },
+        { text: 'Belt runs at its tension limit, \\(F_1 = (F_1)_a\\), so \\((F_1)_a - F_2 = 2T/d\\)', src: 'Flat&V s17 step 4 · Fizz p.6 · Mech p.17', step: 'tens' },
+        { text: 'K_s = 1.25 unless given (Tutorial 1, HW1 P1, Ex 17-1); Table 17-15 ranges', src: 'Mech p.16 · Flat&V s14', var: 'Ks' },
+        { text: 'Design factor n_d = 1.0 unless stated', src: 'Flat&V s13 · Fizz p.6', var: 'nd' },
+        { text: 'Open belt unless the question says crossed (crossed: \\(\\phi = \\pi + 2\\sin^{-1}\\frac{D+d}{2C}\\) on both pulleys)', src: 'Mech p.16 · Shigley Eqs 17-3/17-4', var: 'cfg' },
+        { text: 'The SMALL-pulley wrap \\(\\phi_d\\) is used in \\(e^{f\\phi}\\) and \\(f^{\\prime}\\) — it slips first', src: 'Fizz p.6 · Mech p.18 · Flat&V s16', step: 'spd' },
+        { text: '\\(g = 32.17\\ \\mathrm{ft/s^2}\\) in F_c (Mech writes 32.2)', src: 'Flat&V s12 · Fizz p.6 · Mech p.17', step: 'fc' },
+        { text: 'f, t, \\(\\gamma\\), F_a, d_min from Table 17-2 (f = 0.4–0.8); leather/urethane \\(\\gamma\\) mid values 0.040/0.042 \\(\\mathrm{lbf/in^3}\\)', src: 'Flat&V s15–16 · Fizz p.8 · Mech p.15', var: 'f' },
+        { text: 'C_p from Table 17-4 at the SMALL pulley (between columns use the left one); C_v = 1 except leather (Fig 17-9)', src: 'Flat&V s13 · Fizz p.9 · Mech p.17', var: 'Cp' },
+        { text: 'n_fs = H_a/(H_nom K_s); at the tension limit it returns n_d', src: 'Flat&V s17 step 9 · Fizz p.6', step: 'chk' },
+        { text: 'dip = \\(C^2 w/(96 F_i)\\), C in inches', src: 'Shigley Eq 17-13 · Fizz p.6 · Mech p.18', step: 'chk' },
+        { text: 'Minimum width at \\(f^{\\prime} = f\\), rounded up to a whole inch (Ex 17-2 used the catalogue 10 in)', src: 'Shigley Ex 17-2', var: 'bsel' },
+        { text: '\\(F_{i,min} = (T/d)(e^{f\\phi}+1)/(e^{f\\phi}-1)\\); for any other F_i use \\(F_1 = F_i + F_c + T/d\\)', src: 'Shigley Eq 17-9 · Fizz p.6', var: 'Fiset' },
+        { text: 'Catalogue \\((F_1)_a\\) = force per unit width × b (1 N/mm = 5.710 lbf/in); weight and friction from Table 17-2', src: 'Flat&V s21 (Habasit)', var: 'kN' },
       ],
 
       figures: [
-        { id: 'fig17-1', ref: 'Figure 17-1', book: 'shigley', title: 'Flat-belt geometry: (a) open belt, (b) crossed belt — wrap angles and length', src: 'figures/shigley/fig17-1.png', page: 904, note: 'Open: φ_d = π − 2 sin^{-1}[(D−d)/2C], φ_D = π + 2 sin^{-1}[(D−d)/2C]. Crossed: φ = π + 2 sin^{-1}[(D+d)/2C] on both pulleys.' },
-        { id: 'fig7-4', ref: 'Figure 7-4', book: 'mott', title: 'Belt drive geometry (Mott): θ_1 = 180° − 2φ, θ_2 = 180° + 2φ, span, centre distance', src: 'figures/mott/fig7-4.png', page: 265, note: 'Same geometry as Shigley Eq. 17-1/17-2 written in degrees (Mott Eqs. 7-5 … 7-11).' },
+        { id: 'fig17-1', ref: 'Figure 17-1', book: 'shigley', title: 'Flat-belt geometry: (a) open belt, (b) crossed belt — wrap angles and length', src: 'figures/shigley/fig17-1.png', page: 904, note: 'Open: \\(\\phi_d = \\pi - 2\\sin^{-1}\\frac{D-d}{2C}\\), \\(\\phi_D = \\pi + 2\\sin^{-1}\\frac{D-d}{2C}\\). Crossed: \\(\\phi = \\pi + 2\\sin^{-1}\\frac{D+d}{2C}\\) on both.' },
+        { id: 'fig7-4', ref: 'Figure 7-4', book: 'mott', title: 'Belt drive geometry (Mott): \\(\\theta_{1,2} = 180^\\circ \\mp 2\\phi\\), span, centre distance', src: 'figures/mott/fig7-4.png', page: 265, note: 'Shigley Eqs 17-1/17-2 in degrees (Mott Eqs 7-5 … 7-11).' },
         { id: 'fig17-2', ref: 'Figure 17-2', book: 'shigley', title: 'Non-reversing (open) and reversing (crossed) belt drives', src: 'figures/shigley/fig17-2.png', page: 904 },
-        { id: 'table17-2', ref: 'Table 17-2', book: 'shigley', title: 'Properties of flat- and round-belt materials (t, d_min, F_a, γ, f)', src: 'figures/shigley/table17-2.png', page: 911, note: 'F_a is the allowable tension per inch of width at 600 ft/min. Leather γ 0.035–0.045, urethane 0.038–0.045 → mid values used.' },
+        { id: 'table17-2', ref: 'Table 17-2', book: 'shigley', title: 'Flat- and round-belt materials (t, d_min, F_a, \\(\\gamma\\), f)', src: 'figures/shigley/table17-2.png', page: 911, note: 'F_a = allowable tension per inch of width at 600 ft/min; leather and urethane \\(\\gamma\\) are ranges (mid values used).' },
         { id: 'table17-3', ref: 'Table 17-3', book: 'shigley', title: 'Minimum pulley sizes for urethane flat and round belts', src: 'figures/shigley/table17-3.png', page: 912 },
         { id: 'table17-4', ref: 'Table 17-4', book: 'shigley', title: 'Pulley correction factor C_p for flat belts (enter with the SMALL pulley diameter)', src: 'figures/shigley/table17-4.png', page: 912, note: '"—" means the pulley is too small for that belt. C_p = 1 for urethane.' },
         { id: 'fig17-9', ref: 'Figure 17-9', book: 'shigley', title: 'Velocity correction factor C_v for leather belts', src: 'figures/shigley/fig17-9.png', page: 910, note: 'C_v = 1 for polyamide and urethane. Leather: enter with V (thousands of ft/min) and the thickness.' },
@@ -275,9 +283,9 @@
         { id: 'habasit-crown', ref: 'Habasit recommended crown height (p.20)', book: 'course', title: 'Recommended pulley crown height h (mm) by pulley diameter and pulley width (ISO 22)', src: 'figures/course/habasit_recommended_crown_height.png', note: 'Flat Belts Engineering Guide Habisit.pdf p.20 (slide 19). At least one pulley, preferably the larger, must be crowned; crown heights above the table lose tracking.' },
         { id: 'habasit-crown2', ref: 'Habasit pulley crown shape (p.19)', book: 'course', title: 'Crown profile guideline: regular symmetrical curve; no conical or cylindrical-conical pulleys', src: 'figures/course/habasit_pulley_crown_guideline.png', note: 'Flat Belts Engineering Guide Habisit.pdf p.19 (slide 19).' },
         { id: 'habasit-k1', ref: 'Habasit k1% value (p.16)', book: 'course', title: 'Tensile force for 1 % elongation k_1% and belt relaxation after running-in', src: 'figures/course/habasit_k1_tensile_force_relaxation.png', note: 'Flat Belts Engineering Guide Habisit.pdf p.16 (Flat&V slide 18).' },
-        { id: 'habasit-shaft', ref: 'Habasit shaft load and nominal peripheral force (p.17)', book: 'course', title: 'Shaft load drops 40–50 % after relaxation; nominal peripheral force F′_UN = k_1% × admissible elongation × friction, per unit width', src: 'figures/course/habasit_shaft_load_peripheral_force.png', note: 'Flat Belts Engineering Guide Habisit.pdf p.17 (Flat&V slide 18).' },
+        { id: 'habasit-shaft', ref: 'Habasit shaft load and nominal peripheral force (p.17)', book: 'course', title: 'Shaft load drops 40–50 % after relaxation; nominal peripheral force = k_{1%} × admissible elongation × friction, per unit width', src: 'figures/course/habasit_shaft_load_peripheral_force.png', note: 'Flat Belts Engineering Guide Habisit.pdf p.17 (Flat&V slide 18).' },
         { id: 'fig17-7', ref: 'Figure 17-7', book: 'shigley', title: 'Forces on a pulley: F_1 = F_i + F_c + T/d, F_2 = F_i + F_c − T/d', src: 'figures/shigley/fig17-7.png', page: 908 },
-        { id: 'fig17-8', ref: 'Figure 17-8', book: 'shigley', title: 'Belt tensions F_1, F_2 vs initial tension F_i (slide 11)', src: 'figures/shigley/fig17-8.png', page: 910 },
+        { id: 'fig17-8', ref: 'Figure 17-8', book: 'shigley', title: 'Belt tensions F_1, F_2 vs initial tension F_i (slide 11)', src: 'figures/shigley/fig17-8.png', page: 910, note: 'Midterm 2016/2022 labels: tight side F_1, slack side F_2, gap \\(F_1 - F_2 = 2T/d\\), intercept F_c, top line \\((F_1)_a\\) (max allowable).' },
         { id: 'fig17-11', ref: 'Figure 17-11', book: 'shigley', title: 'Belt-tensioning schemes; catenary dip', src: 'figures/shigley/fig17-11.png', page: 915 },
       ],
 
@@ -290,7 +298,7 @@
 
         { title: '2 · Problem data', steps: [
           { id: 'in', title: 'Pulleys and centre distance', fig: mott ? ['fig7-4', 'fig17-2'] : ['fig17-1', 'fig17-2'],
-            text: 'Shigley quotes the ratio both ways ("angular velocity ratio of 0.5" means D = 2d): enter D, or leave it blank and give the ratio — 2 or 0.5 both give D = 2d. Feet × 12 for C.',
+            text: 'Give D, or leave it blank and give the ratio (2 or 0.5 both mean D = 2d). C in inches (feet × 12).',
             vars: [
               { id: 'd', symbol: 'd', label: 'Small (driving) pulley diameter', unit: 'in', kind: 'input' },
               { id: 'D', symbol: 'D', label: 'Large (driven) pulley diameter', unit: 'in', kind: 'input', hint: 'blank → D from the ratio' },
@@ -302,7 +310,7 @@
               { id: 'VR', symbol: 'D/d', label: 'Velocity ratio', unit: '', kind: 'calc', compute: v => H.has(v, 'Dg', 'd') ? v.Dg / v.d : undefined },
             ] },
           { id: 'geoL', title: 'Centre distance for a stocked belt length (optional)', when: on('geometry'), eq: '17-2 / 17-4 solved for C',
-            text: 'If the question gives the belt length instead of C, C is found by solving Eq. 17-2 (open) or 17-4 (crossed) for C.',
+            text: 'Belt length given instead of C: C is solved from Eq 17-2 (open) or 17-4 (crossed).',
             vars: [
               { id: 'Lgiven', symbol: 'L', label: 'Belt length', unit: 'in', kind: 'input', hint: 'optional' },
               { id: 'Cfound', symbol: 'C', label: 'Centre distance for that length', unit: 'in', kind: 'calc', compute: v => H.has(v, 'Lgiven', 'd', 'Dg') ? solveC(v.d, v.Dg, v.Lgiven, cr(v)) : undefined,
@@ -321,7 +329,7 @@
                 work: v => H.has(v, 'Hd') ? '\\(H_d = H_{nom}K_s n_d = ' + F(v.Hnom) + '(' + F(v.Ks) + ')(' + F(v.nd) + ') = ' + F(v.Hd) + '\\ \\text{hp}\\)' : null },
             ] },
           { id: 'spec', title: 'Belt material — Table 17-2, corrections C_p and C_v', when: v => notGeo(v) && M(v) !== 'catalogue', fig: ['table17-2', 'table17-4', 'fig17-9', 'table17-3'],
-            text: 'Pick the belt the problem names; in a design question choose it from the table below (every Table 17-2 belt, whether it fits the small pulley, its allowable tension per inch and the minimum width it needs). F<sub>a</sub>, d<sub>min</sub>, C<sub>p</sub> (Table 17-4, small pulley) and C<sub>v</sub> fill in — type over them to use your own table reading.',
+            text: 'Pick the belt the problem names, or choose from the table below. F_a, d_min, C_p and C_v fill in — type over them to use your own reading.',
             vars: [
               { id: 'spec', label: 'Belt (Table 17-2)', kind: 'choice', type: 'text', options: Object.keys(SPECS) },
               { id: 'Fa', symbol: 'F_a', label: 'Allowable tension per inch of width', unit: 'lbf/in', kind: 'lookup', fig: 'table17-2', hint: 'Table 17-2 (at 600 ft/min)', auto: v => spec(v) ? spec(v).Fa : undefined },
@@ -335,7 +343,7 @@
             ],
             after: v => specTableHtml(v) },
           { id: 'hab', title: 'Catalogue belt — Habasit (slide 21)', when: on('catalogue'), fig: ['habasit', 'habasit-full', 'habasit-crown', 'habasit-shaft', 'habasit-k1'],
-            text: 'The catalogue gives (F<sub>1</sub>)<sub>a</sub> directly as a force per unit width — no C<sub>p</sub> or C<sub>v</sub>. Course highlights S-250H (29 N/mm), A-3 (36 N/mm) and TF-22 (22 N/mm).',
+            text: 'The catalogue gives \\((F_1)_a\\) directly as a force per unit width — no C_p or C_v.',
             vars: [
               { id: 'hab', label: 'Belt code', kind: 'choice', type: 'text', options: Object.keys(HAB).map(c => ({ value: c, label: c + ' — ' + HAB_GROUP(c) + ', ' + HAB[c][3] + ' N/mm' })) },
               { id: 'kN', symbol: "F_{a}'", label: 'Nominal peripheral force per unit width', unit: 'N/mm', kind: 'lookup', fig: 'habasit-full', hint: 'Habasit table, last column', auto: v => hab(v) ? hab(v)[3] : undefined },
@@ -350,7 +358,7 @@
             vars: [
               { id: 't', symbol: 't', label: 'Belt thickness', unit: 'in', kind: 'lookup', fig: 'table17-2', hint: 'Table 17-2 (catalogue: mm ÷ 25.4)',
                 auto: v => M(v) === 'catalogue' ? (H.has(v, 'tmm') ? v.tmm / 25.4 : undefined) : (spec(v) ? spec(v).t : undefined) },
-              { id: 'gamma', symbol: '\\gamma', label: 'Specific weight', unit: 'lbf/in³', kind: 'lookup', fig: 'table17-2', hint: 'Table 17-2',
+              { id: 'gamma', symbol: '\\gamma', label: 'Specific weight', unit: 'lbf/in^{3}', kind: 'lookup', fig: 'table17-2', hint: 'Table 17-2',
                 auto: v => M(v) === 'catalogue' ? (v.hab ? (HAB_TABLE17_2[v.hab] ? SPECS[HAB_TABLE17_2[v.hab]].g : 0.042) : undefined) : (spec(v) ? spec(v).g : undefined) },
               { id: 'f', symbol: 'f', label: 'Coefficient of friction', unit: '', kind: 'lookup', fig: 'table17-2', hint: 'Table 17-2 (course range 0.4–0.8)',
                 auto: v => M(v) === 'catalogue' ? (v.hab ? (HAB_TABLE17_2[v.hab] ? SPECS[HAB_TABLE17_2[v.hab]].f : 0.5) : undefined) : (spec(v) ? spec(v).f : undefined),
@@ -361,12 +369,15 @@
               { id: 'b', symbol: 'b', label: 'Belt width', unit: 'in', kind: 'input', hint: 'urethane: fixed by the belt (auto)', auto: v => spec(v) && spec(v).b ? spec(v).b : undefined },
             ],
             after: v => M(v) === 'catalogue' ? widthTableHtml(v, 'catalogue') : '' },
+          { id: 'std', title: 'Standard sizes — thickness, plies and widths', when: notGeo, fig: ['table17-2', 'habasit-full'],
+            text: 'Reference: Table 17-2 sizes; the belt in use is highlighted.',
+            after: v => stdFlat(v) },
         ] },
 
         { title: '3 · Solution', steps: [
           { id: 'geo', title: 'Wrap angles and belt length', fig: mott ? ['fig7-4', 'fig17-1'] : ['fig17-1', 'fig7-4'], eq: mott ? '17-1 … 17-4 (Mott 7-5 … 7-11)' : '17-1 … 17-4',
             formula: '\\phi_d = \\pi - 2\\sin^{-1}\\frac{D-d}{2C},\\quad \\phi_D = \\pi + 2\\sin^{-1}\\frac{D-d}{2C},\\quad L = \\sqrt{4C^2-(D-d)^2} + \\tfrac12 (D\\phi_D + d\\phi_d)',
-            text: 'Open belt shown. Crossed belt: replace D − d by D + d; both pulleys then wrap φ = π + 2 sin<sup>−1</sup>[(D + d)/2C] and L = √(4C² − (D + d)²) + ½(D + d)φ.',
+            text: 'Open belt shown. Crossed: replace D − d by D + d; both pulleys wrap \\(\\phi = \\pi + 2\\sin^{-1}\\frac{D+d}{2C}\\) and \\(L = \\sqrt{4C^2 - (D+d)^2} + \\tfrac12(D+d)\\phi\\).',
             vars: [
               { id: 'alpha', symbol: '\\sin^{-1}\\frac{D \\mp d}{2C}', label: 'Belt angle', unit: 'rad', kind: 'calc', digits: 5,
                 compute: v => (H.has(v, 'Dg', 'd') && Cof(v) > 0) ? Math.asin((cr(v) ? v.Dg + v.d : v.Dg - v.d) / (2 * Cof(v))) : undefined },
@@ -379,7 +390,7 @@
                 work: v => (H.has(v, 'L') && !cr(v)) ? '\\(L = \\sqrt{4(' + F(Cof(v)) + ')^2 - (' + F(v.Dg) + '-' + F(v.d) + ')^2} + \\tfrac12[' + F(v.Dg) + '(' + F(v.phiD, 4) + ') + ' + F(v.d) + '(' + F(v.phi, 4) + ')] = ' + F(v.L) + '\\ \\text{in}\\)'
                   : H.has(v, 'L') ? '\\(L = \\sqrt{4(' + F(Cof(v)) + ')^2 - (' + F(v.Dg) + '+' + F(v.d) + ')^2} + \\tfrac12(' + F(v.Dg) + '+' + F(v.d) + ')(' + F(v.phi, 4) + ') = ' + F(v.L) + '\\ \\text{in}\\)' : null },
             ] },
-          { id: 'spd', title: 'Course step 1: belt speed and e^{fφ}', when: notGeo, eq: '(e), 17-7',
+          { id: 'spd', title: 'Course step 1: belt speed and \\(e^{f\\phi}\\)', when: notGeo, eq: '(e), 17-7',
             formula: 'V = \\frac{\\pi d n}{12}\\ \\text{ft/min},\\qquad e^{f\\phi_d}',
             vars: [
               { id: 'V', symbol: 'V', label: 'Belt speed', unit: 'ft/min', kind: 'calc', compute: v => H.has(v, 'd', 'n') ? Math.PI * v.d * v.n / 12 : undefined,
@@ -389,7 +400,7 @@
             ] },
           { id: 'bmin', title: 'Minimum width for full friction development', when: on('width'), fig: ['table17-4'], eq: '17-8, 17-12 (Ex 17-2, Prob 17-5)',
             formula: 'b_{min} = \\frac{\\Delta F}{a_0 - a_2}\\,\\frac{e^{f\\phi}}{e^{f\\phi}-1},\\qquad a_0 = F_aC_pC_v,\\quad a_2 = \\frac{12\\gamma t}{32.17}\\left(\\frac{V}{60}\\right)^2,\\quad \\Delta F = \\frac{2T}{d} = \\frac{2(63\\,025)H_d}{nd}',
-            text: 'Per inch of width the allowable tight side is a<sub>0</sub> and the centrifugal tension a<sub>2</sub>. Setting f′ = f at the design torque gives the narrowest belt that does not slip. Then pick an available width ≥ b<sub>min</sub>; the steps below evaluate that width.',
+            text: 'Per inch of width: allowable tight side a_0, centrifugal a_2. Setting \\(f^{\\prime} = f\\) at the design torque gives the narrowest belt; then pick a width ≥ b_min.',
             vars: [
               { id: 'a0', symbol: 'a_0', label: 'Allowable tension per inch, F_a·C_p·C_v', unit: 'lbf/in', kind: 'calc', compute: v => H.has(v, 'Fa', 'Cp', 'Cv') ? v.Fa * v.Cp * v.Cv : undefined },
               { id: 'a2', symbol: 'a_2', label: 'Centrifugal tension per inch of width', unit: 'lbf/in', kind: 'calc', compute: v => H.has(v, 'gamma', 't', 'V') ? 12 * v.gamma * v.t / G * (v.V / 60) ** 2 : undefined },
@@ -428,7 +439,7 @@
             ] },
           { id: 'tens', title: 'Course steps 6–7: slack side, initial tension, power carried', when: on('analyse', 'width', 'catalogue'), fig: ['fig17-7', 'fig17-8'], eq: '(i), (j)',
             formula: 'F_2 = (F_1)_a - \\Delta F,\\qquad F_i = \\frac{(F_1)_a + F_2}{2} - F_c,\\qquad H_a = \\frac{[(F_1)_a - F_2]\\,V}{33\\,000}',
-            text: 'Shaft load on the small pulley (slide 7): along the centre line (F<sub>1</sub> + F<sub>2</sub>)cos θ, across it (F<sub>1</sub> − F<sub>2</sub>)sin θ, θ = belt angle.',
+            text: 'Shaft load (slide 7): \\((F_1 + F_2)\\cos\\theta\\) along the centre line, \\((F_1 - F_2)\\sin\\theta\\) across it (\\(\\theta\\) = belt angle).',
             vars: [
               { id: 'F2', symbol: 'F_2', label: 'Slack-side tension', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'F1a', 'dF') ? v.F1a - v.dF : undefined,
                 work: v => H.has(v, 'F2') ? '\\(F_2 = ' + F(v.F1a) + ' - ' + F(v.dF) + ' = ' + F(v.F2) + '\\ \\text{lbf}\\)' : null,
@@ -441,11 +452,12 @@
                 compute: v => H.has(v, 'F1a', 'F2', 'alpha') ? Math.hypot((v.F1a + v.F2) * Math.cos(v.alpha), (v.F1a - v.F2) * Math.sin(v.alpha)) : undefined },
             ] },
           { id: 'chk', title: 'Course steps 8–9: friction check, factor of safety, dip', when: on('analyse', 'width', 'catalogue'), fig: ['fig17-11'], eq: '17-7, 17-13',
+            text: '\\(f^{\\prime}\\) is the friction the belt actually needs for the tension ratio and wrap ("effective friction", midterm 2022); no slip while \\(f^{\\prime} \\lt f\\).',
             formula: "f' = \\frac{1}{\\phi_d}\\ln\\frac{(F_1)_a - F_c}{F_2 - F_c} < f,\\qquad n_{fs} = \\frac{H_a}{H_{nom}K_s},\\qquad \\text{dip} = \\frac{C^2 w}{96 F_i}",
             vars: [
               { id: 'fp', symbol: "f'", label: 'Friction developed', unit: '', kind: 'calc', digits: 3, compute: v => (H.has(v, 'phi', 'F1a', 'F2', 'Fc') && v.F2 > v.Fc) ? Math.log((v.F1a - v.Fc) / (v.F2 - v.Fc)) / v.phi : undefined,
                 work: v => H.has(v, 'fp') ? "\\(f' = \\frac{1}{" + F(v.phi, 5) + '}\\ln\\frac{' + F(v.F1a) + ' - ' + F(v.Fc) + '}{' + F(v.F2) + ' - ' + F(v.Fc) + '} = ' + F(v.fp, 3) + '\\)' : null,
-                check: v => (H.has(v, 'fp', 'f') && v.fp >= v.f) ? 'f′ ≥ f — the belt slips' : null },
+                check: v => (H.has(v, 'fp', 'f') && v.fp >= v.f) ? '\\(f^{\\prime}\\) ≥ f — the belt slips' : null },
               { id: 'nfs', symbol: 'n_{fs}', label: 'Factor of safety', unit: '', kind: 'calc', digits: 3, compute: v => H.has(v, 'Ha', 'Hnom', 'Ks') ? v.Ha / (v.Hnom * v.Ks) : undefined,
                 work: v => H.has(v, 'nfs') ? '\\(n_{fs} = \\frac{' + F(v.Ha) + '}{' + F(v.Hnom) + '(' + F(v.Ks) + ')} = ' + F(v.nfs, 3) + '\\)' : null,
                 check: v => (H.has(v, 'nfs', 'nd') && v.nfs < v.nd - 1e-3) ? 'n_fs below n_d' : null },
@@ -469,7 +481,7 @@
             ] },
           { id: 'ten', title: 'Initial tension: minimum for no slip, tensions at the F_i you set, dip', when: on('tension'), fig: ['fig17-7', 'fig17-8', 'fig17-11'], eq: '17-9, 17-13',
             formula: 'F_{i,min} = \\frac{T}{d}\\,\\frac{e^{f\\phi}+1}{e^{f\\phi}-1},\\qquad F_1 = F_i + F_c + \\frac{T}{d},\\quad F_2 = F_i + F_c - \\frac{T}{d},\\qquad \\text{dip} = \\frac{C^2w}{96F_i}',
-            text: 'Below F<sub>i,min</sub> the belt slips (f′ &gt; f); above it F<sub>1</sub> rises and life drops. Leave F<sub>i</sub> blank to use the minimum, or type the value you will set. A measured dip gives F<sub>i</sub> the other way round.',
+            text: 'Below F_{i,min} the belt slips; above it F_1 rises and life drops. Blank F_i = the minimum; a measured dip gives F_i the other way round.',
             vars: [
               { id: 'Fimin', symbol: 'F_{i,min}', label: 'Smallest initial tension (no slip)', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'T', 'd', 'efp') ? v.T / v.d * (v.efp + 1) / (v.efp - 1) : undefined,
                 work: v => H.has(v, 'Fimin') ? '\\(F_{i,min} = \\frac{' + F(v.T) + '}{' + F(v.d) + '}\\cdot\\frac{' + F(v.efp) + '+1}{' + F(v.efp) + '-1} = ' + F(v.Fimin) + '\\ \\text{lbf}\\)' : null },
@@ -478,7 +490,7 @@
                 check: v => (H.has(v, 'F1t', 'F1a') && v.F1t > v.F1a + 1e-6) ? 'F_1 above (F_1)_a = ' + F(v.F1a) + ' lbf — overstressed' : null },
               { id: 'F2t', symbol: 'F_2', label: 'Slack-side tension', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'Fiset', 'Fc', 'T', 'd') ? v.Fiset + v.Fc - v.T / v.d : undefined },
               { id: 'fpt', symbol: "f'", label: 'Friction developed at this F_i', unit: '', kind: 'calc', digits: 3, compute: v => (H.has(v, 'F1t', 'F2t', 'Fc', 'phi') && v.F2t > v.Fc) ? Math.log((v.F1t - v.Fc) / (v.F2t - v.Fc)) / v.phi : undefined,
-                check: v => (H.has(v, 'fpt', 'f') && v.fpt > v.f + 1e-6) ? 'f′ > f — slips at this F_i' : null },
+                check: v => (H.has(v, 'fpt', 'f') && v.fpt > v.f + 1e-6) ? '\\(f^{\\prime}\\) > f — slips at this F_i' : null },
               { id: 'dipt', symbol: '\\text{dip}', label: 'Dip that sets this F_i', unit: 'in', kind: 'calc', digits: 3, compute: v => (H.has(v, 'w', 'Fiset') && Cof(v) > 0 && v.Fiset > 0) ? Cof(v) ** 2 * v.w / (96 * v.Fiset) : undefined,
                 work: v => H.has(v, 'dipt') ? '\\(\\text{dip} = \\frac{(' + F(Cof(v)) + ')^2(' + F(v.w) + ')}{96(' + F(v.Fiset) + ')} = ' + F(v.dipt, 3) + '\\ \\text{in}\\)' : null },
               { id: 'dipin', symbol: '\\text{dip}', label: 'Measured dip (optional)', unit: 'in', kind: 'input', hint: 'to find F_i from a dip' },

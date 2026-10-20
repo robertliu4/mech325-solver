@@ -515,7 +515,7 @@
 
   const SRC = {
     mott: 'Mott Tables 7-14/15/16 (No. 40/60/80)',
-    shig: 'Shigley Table 17-20 (17 T) × K₁',
+    shig: 'Shigley Table 17-20 (17 T) × K_1',
     renold: 'Renold ANSI catalogue (teeth × rpm)',
   };
   // single-strand rating of chain `no` with N teeth at n rpm → {hp, h17, k1, z} or {why}
@@ -592,9 +592,9 @@
   const N1LIST = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 25];
 
   // ---------------- selection tables (HTML via H.table) ----------------
-  const srcNote = src => src === 'shig' ? 'Rating = Table 17-20 (17 T) × K₁ = (N₁/17)^1.08 pre-extreme or ^1.5 post-extreme; lubrication zone read at 17 T.'
+  const srcNote = src => src === 'shig' ? 'Rating = Table 17-20 (17 T) × K_1, \\(K_1 = (N_1/17)^{1.08}\\) pre-extreme (link-plate fatigue) or \\((N_1/17)^{1.5}\\) post-extreme (roller/bushing fatigue).'
     : src === 'renold' ? 'Rating read from the Renold-Jeffrey catalogue page of each chain (teeth × rpm, interpolated); zone from the grey Type B band.'
-      : 'Rating read from Mott Table 7-14/15/16 at N₁ and n₁ (interpolated between columns/rows); other chain numbers are not tabulated by Mott — switch the rating source to Shigley 17-20 or Renold to see them.';
+      : 'Rating from Mott Tables 7-14/15/16 at N_1, n_1 (interpolated); other numbers: switch the source to Shigley 17-20 or Renold.';
   const lubeCell = z => z ? (z === 'C′' ? '<b>C′</b> galling' : z) : '—';
 
   function strandsTable(o) {
@@ -603,7 +603,7 @@
     const rc = PITCH[ch] ? rating(o.src, ch, o.N1, o.n1) : undefined;
     const ruleTxt = o.rule === 'pitch' ? 'smallest pitch first, then fewest strands — Shigley Ex. 17-5 picks 3 × No. 140; course: add strands before going to a much larger pitch'
       : 'fewest strands first, then the smallest chain — Mott Ex. 7-5 (single No. 60), Fizz p.28 "single strand first"; HW1 P6 → 3 × No. 80';
-    const tail = ' Mech p.34: No. 40 often fails, No. 80 is usually overkill — more strands keep the pitch (and sprocket size) down. ' + srcNote(o.src);
+    const tail = ' ' + srcNote(o.src);
     // chain fixed by the question / the student (differs from the free pick): rows = strands of THAT chain
     if (PITCH[ch] && (!pk || pk.chain !== ch)) {
       if (!rc || rc.hp === undefined) return '<div class="seltab-note">No. ' + ch + ': ' + (rc ? rc.why : '') + ' — change the rating source or the chain.</div>';
@@ -614,7 +614,7 @@
         return { cells: [s, f(o.fac[s]), f(cap), f(cap / o.P, 3), ok ? 'yes' : 'no', sm && sm.c ? 'No. ' + sm.c.no + (sm.ok ? '' : ' (' + sm.c.r.z + ')') : '—'], ok, pick: isPick, set: Object.assign({ strands: s }, o.clear || {}) };
       });
       return H.table(['Strands', 'factor', 'No. ' + ch + ' capacity (hp)', 'capacity/' + o.sym, '≥ ' + o.sym + '?', 'smallest chain for this many strands'], tr, {
-        caption: 'Strands for the chosen No. ' + ch + ' — ' + SRC[o.src] + ' at N₁ = ' + o.N1 + ', n₁ = ' + f(o.n1) + ' rpm (rating ' + f(rc.hp) + ' hp/strand, ' + o.sym + ' = ' + f(o.P) + ' hp)',
+        caption: 'Strands for the chosen No. ' + ch + ' — ' + SRC[o.src] + ' at N_1 = ' + o.N1 + ', n_1 = ' + f(o.n1) + ' rpm (rating ' + f(rc.hp) + ' hp/strand, ' + o.sym + ' = ' + f(o.P) + ' hp)',
         note: 'Pick = fewest strands whose capacity ≥ ' + o.sym + ' (HW1 P7: No. 80 given → 2 strands). ' + (pk ? 'If the chain were free the rule (' + ruleTxt + ') gives ' + pk.strands + ' × No. ' + pk.chain + ' — clear the chain field to see it.' : '') + tail,
       });
     }
@@ -627,8 +627,8 @@
       };
     });
     return H.table(['Strands', 'factor', 'P_des/factor (hp)'.replace('P_des', o.sym), 'smallest chain that carries it', 'its rating/strand (hp)', 'lube', 'No. ' + (PITCH[ch] ? ch : '?') + ' × factor (hp)'], tr, {
-      caption: 'Chain number × strands — ' + SRC[o.src] + ' at N₁ = ' + o.N1 + ', n₁ = ' + f(o.n1) + ' rpm (' + o.sym + ' = ' + f(o.P) + ' hp)',
-      note: 'Rule (' + ruleTxt + '). Rows whose smallest chain sits in the galling region C′ or runs above 9000 ft/min are rejected.' + tail,
+      caption: 'Chain number × strands — ' + SRC[o.src] + ' at N_1 = ' + o.N1 + ', n_1 = ' + f(o.n1) + ' rpm (' + o.sym + ' = ' + f(o.P) + ' hp)',
+      note: 'Rule (' + ruleTxt + '). Rows in the galling region C′ or above 9000 ft/min are rejected.' + tail,
     });
   }
   function chainTable(o) {
@@ -657,7 +657,7 @@
       const cap = r.hp !== undefined ? r.hp * fac : undefined;
       const okCap = cap !== undefined && (!(P > 0) || cap >= P) && r.z !== 'C′';
       const ok = okCap && N2 <= 120;
-      const note = [N < 17 ? (o.n1 < 100 ? '< 17 (n₁ < 100 ok)' : '< 17') : '', N % 2 === 0 ? 'even' : '', N2 > 120 ? 'N₂ > 120' : ''].filter(Boolean).join(', ');
+      const note = [N < 17 ? (o.n1 < 100 ? '< 17 (n_1 < 100 ok)' : '< 17') : '', N % 2 === 0 ? 'even' : '', N2 > 120 ? 'N_2 > 120' : ''].filter(Boolean).join(', ');
       return { N, N2, n2a, err, r, cap, ok, note };
     });
     const cand = rows.filter(r => r.ok && r.N >= 17);
@@ -666,9 +666,9 @@
       cells: [r.N, r.N2, f(r.n2a), r.err !== undefined ? (r.err >= 0 ? '+' : '') + f(r.err, 2) + ' %' : '—', r.r.hp !== undefined ? f(r.r.hp) : r.r.why, r.cap !== undefined ? f(r.cap) + (P > 0 ? (r.cap >= P ? ' ✓' : ' ✗') : '') : '—', r.r.z ? lubeCell(r.r.z) : '—', PITCH[ch] ? f(PD(PITCH[ch], r.N)) : '—', PITCH[ch] ? f(vel(ch, r.N, o.n1)) : '—', r.note],
       ok: r.ok, pick: best === r, set: Object.assign(PITCH[ch] ? { chain: ch, strands: o.strands || 1 } : {}, { N1: r.N, [o.N2id]: '' }, o.clear || {}),
     }));
-    return H.table(['N₁', 'N₂', 'n₂ (rpm)', 'speed error', 'rating/strand (hp)', '× ' + f(fac) + ' (hp)', 'lube', 'PD₁ (in)', 'V (ft/min)', 'note'], tr, {
+    return H.table(['N_1', 'N_2', 'n_2 (rpm)', 'speed error', 'rating/strand (hp)', '× ' + f(fac) + ' (hp)', 'lube', 'PD_1 (in)', 'V (ft/min)', 'note'], tr, {
       caption: 'Small-sprocket teeth with No. ' + (PITCH[ch] ? ch : '?') + ', ' + (o.strands || 1) + ' strand(s) — ' + SRC[o.src],
-      note: 'Pick = smallest ODD N₁ ≥ 17 whose capacity ≥ ' + o.sym + ' (Fizz p.28, Mech p.36: 17 gives K₁ = 1; Martin: 17 recommended, 15 common, as low as 7) with N₂ ≤ 120. HW1 P6 used 14 T (smallest that carries 22.4 hp/strand on a 3-strand No. 80 at 500 rpm) — accepted at low speed, so it is shown but not starred. Use sets N₁ and lets N₂ = round(N₁·VR) recompute.',
+      note: 'Pick = smallest ODD N_1 ≥ 17 whose capacity ≥ ' + o.sym + ' with N_2 ≤ 120 (Fizz p.28, Mech p.36; 17 gives K_1 = 1). More teeth also cut chordal speed variation. HW1 P6 used 14 T at 500 rpm (shown, not starred).',
     });
   }
   function n2Table(o) {
@@ -680,9 +680,9 @@
       const ok = N2 <= 120 && N2 / o.N1 <= 7.0001;
       return { cells: [N2, f(N2 / o.N1, 4), f(n2a), err !== undefined ? (err >= 0 ? '+' : '') + f(err, 2) + ' %' : '—', av ? (av.has(N2) ? 'yes' : 'no') : '—', N2 > 120 ? '> 120 T' : (N2 / o.N1 > 7 ? 'ratio > 7' : '')], ok, pick: N2 === pk && ok, set: { [o.N2id]: N2 } };
     });
-    return H.table(['N₂', 'ratio', 'n₂ (rpm)', 'speed error', 'stocked (Table 17-21)', 'note'], tr, {
-      caption: 'Large-sprocket teeth around N₁·VR = ' + f(o.N1 * o.VR, 4),
-      note: 'Pick = nearest integer that is stocked for this chain in Table 17-21 (Mott Ex. 7-5: 65.11 → 65; HW1 P7: 85 is not stocked for No. 80 → 84, the course\'s choice; Mech rounds up). Check the output speed stays inside the required range; ratio ≤ 7:1 (course s27), N₂ ≤ 120.',
+    return H.table(['N_2', 'ratio', 'n_2 (rpm)', 'speed error', 'stocked (Table 17-21)', 'note'], tr, {
+      caption: 'Large-sprocket teeth around N_1·VR = ' + f(o.N1 * o.VR, 4),
+      note: 'Pick = nearest integer stocked in Table 17-21 (Mott Ex 7-5: 65.11 → 65; HW1 P7: 85 → 84). Ratio ≤ 7:1, N_2 ≤ 120.',
     });
   }
   function lengthTable(o) {
@@ -696,9 +696,9 @@
       const ok = cd !== undefined && (th === undefined || th >= 120);
       return { cells: [L, p ? f(L * p) : '—', cd !== undefined ? f(cd) : '—', cin !== undefined ? f(cin) : '—', cd !== undefined ? (in3050 ? 'yes' : 'no') : '—', big === undefined ? '—' : (big ? 'yes' : 'no'), th !== undefined ? f(th) + '°' : '—'], ok, pick: L === pk && ok, set: { [o.Lid]: L } };
     });
-    return H.table(['L (pitches)', 'L (in)', 'CD (pitches)', 'CD (in)', '30–50 p?', 'CD ≥ 1.5 PD₂?', 'θ₁'], tr, {
+    return H.table(['L (pitches)', 'L (in)', 'CD (pitches)', 'CD (in)', '30–50 p?', 'CD ≥ 1.5 PD_2?', 'θ_1'], tr, {
       caption: 'Even chain lengths around the computed ' + f(l) + ' pitches (trial CD = ' + f(o.C) + ' pitches)',
-      note: 'Pick = nearest EVEN number of pitches (no offset link; Mott Ex. 7-5 122.5 → 122, HW1 P6 93.1 → 94, Shigley Ex. 17-5 75.79 → 76); if that pulls a trial CD of 30+ pitches below the 30-pitch minimum take the next even length (Mott Ex. 7-6: 102.9 → 104). Course: CD 30–50 pitches and θ₁ ≥ 120° (rows below 120° are greyed); CD ≥ 150 % of the large sprocket is a course guideline only shown here (Mott Ex. 7-6 itself has 15.27 in < 1.5 × 10.35 in). Tutorial 1 Q2 kept 135 (odd) — type it if the question does.',
+      note: 'Pick = nearest EVEN number of pitches (no offset link; Mott Ex 7-5 122.5 → 122, midterm 2021 124.8 → 124); next even if CD would drop below 30 pitches. Keep 30–50 pitches and \\(\\theta_1 \\ge 120^\\circ\\). Midterm 2024 rounded to odd 129/147 (slip — an odd length needs an offset link).',
     });
   }
   function tensionTable(o) {
@@ -710,10 +710,22 @@
     });
     return H.table(['Chain', 'p (in)', o.TSlabel + ' (lb)', 'Renold min tensile (lb)', 'Renold working load (lb)', 'SF', 'F_w ≤ WL?'], tr, {
       caption: 'Chain in tension: need strength ≥ 10 × F_w = ' + f(need, 6) + ' lb per strand',
-      note: 'Pick = smallest chain with ' + o.TSlabel + ' strength ≥ 10 × working load (course HW1 P5: 2500 lb → 25 000 lb → No. 120, 34 000 lb, SF 13.6; Fizz p.27 "use only 10 % of the tensile strength"). Renold columns: catalogue single-strand values (Chains s15; multi-strand rows on the catalogue page). Renold nominal safety factors 5–12 on breaking load (s33).',
+      note: 'Pick = smallest chain with ' + o.TSlabel + ' strength ≥ 10 × working load (HW1 P5: 2500 lb → No. 120, SF 13.6). Renold: nominal safety factor 5–12 on breaking load (s33).',
     });
   }
 
+  // Chain dimensions: Shigley Table 17-19 [width in, roller dia in, strand spacing in]
+  const DIM17_19 = { 25: [0.125, 0.130, 0.252], 35: [0.188, 0.200, 0.399], 41: [0.25, 0.306, NaN], 40: [0.312, 0.312, 0.566], 50: [0.375, 0.400, 0.713], 60: [0.500, 0.469, 0.897], 80: [0.625, 0.625, 1.153],
+    100: [0.750, 0.750, 1.409], 120: [1.000, 0.875, 1.789], 140: [1.000, 1.000, 1.924], 160: [1.250, 1.125, 2.305], 180: [1.406, 1.406, 2.592], 200: [1.500, 1.562, 2.817], 240: [1.875, 1.875, 3.458] };
+  function dimsTable(chain, book) {
+    const ch = Number(chain);
+    const rows = ORDER.map(no => { const d = DIM17_19[no], t = T17_19[no];
+      return { cells: ['No. ' + no + (no === ch ? ' <span style="color:#2563eb">← in use</span>' : ''), f(PITCH[no]) + ' in', f(d[0], 4), f(d[1], 4), isNaN(d[2]) ? '—' : f(d[2], 4), f(T7_12[no], 6), f(t[1], 6), f(t[2])], pick: no === ch, set: { chain: no } }; });
+    return H.table(['Chain', 'Pitch p', 'Width (in)', 'Roller dia (in)', 'Strand spacing (in)', 'Avg tensile, Mott 7-12 (lb)', 'Min tensile, Shigley 17-19 (lbf)', 'Weight (lbf/ft)'], rows,
+      { caption: 'Standard roller-chain sizes — ' + (book === 'mott' ? 'Mott Table 7-12 with Shigley Table 17-19 dimensions' : 'Shigley Table 17-19 (Mott Table 7-12 tensile for comparison)'),
+        note: 'Chain number: first digit(s) × 1/8 in = pitch (No. 40 = 1/2 in, No. 100 = 1¼ in); a final 1 (No. 41) is a light-duty chain.' });
+  }
+
   window.CHAINS = { MOTT, RENOLD, S20, PITCH, T7_12, T17_19, T17_21, ORDER, LUBE, SRC, rating, pick, fewestStrands, smallestFor, smallest, K1, H1, H2, Lp, CDp, pickLength, n2pick, PD, vel,
-    strandsTable, chainTable, teethTable, n2Table, lengthTable, tensionTable };
+    strandsTable, chainTable, teethTable, n2Table, lengthTable, tensionTable, dimsTable };
 })();
