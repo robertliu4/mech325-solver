@@ -8,7 +8,8 @@
  *   Lewis check of Helical/Bevel s31–34 (σt = Wt Pd SF/(F Y), Mott Table 9-15 Y).
  * Verified against: Mott Ex. 8-9 (24 T, Pd 6, 125 rpm, 20 ft → DP 4.000, B 1.333, B-C 3.333 in, Vrack 130.9 ft/min, t 9.167 s, 19.09 rev)
  *   and Gear Trains Tut 1 Q3h (20° FD pinion with a rack → NP,min = 2/sin²20° = 17.1 → 18 teeth). The example's bending part (1 hp, F 1 in,
- *   Q_v 7, J 0.37 = Fig. 14-6 for 24 T with the 1000-tooth/rack curve — was 0.35, a mis-read) is illustrative: Wt 252.1 lbf, σ 5 373 psi. */
+ *   Q_v 7, J 0.37 = Fig. 14-6 for 24 T with the 1000-tooth/rack curve — was 0.35, a mis-read) is illustrative: Wt 252.1 lbf, σ 5 373 psi.
+ * Verified against (gears polish, v2/notes/past_exam_gears.md): HW2 P2 (Mott 8-81: NP 30, Pd 12, 50 rpm, 7 ft → dP 2.5, B 0.917, 2.167 in, 32.72 ft/min, 12.83 s, 10.7 rev). */
 (function () {
   const r = d => d * Math.PI / 180, fmt = (x, d) => H.fmt(x, d);
   const has = (v, ...a) => H.has(v, ...a);
@@ -134,7 +135,7 @@
       { title: '3 · Forces (Sec. 13-14 spur-gear force analysis)', steps: [
         { id: 'f', title: 'Tangential, radial and normal tooth forces', eq: '13-35, 13-36', fig: ['f13-29'],
           formula: 'T = \\frac{63\\,025\\,H}{n_P},\\quad W_t = \\frac{2T}{D_P} = \\frac{33\\,000\\,H}{V_{rack}},\\quad W_r = W_t\\tan\\phi,\\quad W = \\frac{W_t}{\\cos\\phi}',
-          text: 'Driving pinion: \\(W_t\\) on the pinion opposes its rotation; on the rack it acts along the rack in the direction the rack moves (= pinion pitch-point velocity). \\(W_r\\) pushes the rack away from the pinion (carried by the rack guides) and the pinion toward its own centre. Given a rack force instead of power, the sheet works back to torque and power.',
+          text: 'Driving pinion: \\(W_t\\) opposes the pinion rotation and pushes the rack the way it moves; \\(W_r\\) separates rack and pinion (the rack guides carry it). A given rack force works back to torque and power.',
           vars: [
             { id: 'Wt', symbol: 'W_t', label: 'Tangential force (on rack and pinion)', unit: 'lbf', kind: 'calc', compute: v => has(v, 'Frack') ? v.Frack : (has(v, 'H', 'Vrack') ? 33000 * v.H / v.Vrack : undefined),
               work: v => !has(v, 'Frack') && has(v, 'H', 'Vrack') ? '\\(W_t = 33\\,000(' + fmt(v.H) + ')/' + fmt(v.Vrack) + ' = ' + fmt(33000 * v.H / v.Vrack) + '\\) lbf' : null },

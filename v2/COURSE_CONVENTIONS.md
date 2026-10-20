@@ -472,3 +472,13 @@ the textbook crops in `v2/figures/shigley` and `v2/figures/mott`.
 - Tutorial 2022 Q4 (Mott 12-23): "SAE 1170 CD … s_y = 51 ksi" with the solver's own note that it should be 57 ksi; D = 2.75 in either way.
 - Final review Q1(e): coupling key length uses D = 0.5 in and W = 0.125 in (1/8 key, Table 11-1 row 0.4375–0.5625) → 0.966 in.
 - New crops from this pass: `figures/course/pin_double_shear_failure_loads.png` (class-notes pin table, HW4 2023 p.17), `skf_table3_a1_reliability_p90.png`, `skf_diagram8_askf_p95.png`, `skf_table6_eta_c_contamination_p105.png` (SKF catalogue, HW4 2024 P4d); `figures/shigley/table7-4.png` (setscrews); `figures/mott/table11-5.png`, `table11-6.png` (splines).
+
+### Added during the gears polish (spur, helical, bevel, worm, rack, gear trains — see `v2/notes/past_exam_gears.md`)
+- HW2 P6 (Shigley 13-54): the solution's W = 344i + 250j + 595k is inconsistent. +595k tangential implies ω = +i, and then a RH driving pinion pushes gear 3 along −x, so the Wt and Wa signs do not match. The pages give senses from the hand rule.
+- HW2 P10 (Mott 10-14 mod.): Ks written as 0.4867 + 0.2133/16 = 0.500, but Pd = 10 gives 0.508 (st 29 443, not 28 968). KL values are swapped between pinion (1.8e7 cycles → 1.007) and gear (6e6 → 1.027), so sat,P should be about 28 766, not 28 208. Forces labelled "at r_m" use the large-end Wt 840 (Tp/rm = 1141).
+- Midterm 2022 P2 (helical): Wt 975.6 vs 978 lbf (rounding / 63 000). Part 3 multiplies by YN (s_at' = 29 × 0.95 = 27.5) instead of dividing (30.5 ksi → HB about 236; 4140 OQT1300 HB 235 → SF about 1.00, not 1.13). Cma is written with 1.093e-7.
+- Midterm 2021 P2 part 3: SF computed as a hardness ratio 341/329 = 1.04 instead of a strength ratio (about 1.03).
+- HW2 P7 (Mott 9-60): the Cma formula is written "1.693e-4" (the value 0.1458 is right).
+- Midterm 2021 MC9: (c) "efficiency is a function of f and pressure angle" is keyed FALSE. That is debatable because η depends on f, φn and λ. The pages state the full dependence.
+- Midterm 2023 P2 (bevel) computes forces at the large end (d/2) where the course slides use the mean radius, so the bevel pages have a force-radius choice.
+- Pre-existing bug fixed: helical_shigley I-step note referenced an undefined variable, so its after text was silently empty.

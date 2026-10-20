@@ -14,7 +14,9 @@
  *   JP 0.247 / JG 0.202 (Fig 15-7: 20T with 60T mate / 60T with 20T mate; the earlier 0.235 / 0.215 were mis-reads)
  *   → bending rating 17.7 hp (pinion) / 14.8 hp (gear); Cs 0.5938, Cxc 2 (uncrowned),
  *   I 0.083 (Fig 15-6), CL 1.000, sac 125 920 → swc 112 640 psi → W^t_wear 460 lbf → wear rating 10.95 hp (Cp 2300; 11.0 hp with
- *   Cp 2290) → gearset rated 10.95 ≈ 11 hp, wear-limited. Forces at r_av for H = 10.95 hp: TP 766.8 lbf·in, r_av,P 1.469 in, Wt 522 lbf. */
+ *   Cp 2290) → gearset rated 10.95 ≈ 11 hp, wear-limited. Forces at r_av for H = 10.95 hp: TP 766.8 lbf·in, r_av,P 1.469 in, Wt 522 lbf.
+ * Verified against (gears polish, v2/notes/past_exam_gears.md): Midterm 2023 P2 with forces at the large end (γ 18.43°, Wt 360.1, Wr 124.4, Wa 41.45, Kv 1.188, Ks 0.508, Km 1.104, st 14 398,
+ *   KL 0.9689, sat 14 860); HW2 P5 (13-50: WrG 4.682, WaG 7.803). */
 (function () {
   // engine.js (which defines window.H) loads after this file, so only call H lazily inside functions
   const r = d => d * Math.PI / 180, fmt = (x, d) => H.fmt(x, d);
@@ -163,7 +165,7 @@
       { title: '3 · Force analysis (Sec. 13-15) — forces at the mean radius', text: 'Shaft/bearing loads act at the tooth midpoint \\(r_{av}\\) (Eq. 13-37); the AGMA stresses in section 4 use \\(W^t = 2T/d_P\\) at the large end. A question may ask for the forces at \\(d_P\\) instead (Midterm 2023) — pick that below.', steps: [
         { id: 'force', title: 'Tangential, radial and axial loads', eq: '13-37, 13-38', fig: ['f13-31', 'cwt'],
           formula: 'T_P = \\frac{63\\,025\\,H}{n_P},\\quad W_t = \\frac{T_P}{r_{av,P}},\\quad W_r = W_t\\tan\\phi\\cos\\gamma,\\quad W_a = W_t\\tan\\phi\\sin\\gamma',
-          text: 'Directions: on the driven gear \\(W_t\\) acts with its motion at the mesh, on the driver it opposes motion. \\(W_r\\) points to that gear’s own axis; \\(W_a\\) is along its axis and pushes it away from the cone apex (toward its back), so one bearing takes it as thrust. For 90° shafts the pinion \\(W_r\\) is the gear \\(W_a\\) and vice-versa.',
+          text: '\\(W_t\\) opposes motion on the driver and acts with it on the driven gear; \\(W_r\\) points to each gear’s own axis and \\(W_a\\) pushes each gear away from the cone apex (one bearing takes the thrust). For 90° shafts pinion \\(W_r\\) = gear \\(W_a\\) and vice-versa.',
           vars: [
             { id: 'TP', symbol: 'T_P', label: 'Pinion torque', unit: 'lbf·in', kind: 'calc', compute: v => has(v, 'H', 'nP') ? 63025 * v.H / v.nP : undefined,
               work: v => has(v, 'H', 'nP') ? '\\(T_P = 63\\,025(' + fmt(v.H) + ')/' + fmt(v.nP) + ' = ' + fmt(63025 * v.H / v.nP) + '\\) lbf·in' : null },
@@ -179,7 +181,7 @@
             { id: 'WaG', symbol: 'W_{aG}', label: 'Gear axial load \\(W_t\\tan\\phi\\sin\\Gamma\\) (= pinion radial)', unit: 'lbf', kind: 'calc', compute: v => has(v, 'Wt_f', 'phi', 'Gam') ? v.Wt_f * Math.tan(r(v.phi)) * Math.sin(r(v.Gam)) : undefined },
             { id: 'Wres', symbol: 'W', label: 'Resultant tooth force \\(W_t/\\cos\\phi\\)', unit: 'lbf', kind: 'calc', compute: v => has(v, 'Wt_f', 'phi') ? v.Wt_f / Math.cos(r(v.phi)) : undefined },
           ],
-          after: v => has(v, 'Wt_f') ? '<span class="muted">Bearing reactions: put \\(\\mathbf{W} = (W_t, W_r, W_a)\\) at the mean radius, sum moments about one bearing (\\(\\mathbf{M} = \\mathbf{r}\\times\\mathbf{F}\\)), then sum forces; the thrust goes to one bearing only (Shigley Ex. 13-8, HW2 P5).</span>' : '' },
+          after: v => has(v, 'Wt_f') ? '<span class="muted">Bearing reactions: put \\(\\mathbf{W} = (W_t, W_r, W_a)\\) at the force radius, sum moments about one bearing (\\(\\mathbf{M} = \\mathbf{r}\\times\\mathbf{F}\\)), then sum forces; the thrust goes to one bearing only (Shigley Ex. 13-8, HW2 P5).</span>' : '' },
       ] },
 
       { title: '4 · AGMA bending stress \\(s_t\\) (Eq. 15-3)', steps: [

@@ -13,7 +13,9 @@
  *   F 0.5, sand-cast, basis = Shigley/course selected)
  *   with the Shigley/course basis: λ 4.764°, vs 679.8, μ 0.0250, η 75.63 %, W_tG 966, W_tW (= W_xG) 106.4, p_n 0.3913, σ 41 360 psi (Mott Kv
  *   0.955 form; Shigley form 39 500) > 24 ksi FAIL, Cs 786.9, Cm 0.767, Cv 0.312, Fe 0.5 → W_tR 447 < 966 FAIL (the course solution's 1787
- *   used Fe = 2 in by mistake), Hloss 17 570, hCR 0.396 no fan → ts 96.1 °F (course: Amin 1642 used C = 8.5 by mistake; sheet 505.5 in²). */
+ *   used Fe = 2 in by mistake), Hloss 17 570, hCR 0.396 no fan → ts 96.1 °F (course: Amin 1642 used C = 8.5 by mistake; sheet 505.5 in²).
+ * Verified against (gears polish, v2/notes/past_exam_gears.md): HW2 P9 (Mott 8-52 / 10-18: λ 4.574°, DG 4, C 2.625, vs 394, WtG 462, WxG 52.56, WrG 120.2, Wf 15.55, PL 0.186 hp, Pi 0.626 hp,
+ *   η 70.3 % vs 70.4, Kv 0.9745, Wd 474, σ 24 223 vs 24 235 psi, Cs 1000, Cm 0.814, Cv 0.427, WtR 658.8 lb > 462 OK); worm-turns MC3 cases. */
 (function () {
   const r = d => d * Math.PI / 180, fmt = (x, d) => H.fmt(x, d);
   const has = (v, ...a) => H.has(v, ...a);

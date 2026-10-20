@@ -13,7 +13,9 @@
  *   st,G 10 820 psi → 207 HB, still below the 267 HB pitting requirement.
  *   Also checked with Gear Trains Tutorial 5 (S 15-1/15-2: uncrowned 20/60 T, Pd 6, Av 11, 300 HB, F 1.25, 900 rpm, 10^9 rev,
  *   R 0.999, Kmb 1.1, Cxc 2, Ko = SF = 1): JP 0.247 / JG 0.202 → bending 17.7 / 14.8 hp; I 0.083, CR 1.12 (Table 10-3) → wear 10.9 hp
- *   → gearset ≈ 11 hp, wear-limited (same as the Shigley sheet). */
+ *   → gearset ≈ 11 hp, wear-limited (same as the Shigley sheet).
+ * Verified against (gears polish, v2/notes/past_exam_gears.md): Midterm 2023 P2 (HB 290; 4140 OQT1000 → SF 1.151); HW2 P10 (Mott 10-14 mod.: Wt 840.3, Kv 1.071, Ks 0.508, Km 1.256, st 29 443 —
+ *   solution 28 968 used Ks 0.500 — sc 238 320, KLP 1.007, KLG 1.027, CL 1.274). */
 (function () {
   const r = d => d * Math.PI / 180, fmt = (x, d) => H.fmt(x, d);
   const has = (v, ...a) => H.has(v, ...a);

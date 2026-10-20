@@ -7,7 +7,11 @@
  *     N 1.26e8, ZN 0.943, Sc,min 135.5 ksi (SF 1) → HB ≥ 330; 4340 OQT1000 HB 363 → SH 1.08 ≈ 1.10)
  * Verified against: Shigley Ex. 14-4 (4 hp, 1800 rpm, 17/52 T, P 10, F 1.5, Q_v 6, K_s formula, R 0.90, 10^8 cycles, 240/200 HB) with the auto J
  *   (digitized Fig. 14-6) → J 0.297/0.399 (book 0.30/0.40), K_v 1.377, σ_P 6488 (book 6417 with J 0.30), σ_c 70 331 (70 360), S_H,P 1.69, S_H,G 1.52.
- * Defaults = Fizz/Mech guide assumptions (review 2026-10): F_nom 12/P_d, Q_v 7 (A_v 10), K_s Mott Table 9-2, N_P 17, life 20 000 h when none given. */
+ * Defaults = Fizz/Mech guide assumptions (review 2026-10): F_nom 12/P_d, Q_v 7 (A_v 10), K_s Mott Table 9-2, N_P 17, life 20 000 h when none given.
+ * Verified against (gears polish, v2/notes/past_exam_gears.md): Midterm 2025 P2 (NG 46, Wt 423.7, Kv 1.175, Km 1.22, I 0.1173, σc 115.8 ksi, ZN 0.943, Fig. 9-11 pick Pd 10); Midterm 2021 P2
+ *   (V 610.9, Wt 270.1, σc 120.3 ksi vs 120.4, HB 283 vs 282); 2016 Q15b / 2021 Q17 (C 6, P16, VR 3 → 48/144); 2016 LA21–23 (idler train Wt 355.9,
+ *   Wr 129.5, C 9.75; σ 17 280 / 16 723; SF 5.6 / 4.3); train section: HW2 P4 (400 / 133.3 rpm, 1576 / 14 181 lbf·in), 2014 MC6 and 2016 MC7
+ *   planetary (300 / 1000 rpm, opposite), 2014 LA21 (12.35 N·m), MC6/7 of 2021–2024 (270 CW 26.5 N·m; 360 CW 19.9; 300 CW 31.8). */
 (function () {
   // ---------- local helpers ----------
   const has = (v, ...ids) => H.has(v, ...ids);
@@ -183,6 +187,8 @@
       { text: 'Grade 1 through-hardened steel', src: 'Fizz p.48 · Mech p.84', var: 'grade', value: 1 },
       { text: 'Same material for pinion and gear → \\(C_H = 1\\)', src: 'Fizz p.48 · Mech p.73 · Gear Stress s45 (course)', var: 'HBG' },
       { text: 'Steel from Mott Appendix 3 (Appendix 5 carburized); required \\(H_B > 400\\) → flame/induction hardening or carburizing', src: 'Fizz p.48–51 · Mech p.84–87', step: 'hb' },
+      { text: '\\(W_r = W_t\\tan\\phi\\) exists because of the pressure angle; a larger \\(\\phi\\) gives a larger \\(W_r\\)', src: 'midterms 2016 MC5, 2022 MC4', step: 'force' },
+      { text: 'A planetary train has two degrees of freedom; fix one member (arm or ring) to get a single ratio. An idler changes direction only', src: 'midterm 2022 MC10 · RAP quiz', step: 'train' },
     ],
 
     figures: [
@@ -483,7 +489,7 @@
           ] },
         { id: 'hb', title: 'Required Brinell hardness (through-hardened steel) → pick a steel (F37–38, 40 · M23, 30)', fig: ['f14-2', 'f14-5', 'mt9-8', 'mapp3a', 'mapp3b', 'mapp5', 't14-3', 't14-6', 'm-t2-2', 'm-t2-9', 'm-t2-8', 'm-f2-12'],
           formula: 'H_{B} = \\frac{S_t - 12\\,800}{77.3}\\ (\\text{grade 1 bending}),\\qquad H_B = \\frac{S_c - 29\\,100}{322}\\ (\\text{grade 1 contact})',
-          text: 'Take the largest hardness and pick an alloy + heat treatment above it (Mott Table 9-8 / Appendix 3, e.g. 4140 OQT1300 HB 235, 4140 OQT1000 HB 341, 4340 OQT1000 HB 363); quote HB and % elongation. Above ≈ 400 HB use flame/induction hardening or carburizing (Tables 14-3/14-6).',
+          text: 'Pick an alloy + heat treatment above the largest hardness (Mott Table 9-8 / App. 3: 4140 OQT1300 HB 235, OQT1000 HB 341) and quote HB and % elongation. Above about 400 HB, case-harden (Tables 14-3/14-6).',
           vars: [
             { id: 'grade', label: 'Steel grade', kind: 'choice', options: [{ label: 'Grade 1 (guides and course default)', value: 1 }, { label: 'Grade 2', value: 2 }], default: 1 },
             { id: 'HBbP', symbol: 'H_{B,bend,P}', label: 'Hardness for pinion bending', unit: 'HB', kind: 'calc', digits: 4, compute: v => has(v, 'StreqP', 'grade') ? Math.max(0, v.grade === 2 ? (v.StreqP - 16400) / 102 : (v.StreqP - 12800) / 77.3) : undefined, work: v => v.HBbP !== undefined ? '\\(H_B = (' + f(v.StreqP) + ' - ' + (v.grade === 2 ? '16\\,400)/102' : '12\\,800)/77.3') + ' = ' + f(v.HBbP) + '\\)' : null },

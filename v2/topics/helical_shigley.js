@@ -5,7 +5,10 @@
  *   S_t,min (SF = 1) 5961 psi (course 5947), I 0.1909 (course 0.190), σ_c 73.2 ksi (course ≈ 74.0), S_c,min 65.6 ksi (course 66.2), 200 HB → S_F 4.74 (4.8), S_H 1.43 (1.41)).
  * Verified against: Gear Trains Tutorial 1 Q1 / Module 2 p1–3 (P_n = 6, ψ = 25°, 16/36 T → P_t 5.438, d_4 2.942, d_5 6.620, C 4.78 in).
  * Auto J′/K_J′ (digitized Figs. 14-7/14-8): 16 T, ψ 25° → J′ 0.468 (tutorial 0.47); lecture 20T/100T, ψ 20° → J′ 0.505 (course: Shigley 0.505), K 1.01, gear K 0.933 (0.935).
- * Defaults = Fizz/Mech guide assumptions (review 2026-10): P_n 12, N_P 24, F = 2p_x, Q_v 7, K_s Mott Table 9-2, life 20 000 h when none given. */
+ * Defaults = Fizz/Mech guide assumptions (review 2026-10): P_n 12, N_P 24, F = 2p_x, Q_v 7, K_s Mott Table 9-2, life 20 000 h when none given.
+ * Verified against (gears polish, v2/notes/past_exam_gears.md): Midterm 2024 P2 (Pn 10, ψ 20°, 19T, 20 hp: Wt 712.5, Wr 276, Wa 259.3, Kv 1.189, Km 1.206, J 0.50 → σ 28.8 ksi vs 28.9, HB 231 vs 233);
+ *   Midterm 2022 P2 via the transverse-pitch input (Pn 12.42, Wt 978 vs 975.6, Wr 368.5, Wa 262); 2014 Q15 (pn 0.3887); HW2 P6 (13-54: Pt 5.196,
+ *   φt 22.8°, Wt 595, Wa 343.5, Wr 250.1). */
 (function () {
   const has = (v, ...ids) => H.has(v, ...ids);
   const f = (x, d) => H.fmt(x, d);

@@ -8,7 +8,8 @@
  *   plastic-gear Lewis check of Helical/Bevel s31–34 (σt = Wt Pd SF/(F Y), Mott Table 9-15 Y).
  * Verified against: Mott Ex. 8-9 (24 T, Pd 6, 125 rpm, 20 ft → DP 4.000, B 1.333, B-C 3.333 in, Vrack 130.9 ft/min, t 9.167 s, 19.09 rev)
  *   and Gear Trains Tut 1 Q3h (20° FD pinion with a rack → NP,min = 2/sin²20° = 17.1 → 18 teeth). The example's bending part (1 hp,
- *   F 1 in, Av 10, J 0.37 from Fig. 9-10 with the ∞ mate) is illustrative: Wt 252.1 lb, st 5 374 psi (same as the Shigley sheet). */
+ *   F 1 in, Av 10, J 0.37 from Fig. 9-10 with the ∞ mate) is illustrative: Wt 252.1 lb, st 5 374 psi (same as the Shigley sheet).
+ * Verified against (gears polish, v2/notes/past_exam_gears.md): HW2 P2 (Mott 8-81: NP 30, Pd 12, 50 rpm, 7 ft → dP 2.5, B 0.917, 2.167 in, 32.72 ft/min, 12.83 s, 10.7 rev). */
 (function () {
   const r = d => d * Math.PI / 180, fmt = (x, d) => H.fmt(x, d);
   const has = (v, ...a) => H.has(v, ...a);
@@ -142,7 +143,7 @@
       { title: 'Forces (Sec. 9-3 spur-gear forces)', steps: [
         { id: 'f', title: 'Torque, tangential, radial and normal forces',
           formula: 'T = \\frac{63\\,000P}{n_P},\\quad W_t = \\frac{T}{D_P/2} = \\frac{33\\,000P}{v_t},\\quad W_r = W_t\\tan\\phi,\\quad W_n = \\frac{W_t}{\\cos\\phi}',
-          text: 'Driving pinion: \\(W_t\\) on the pinion opposes its rotation; on the rack it acts along the rack in the direction the rack moves (= pinion pitch-point velocity). \\(W_r\\) pushes the rack away from the pinion (carried by the rack guides) and the pinion toward its own centre. Given a rack force instead of power, the sheet works back to torque and power.',
+          text: 'Driving pinion: \\(W_t\\) opposes the pinion rotation and pushes the rack the way it moves; \\(W_r\\) separates rack and pinion (the rack guides carry it). A given rack force works back to torque and power.',
           vars: [
             { id: 'Wt', symbol: 'W_t', label: 'Tangential force', unit: 'lb', kind: 'calc', compute: v => has(v, 'Frack') ? v.Frack : (has(v, 'P', 'Vrack') ? 33000 * v.P / v.Vrack : undefined),
               work: v => !has(v, 'Frack') && has(v, 'P', 'Vrack') ? '\\(W_t = 33\\,000(' + fmt(v.P) + ')/' + fmt(v.Vrack) + ' = ' + fmt(33000 * v.P / v.Vrack) + '\\) lb' : null },

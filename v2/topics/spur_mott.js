@@ -8,7 +8,9 @@
  *   are reproduced with ksMode = 2 and I = 0.1205 here, and on the Shigley page.
  * Verified against: Mott Ex. 9-7 (3 hp, 1750 rpm, uniform/heavy K_o 1.75, P_d 12, N_P 18, A_v 11, open gearing) with the auto values →
  *   N_G 68, F 1.00, v_t 687, W_t 144, K_v 1.35, J 0.321/0.414 (book 0.325/0.410), I 0.104 (book 0.104), K_m 1.305, s_c 122.6 ksi (book 122.9).
- * Defaults = Fizz/Mech guide assumptions (review 2026-10); midterm bending s_t now uses the digitized J (0.297/0.391). */
+ * Defaults = Fizz/Mech guide assumptions (review 2026-10); midterm bending s_t now uses the digitized J (0.297/0.391).
+ * Verified against (gears polish, v2/notes/past_exam_gears.md): HW2 P7 (Mott 9-60: Pd auto 10, NG 56, Wt 291.8, Km 1.19, st 17 089, sc 125 525); the shared train section reproduces the midterm
+ *   gear-train MCs (2014 MC6, 2016 MC7, 2021–2024 MC6/7, 2014 LA21) with 63 000 for hp. */
 (function () {
   const has = (v, ...ids) => H.has(v, ...ids);
   const f = (x, d) => H.fmt(x, d);
@@ -127,13 +129,13 @@
       n = n * D / G; shafts.push('after stage ' + k + ': ' + f(n) + ' rpm');
     });
     out += '<br>Shaft speeds: ' + shafts.join(' · ') + '.';
-    if (rows.length) out += H.table(['mesh', 'driver rpm', 'driver \\(d\\) (in)', '\\(V\\) (ft/min)', '\\(W_t\\) (lbf)', '\\(W_r\\) (lbf)', '\\(C\\) (in)'], rows, { caption: 'Mesh loads (spur, \\(P_d\\) = ' + f(P) + ', \\(\\phi\\) = ' + f(phi) + '°; power reduced by \\(\\eta\\) per stage)' });
+    if (rows.length) out += H.table(['mesh', 'driver rpm', 'driver \\(d\\) (in)', '\\(V\\) (ft/min)', '\\(W_t\\) (lb)', '\\(W_r\\) (lb)', '\\(C\\) (in)'], rows, { caption: 'Mesh loads (spur, \\(P_d\\) = ' + f(P) + ', \\(\\phi\\) = ' + f(phi) + '°; power reduced by \\(\\eta\\) per stage)' });
     if (S.some(k => v['tI' + k] > 0)) out += '<br>Idler: same \\(W_t\\) at both meshes; with the gears in line the radial forces cancel and its shaft carries \\(2W_t\\). Idler teeth see 2 load cycles per revolution (q = 2).' + (cI.length ? ' Centre distance driver → driven through the idler (in line): ' + cI.join('; ') + '.' : '');
     return out;
   };
   const trainSection = o => ({ title: 'Gear trains — speed, direction, torque and mesh forces', steps: [
     { id: 'train', title: 'Train value, output speed, direction and torque', eq: o.eq, fig: o.fig,
-      formula: 'e = \\pm\\frac{\\prod N_{driver}}{\\prod N_{driven}},\\qquad n_L = e\\,n_F,\\qquad T_L = \\frac{T_F\\,\\eta^{k}}{|e|},\\qquad T = \\frac{63\\,025\\,H}{n}',
+      formula: 'e = \\pm\\frac{\\prod N_{driver}}{\\prod N_{driven}},\\qquad n_L = e\\,n_F,\\qquad T_L = \\frac{T_F\\,\\eta^{k}}{|e|},\\qquad T = \\frac{63\\,000\\,H}{n}',
       text: 'Enter each stage as driver/driven teeth; gears on one shaft form a compound train. An idler (or a planet with the arm fixed) changes only the direction. External meshes reverse rotation, an internal (ring) mesh does not.',
       vars: [
         { id: 'tn', symbol: 'n_F', label: 'Input speed', unit: 'rpm', kind: 'input', auto: v => v[o.n] },
@@ -146,9 +148,9 @@
           compute: v => { const S = stages(v); return S.length ? S.reduce((a, k) => a * v['tD' + k] / v['tG' + k], 1) : undefined; },
           work: v => { const S = stages(v); return S.length ? '\\(e = \\frac{' + S.map(k => f(v['tD' + k])).join('\\times') + '}{' + S.map(k => f(v['tG' + k])).join('\\times') + '} = ' + f(v.te, 4) + '\\), train value \\(1/e\\) = ' + f(1 / v.te, 4) : null; } },
         { id: 'tnL', symbol: 'n_L', label: 'Output speed', unit: 'rpm', kind: 'calc', compute: v => has(v, 'te', 'tn') ? v.te * v.tn : undefined },
-        { id: 'tTin', symbol: 'T_F', label: 'Input torque', unit: 'lbf·in', kind: 'calc', compute: v => tHp(v) !== undefined && v.tn > 0 ? 63025 * tHp(v) / v.tn : undefined },
-        { id: 'tTL', symbol: 'T_L', label: 'Output torque', unit: 'lbf·in', kind: 'calc', compute: v => has(v, 'tTin', 'te') && v.te > 0 ? v.tTin * Math.pow(v.teta || 1, stages(v).length) / v.te : undefined,
-          work: v => v.tTL !== undefined ? '\\(T_L = ' + f(v.tTin) + '(' + f(v.teta || 1) + ')^{' + stages(v).length + '}/' + f(v.te, 4) + ' = ' + f(v.tTL) + '\\ \\mathrm{lbf\\cdot in} = ' + f(v.tTL * 0.112985) + '\\ \\mathrm{N\\cdot m}\\)' : null },
+        { id: 'tTin', symbol: 'T_F', label: 'Input torque', unit: 'lb·in', kind: 'calc', compute: v => tHp(v) !== undefined && v.tn > 0 ? 63000 * tHp(v) / v.tn : undefined },
+        { id: 'tTL', symbol: 'T_L', label: 'Output torque', unit: 'lb·in', kind: 'calc', compute: v => has(v, 'tTin', 'te') && v.te > 0 ? v.tTin * Math.pow(v.teta || 1, stages(v).length) / v.te : undefined,
+          work: v => v.tTL !== undefined ? '\\(T_L = ' + f(v.tTin) + '(' + f(v.teta || 1) + ')^{' + stages(v).length + '}/' + f(v.te, 4) + ' = ' + f(v.tTL) + '\\ \\mathrm{lb\\cdot in} = ' + f(v.tTL * 0.112985) + '\\ \\mathrm{N\\cdot m}\\)' : null },
         { id: 'tTLsi', symbol: 'T_L', label: 'Output torque (SI)', unit: 'N·m', kind: 'calc', compute: v => v.tTL !== undefined ? v.tTL * 0.112985 : undefined },
       ],
       after: v => trainAfter(v, o) },
@@ -189,6 +191,8 @@
       { text: 'Grade 1 through-hardened steel', src: 'Fizz p.48 · Mech p.84', var: 'grade', value: 1 },
       { text: 'Same material for pinion and gear (gear HB = pinion HB)', src: 'Fizz p.48 · Mech p.73', var: 'HBG' },
       { text: 'Steel from Appendix 3 (Appendix 5 carburized); required HB > 400 → flame/induction hardening or carburizing (Table 9-9)', src: 'Fizz p.48–51 · Mech p.84–87', step: 'hb' },
+      { text: '\\(W_r = W_t\\tan\\phi\\) exists because of the pressure angle; a larger \\(\\phi\\) gives a larger \\(W_r\\)', src: 'midterms 2016 MC5, 2022 MC4', step: 'force' },
+      { text: 'A planetary train has two degrees of freedom; fix one member (arm or ring) to get a single ratio. An idler changes direction only', src: 'midterm 2022 MC10 · RAP quiz', step: 'train' },
     ],
 
     figures: [
@@ -445,7 +449,7 @@
           ] },
         { id: 'hb', title: 'Required Brinell hardness and material (F37–38, 40 · M23, 30)', fig: ['f9-18', 'f9-19', 't9-8', 'app3a', 'app3b', 'app5', 't9-9', 't9-10', 'm-t2-2', 'm-t2-9', 'm-t2-8', 'm-f2-12'],
           formula: 'HB = \\frac{s_{at}/1000 - 12.80}{0.0773}\\ (\\text{grade 1}),\\qquad HB = \\frac{s_{ac}/1000 - 29.10}{0.322}\\ (\\text{grade 1})',
-          text: 'Take the largest hardness and pick an alloy + heat treatment above it (Table 9-8 / Appendix 3, e.g. 4140 OQT1300 HB 235, 4140 OQT1000 HB 341, 4340 OQT1000 HB 363); quote HB and % elongation. Above 400 HB use flame/induction hardening or carburizing (Table 9-9).',
+          text: 'Pick an alloy + heat treatment above the largest hardness (Table 9-8 / App. 3: 4140 OQT1300 HB 235, OQT1000 HB 341) and quote HB and % elongation. Above 400 HB, case-harden (Table 9-9).',
           vars: [
             { id: 'grade', label: 'Steel grade', kind: 'choice', options: [{ label: 'Grade 1 (guides and course default)', value: 1 }, { label: 'Grade 2', value: 2 }], default: 1 },
             { id: 'HBbP', symbol: 'HB_{bend,P}', label: 'Hardness for pinion bending', unit: 'HB', kind: 'calc', digits: 4, compute: v => has(v, 'satP', 'grade') ? Math.max(0, satHB(v.satP, v.grade)) : undefined, work: v => v.HBbP !== undefined ? '\\(HB = (' + f(v.satP / 1000) + ' - ' + (v.grade === 2 ? '16.40)/0.102' : '12.80)/0.0773') + ' = ' + f(satHB(v.satP, v.grade)) + '\\)' : null },

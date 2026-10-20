@@ -19,7 +19,9 @@
  *   NOT reproduced on purpose (slips in the course solution, which copied numbers from Shigley Ex. 15-3): the solution's (W^t)all = 1787
  *   uses Fe = 2 in although F = 0.5 in (sheet: Fe = 0.5 → 447 lbf < 966 → wear FAIL; the solution's own redesign at F = 7/8 in gives 782 lbf,
  *   consistent with Fe = F); Amin = 1642 uses C = 8.5 in instead of C = 4.25 (sheet: 505.5 in²); Wf = −29.5 is an arithmetic slip for
- *   0.025(966)/(0.025 sin λ − cos 20° cos λ) = −25.85 lbf (Hf 0.532 hp, not 0.608). */
+ *   0.025(966)/(0.025 sin λ − cos 20° cos λ) = −25.85 lbf (Hf 0.532 hp, not 0.608).
+ * Verified against (gears polish, v2/notes/past_exam_gears.md): worm-turns step for midterm MC3 (2014/2022/2023/2024: 24 × 2/96 = 0.5 rev); HW2 P9 data on this page (Pt 10, d 1.25, NG 40,
+ *   φn 14.5°) gives λ 4.57°, C 2.625, f 0.0324. */
 (function () {
   const r = d => d * Math.PI / 180, fmt = (x, d) => H.fmt(x, d);
   const has = (v, ...a) => H.has(v, ...a);

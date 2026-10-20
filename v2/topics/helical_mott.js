@@ -6,7 +6,9 @@
  *   HB 235 → SF 5.19 bending, 1.63 contact (course 1.58)).
  * Verified against: Gear Trains Tutorial 1 Q1 (P_nd = 6, ψ = 25°, 16/36 T → P_d 5.438, D_P 2.942, D_G 6.620, C 4.78 in).
  * Auto J (digitized Figs. 10-5/10-6/10-7): Mott Ex. 10-3 (24 T, 75-T mate, ψ 15°) → J_P 0.479 (book 0.48); lecture 20T/100T ψ 20° → 0.457×1.01, 0.549×0.935 (course 0.46×1.01, 0.55×0.935).
- * Defaults = Fizz/Mech guide assumptions (review 2026-10): P_nd 12, N_P 24, F = 2p_x, A_v 10, K_s Table 9-2, life 20 000 h when none given. */
+ * Defaults = Fizz/Mech guide assumptions (review 2026-10): P_nd 12, N_P 24, F = 2p_x, A_v 10, K_s Table 9-2, life 20 000 h when none given.
+ * Verified against (gears polish, v2/notes/past_exam_gears.md): Midterm 2024 P2 (J 0.46 → st 31.3 ksi vs 31.4, HB 265 vs 267); Midterm 2022 P2 (PdIn 12 → Pnd 12.42, st 29.1 ksi); HW2 P3 (Mott 8-42:
+ *   Pd 8.485, px 0.3702, φt 27.24°, F/px 4.05); HW2 P8 spreadsheet (st 40 111 / 37 387, sc 161 397 — within 0.3 %). */
 (function () {
   const has = (v, ...ids) => H.has(v, ...ids);
   const f = (x, d) => H.fmt(x, d);
