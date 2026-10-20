@@ -1,10 +1,13 @@
 /* Spur gears — Shigley 11e (Ch. 13 geometry/forces, Ch. 14 AGMA stress). Merged Fizz 40-step + Mech-bible procedure.
- * Defaults follow the UBC MECH 325 course conventions (v2/COURSE_CONVENTIONS.md §0, §6, §7: Gear_Stress_2026 slides, Module 2 tutorial solutions, Midterm 2025).
+ * Defaults follow the Fizz / Mech student guides (see TOPIC.assumptions), with the UBC MECH 325 course conventions noted where they differ (v2/COURSE_CONVENTIONS.md §0, §6, §7: Gear_Stress_2026 slides, Module 2 tutorial solutions, Midterm 2025).
  * Verified against: Gear Trains Tutorial 3 / Module 2 p5–15 (5 hp, 300 rpm, 16/48 T, P=6, F=2, Qv=6, 200 HB, R=0.90, 10^8 cycles, J=0.27
  *   → dP 2.667, V 209.4, Wt 787.8, Kv 1.196, Ks 1.088, Km 1.221, σ 13 904 psi, I 0.1205, σc 101 481 psi, YN 0.977, ZN 0.948, SF 2.34, SH 1.03)
  * Verified against: Midterm 2025 P2 (10 hp, 1750 → 650 rpm, P=10, NP=17, F=1.5, Qv=9, Ko=1.25, 6 h/day × 200 d × 1 yr
  *   → NG 46, dP 1.700, V 778.9, Wt 423.7, Wr 154.2, Kv 1.175, Km 1.220, I 0.117 (Eq 14-23) → σc 115.8 ksi; with Mott I = 0.096 → 127.8 ksi;
- *     N 1.26e8, ZN 0.943, Sc,min 135.5 ksi (SF 1) → HB ≥ 330; 4340 OQT1000 HB 363 → SH 1.08 ≈ 1.10) */
+ *     N 1.26e8, ZN 0.943, Sc,min 135.5 ksi (SF 1) → HB ≥ 330; 4340 OQT1000 HB 363 → SH 1.08 ≈ 1.10)
+ * Verified against: Shigley Ex. 14-4 (4 hp, 1800 rpm, 17/52 T, P 10, F 1.5, Q_v 6, K_s formula, R 0.90, 10^8 cycles, 240/200 HB) with the auto J
+ *   (digitized Fig. 14-6) → J 0.297/0.399 (book 0.30/0.40), K_v 1.377, σ_P 6488 (book 6417 with J 0.30), σ_c 70 331 (70 360), S_H,P 1.69, S_H,G 1.52.
+ * Defaults = Fizz/Mech guide assumptions (review 2026-10): F_nom 12/P_d, Q_v 7 (A_v 10), K_s Mott Table 9-2, N_P 17, life 20 000 h when none given. */
 (function () {
   // ---------- local helpers ----------
   const has = (v, ...ids) => H.has(v, ...ids);
@@ -45,7 +48,6 @@
   // Ko table (Fig 14-17 / 14-18)
   const KO = { uniform: { uniform: 1.00, moderate: 1.25, heavy: 1.75 }, light: { uniform: 1.25, moderate: 1.50, heavy: 2.00 }, medium: { uniform: 1.50, moderate: 1.75, heavy: 2.25 } };
   const KR = { 0.5: 0.70, 0.9: 0.85, 0.99: 1.00, 0.999: 1.25, 0.9999: 1.50 };
-  const Ks_eq = (F, N, P) => { if (!(F > 0 && N > 0 && P > 0)) return undefined; const k = 1.192 * Math.pow(F * Math.sqrt(lewisY(N)) / P, 0.0535); return k < 1 ? 1 : k; };
   // Fig 14-14: 250 HB line below the knee (≈3×10⁶ cycles), upper "normal commercial" line 1.3558 N^-0.0178 above it. Fig 14-15: knee at 10⁷.
   const YN_auto = N => N >= 3e6 ? 1.3558 * Math.pow(N, -0.0178) : 4.9404 * Math.pow(Math.max(N, 1e3), -0.1045);
   const ZN_auto = N => N >= 1e7 ? 1.4488 * Math.pow(N, -0.023) : 2.466 * Math.pow(Math.max(N, 1e4), -0.056);
@@ -170,7 +172,7 @@
           text: 'Pressure angle 20° full depth unless stated (guides; course standard-teeth table: a = 1/P, b = 1.25/P, c = 0.25/P). Read a trial diametral pitch from Mott Fig. 9-11 with P_des and n_P ("round to the smallest number" — the smaller standard P_d from Table 13-2, bigger teeth). Choose N_P between 17 and 20 (guides; 17 is used until you type one — no interference at 20°, Eq. 13-11). Take n_G at the middle of the allowed range; N_G = N_P·VR rounded to an integer (midterm: 17 × 2.69 = 45.8 → 46); the actual ratio and output speed follow — if n_G is out of range try another N_P.',
           formula: 'N_G = N_P \\cdot VR \\quad\\Rightarrow\\quad m_G = \\frac{N_G}{N_P}, \\qquad n_G = n_P\\frac{N_P}{N_G}',
           vars: [
-            { id: 'phi', symbol: '\\phi', label: 'Pressure angle', unit: '°', kind: 'choice', options: [{ label: '20° full depth', value: 20 }, { label: '25° full depth', value: 25 }, { label: '14.5° (obsolete)', value: 14.5 }], default: 20 },
+            { id: 'phi', symbol: '\\phi', label: 'Pressure angle', kind: 'choice', options: [{ label: '20° full depth', value: 20 }, { label: '25° full depth', value: 25 }, { label: '14.5° (obsolete)', value: 14.5 }], default: 20 },
             { id: 'Pd', symbol: 'P_d', label: 'Diametral pitch', unit: 'teeth/in', kind: 'lookup', fig: 'm9-11', hint: 'from Mott Fig. 9-11 (or given). Standard values Table 13-2. Module given? P_d = 25.4/m',
               check: v => v.Pd !== undefined && [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 24, 32, 40, 48, 64, 72, 80, 96, 120].indexOf(v.Pd) < 0 ? 'not a standard pitch (Table 13-2 / Mott 8-3)' : null },
             { id: 'NP', symbol: 'N_P', label: 'Pinion teeth', kind: 'input', hint: '17–20 (guides); auto 17', auto: () => 17, check: v => v.NP !== undefined && v.NP < 17 && v.phi === 20 ? 'N_P < 17 → interference risk at 20° (Eq. 13-11)' : (v.NP !== undefined && v.NP !== Math.round(v.NP) ? 'must be an integer' : null) },
@@ -259,11 +261,17 @@
               work: v => has(v, 'Av', 'Bv', 'V') ? '\\(K_v = \\left(\\frac{' + f(v.Av) + ' + \\sqrt{' + f(v.V) + '}}{' + f(v.Av) + '}\\right)^{' + f(v.Bv) + '} = ' + f(Math.pow((v.Av + Math.sqrt(v.V)) / v.Av, v.Bv)) + '\\)' : null },
             { id: 'Vmax', symbol: '(V_t)_{max}', label: 'Max. pitch-line velocity for this Q_v', unit: 'ft/min', kind: 'calc', compute: v => has(v, 'Av', 'Qv') ? Math.pow(v.Av + (v.Qv - 3), 2) : undefined, check: v => has(v, 'V', 'Vmax') && v.V > v.Vmax ? 'V exceeds (V_t)max — use a higher quality number' : null },
           ] },
+        { id: 'j', title: 'Bending geometry factors J_P, J_G (F18 · M16)', fig: ['f14-6'],
+          text: 'Fig. 14-6 (20°, full depth, load at highest point of single-tooth contact; guides: "assume 20° unless otherwise specified"). J_P: x = N_P on the curve for N_G mating teeth. J_G: x = N_G on the curve for N_P. The auto value interpolates a digitized copy of the chart (between the 17…1000-tooth mate curves; Ex. 14-4, 17/52 T → 0.297/0.399 vs book 0.30/0.40) — compare with your own reading. For 25° teeth it uses Mott Fig. 9-10(b).',
+          vars: [
+            { id: 'JP', symbol: 'J_P', label: 'Geometry factor, pinion', kind: 'lookup', fig: 'f14-6', digits: 3, hint: 'auto = digitized Fig. 14-6 (x = N_P, curve N_G)', auto: v => has(v, 'NP', 'NG', 'phi') ? Jchart(v.phi, v.NP, v.NG) : undefined },
+            { id: 'JG', symbol: 'J_G', label: 'Geometry factor, gear', kind: 'lookup', fig: 'f14-6', digits: 3, hint: 'auto = digitized Fig. 14-6 (x = N_G, curve N_P)', auto: v => has(v, 'NP', 'NG', 'phi') ? Jchart(v.phi, v.NG, v.NP) : undefined },
+          ] },
         { id: 'ks', title: 'Size factor K_s (F23 · M17)', fig: ['cks', 'mks', 't14-2'],
           text: 'Guides: K_s from Mott Table 9-2 with P_d — 1.00 for P_d ≥ 5, which is also the course\'s "typically K_s = 1" (midterm: P_d > 5). Shigley\'s own size factor is Eq. (a), Sec. 14-10 with the Lewis Y of Table 14-2 (Tutorial 3 keeps K_s = 1.088 for F = 2, Y = 0.296, P = 6); if it gives < 1 use 1.',
           formula: 'K_s = \\text{Table 9-2}(P_d)\\ \\ (= 1 \\text{ for } P_d \\ge 5)\\qquad\\text{or}\\qquad K_s = 1.192\\left(\\frac{F\\sqrt{Y}}{P_d}\\right)^{0.0535}\\ \\ (\\ge 1)',
           vars: [
-            { id: 'ksMode', label: 'K_s rule', kind: 'choice', options: [{ label: 'Mott Table 9-2 by P_d (guides; = 1 for P_d ≥ 5)', value: 1 }, { label: 'Formula 1.192 (F√Y/P)^0.0535 (Shigley Ex. 14-4, Tutorial 3)', value: 2 }], default: 1 },
+            { id: 'ksMode', label: 'K_s rule', kind: 'choice', options: [{ label: 'Mott Table 9-2 by P_d (guides: = 1 for P_d ≥ 5)', value: 1 }, { label: 'Formula 1.192 (F√Y/P)^0.0535 (Shigley Ex. 14-4, Tutorial 3)', value: 2 }], default: 1 },
             { id: 'YP', symbol: 'Y_P', label: 'Lewis form factor, pinion', kind: 'lookup', fig: 't14-2', digits: 3, auto: v => has(v, 'NP') && v.NP >= 12 ? lewisY(v.NP) : undefined, hint: 'Table 14-2 (interpolated) — only used by the formula' },
             { id: 'YG', symbol: 'Y_G', label: 'Lewis form factor, gear', kind: 'lookup', fig: 't14-2', digits: 3, auto: v => has(v, 'NG') && v.NG >= 12 ? lewisY(v.NG) : undefined },
             { id: 'KsP', symbol: '(K_s)_P', label: 'Size factor, pinion', kind: 'lookup', fig: 'cks', hint: 'auto = Table 9-2 or the formula, per the rule above', auto: v => v.ksMode === 2 ? (has(v, 'F', 'YP', 'Pd') ? Math.max(1, 1.192 * Math.pow(v.F * Math.sqrt(v.YP) / v.Pd, 0.0535)) : undefined) : (has(v, 'Pd') ? KS92(v.Pd) : undefined),
@@ -295,26 +303,21 @@
             { id: 'mB', symbol: 'm_B', label: 'Backup ratio', kind: 'calc', digits: 3, compute: v => has(v, 'tR', 'ht') ? v.tR / v.ht : undefined },
             { id: 'KB', symbol: 'K_B', label: 'Rim-thickness factor', kind: 'lookup', fig: 'f14-16', hint: 'auto = 1 (solid) or Eq. 14-40', auto: v => v.mB === undefined ? 1 : (v.mB < 1.2 ? 1.6 * Math.log(2.242 / v.mB) : 1) },
           ] },
-        { id: 'j', title: 'Bending geometry factors J_P, J_G', fig: ['f14-6'],
-          text: 'Fig. 14-6 (20°, full depth, load at highest point of single-tooth contact). J_P: x = N_P on the curve for N_G mating teeth. J_G: x = N_G on the curve for N_P. The auto value is only a rough read of the mid curves — always read the chart. For 25° teeth use Mott Fig. 9-10(b).',
-          vars: [
-            { id: 'JP', symbol: 'J_P', label: 'Geometry factor, pinion', kind: 'lookup', fig: 'f14-6', digits: 3, hint: 'ROUGH auto estimate — read Fig. 14-6', auto: v => has(v, 'NP') && v.phi === 20 ? Jest(v.NP) : undefined },
-            { id: 'JG', symbol: 'J_G', label: 'Geometry factor, gear', kind: 'lookup', fig: 'f14-6', digits: 3, hint: 'ROUGH auto estimate — read Fig. 14-6', auto: v => has(v, 'NG') && v.phi === 20 ? Jest(v.NG) : undefined },
-          ] },
-        { id: 'i', title: 'Pitting geometry factor I and elastic coefficient C_p', eq: '14-23, 14-13', fig: ['t14-8', 'mf9-17'],
+        { id: 'i', title: 'Pitting geometry factor I and elastic coefficient C_p (F14–15, 19 · M26–27)', eq: '14-23, 14-13', fig: ['t14-8', 'mf9-17'],
           formula: 'I = \\frac{\\cos\\phi_t\\sin\\phi_t}{2m_N}\\,\\frac{m_G}{m_G+1}\\quad (m_N = 1 \\text{ for spur}),\\qquad C_p = \\sqrt{\\frac{1}{\\pi\\left[\\frac{1-\\nu_P^2}{E_P} + \\frac{1-\\nu_G^2}{E_G}\\right]}}',
-          text: 'Two accepted routes (Gear Stress s31–32): Shigley Eq. 14-23 (auto) or a reading of Mott Fig. 9-17 ("slightly different but easier" — tutorial 0.1205 vs 0.097, midterm 0.117 vs 0.096). Type the Mott reading to use it. Steel on steel: C_p = 2300 √psi (Table 14-8 / Mott Table 9-7) — "the normal case". Surface condition factor C_f = 1 (not in Mott).',
+          text: 'Two accepted routes (Gear Stress s31–32): Shigley Eq. 14-23 (auto — I at the pitch point) or Mott Fig. 9-17, which both guides use (I at the lowest point of single-tooth contact, "slightly different but easier" — tutorial 0.1205 vs 0.097, midterm 0.117 vs 0.096); the Fig. 9-17 value is computed below — type it to use it. Guides: material steel → C_p = 2300 √psi (Table 14-8 / Mott Table 9-7). Surface condition factor C_f = 1 (course; not in Mott or the guides).',
+          after: v => has(v, 'phi', 'NP', 'NG') && I_lpstc(v.phi, v.NP, v.NG) !== undefined ? 'Mott Fig. 9-17 (guides\' route) for N_P = ' + f(v.NP) + ', m_G = ' + f(v.mG, 3) + ': I = ' + f(I_lpstc(v.phi, v.NP, v.NG), 4) + ' · Eq. 14-23: I = ' + f(cosd(v.phi) * sind(v.phi) / 2 * v.mG / (v.mG + 1), 4) + '.' : '',
           vars: [
             { id: 'I', symbol: 'I', label: 'Pitting geometry factor', kind: 'lookup', fig: 'mf9-17', digits: 4, hint: 'auto = Eq. 14-23; or type the Mott Fig. 9-17 reading', auto: v => has(v, 'phi', 'mG') ? cosd(v.phi) * sind(v.phi) / 2 * v.mG / (v.mG + 1) : undefined,
               work: v => has(v, 'phi', 'mG') ? '\\(I = \\frac{\\cos ' + f(v.phi) + '^\\circ \\sin ' + f(v.phi) + '^\\circ}{2}\\cdot\\frac{' + f(v.mG) + '}{' + f(v.mG) + '+1} = ' + f(cosd(v.phi) * sind(v.phi) / 2 * v.mG / (v.mG + 1), 4) + '\\)' : null },
-            { id: 'Cp', symbol: 'C_p', label: 'Elastic coefficient', unit: '√psi', kind: 'lookup', fig: 't14-8', default: 2300, hint: 'Table 14-8; 2300 for steel–steel (course standard)', check: v => v.Cp !== undefined && Math.abs(v.Cp - 2300) > 1 ? 'course standard is 2300 √psi for steel on steel — only change for other materials' : null },
+            { id: 'Cp', symbol: 'C_p', label: 'Elastic coefficient', unit: '√psi', kind: 'lookup', fig: 't14-8', default: 2300, hint: 'Table 14-8; 2300 for steel–steel (guides; course standard)', check: v => v.Cp !== undefined && Math.abs(v.Cp - 2300) > 1 ? 'guides/course use 2300 √psi for steel on steel — only change for other materials' : null },
             { id: 'Cf', symbol: 'C_f', label: 'Surface condition factor', kind: 'input', default: 1, hint: '1 (course: no AGMA values; not in Mott)', check: v => v.Cf !== undefined && v.Cf !== 1 ? 'course assumes C_f = 1' : null },
           ] },
       ] },
 
       // ================= STRESS =================
-      { title: 'AGMA stress numbers', steps: [
-        { id: 'sb', title: 'Bending stress σ (pinion and gear)', eq: '14-15', fig: ['f14-17'],
+      { title: 'AGMA stress numbers (Fizz steps 32, 34 · Mech steps 20, 25, 28)', steps: [
+        { id: 'sb', title: 'Bending stress σ, pinion and gear (F32 · M20)', eq: '14-15', fig: ['f14-17'],
           formula: '\\sigma = W_t K_o K_v K_s \\frac{P_d}{F}\\frac{K_m K_B}{J}',
           vars: [
             { id: 'sP', symbol: '\\sigma_P', label: 'Pinion bending stress', unit: 'psi', kind: 'calc', compute: v => has(v, 'Wt', 'Ko', 'Kv', 'KsP', 'Pd', 'F', 'Km', 'KB', 'JP') ? v.Wt * v.Ko * v.Kv * v.KsP * v.Pd / v.F * v.Km * v.KB / v.JP : undefined,
@@ -322,7 +325,7 @@
             { id: 'sG', symbol: '\\sigma_G', label: 'Gear bending stress', unit: 'psi', kind: 'calc', compute: v => has(v, 'Wt', 'Ko', 'Kv', 'KsG', 'Pd', 'F', 'Km', 'KB', 'JG') ? v.Wt * v.Ko * v.Kv * v.KsG * v.Pd / v.F * v.Km * v.KB / v.JG : undefined,
               work: v => v.sG !== undefined ? '\\(\\sigma_G = ' + f(v.Wt) + '(' + f(v.Ko) + ')(' + f(v.Kv) + ')(' + f(v.KsG) + ')\\frac{' + f(v.Pd) + '}{' + f(v.F) + '}\\frac{' + f(v.Km, 4) + '(' + f(v.KB) + ')}{' + f(v.JG, 3) + '} = ' + f(v.sG) + '\\ \\mathrm{psi}\\)' : null },
           ] },
-        { id: 'sc', title: 'Contact stress σ_c', eq: '14-16', fig: ['f14-18'],
+        { id: 'sc', title: 'Contact stress σ_c (F34 · M25, 28)', eq: '14-16', fig: ['f14-18'],
           formula: '\\sigma_c = C_p\\sqrt{W_t K_o K_v K_s \\frac{K_m}{d_P F}\\frac{C_f}{I}}',
           text: 'Always use the pinion diameter d_P. Pinion and gear see the same contact stress except for K_s (Shigley) — Mott uses one value.',
           vars: [
@@ -333,39 +336,37 @@
       ] },
 
       // ================= STRENGTH MODIFIERS =================
-      { title: 'Life, reliability and strength modifiers', steps: [
-        { id: 'life', title: 'Design life, load cycles and stress-cycle factors Y_N, Z_N', eq: '§14-13', fig: ['cyn', 'czn', 'f14-14', 'f14-15', 'mlife'],
-          formula: 'N = n \\times 60 \\times \\tfrac{h}{day} \\times \\tfrac{days}{yr} \\times yr = 60\\,L\\,n\\,q,\\qquad Y_N = 1.3558N^{-0.0178},\\quad Z_N = 1.4488N^{-0.023}\\ \\ (N\\ge10^7)',
-          text: 'Course (Gear Stress s37, s44; Midterm): AGMA strengths are at 10⁷ cycles — <b>leave the life blank to use 10⁷ (Y_N = Z_N = 1)</b>. Otherwise give hours/day × days/yr × years (midterm: 1750 × 60 × 6 × 200 × 1 = 1.26×10⁸) or a life in hours (Mott Table 9-12). Beyond 10⁷ use the <b>upper line for normal commercial gears</b> (Y_N = 1.3558 N^-0.0178, Z_N = 1.4488 N^-0.023); the 1.6831 N^-0.0323 line is for high-precision applications only. Tutorials also accept a graph reading (0.95 at 10⁸; Z_N 0.90 at the centre of the shaded zone). q = 1 load per revolution (2 for an idler); the gear sees N_P/m_G cycles.',
+      { title: 'Life, reliability and strength modifiers (Fizz steps 25–31 · Mech steps 21–22, 29)', steps: [
+        { id: 'rel', title: 'Reliability K_R, temperature K_T, design safety factor (F25–27 · M21a–b)', eq: '14-38', fig: ['t14-10'],
+          formula: 'K_R = 0.658 - 0.0759\\ln(1-R)\\ (0.5<R<0.99);\\quad K_R = 0.50 - 0.109\\ln(1-R)\\ (0.99\\le R\\le 0.9999)',
+          text: 'Guides: "assume 99 %" → K_R = 1.00 (midterm: "K_R = 1.0 for reliability = 0.99 assumed"; tutorials with R = 0.90 use 0.85). Service/design factor "usually pick 1.00" (range 1.00–1.50): solve for the <b>minimum strength with S_F = 1</b>, then pick a material so that 1.0 ≤ S_F ≤ 1.5 (course: "AGMA suggests S_F of 1 to 1.5"); the same design factor is applied to bending and wear. K_T = 1 for T < 250 °F — course, always assumed (Mott and the guides have no K_T).',
+          vars: [
+            { id: 'R', symbol: 'R', label: 'Reliability', kind: 'input', default: 0.99, hint: '0.99 (guides: "assume 99 %") · 0.90 · 0.999 · 0.9999' },
+            { id: 'KR', symbol: 'K_R', label: 'Reliability factor', kind: 'lookup', fig: 't14-10', digits: 3, hint: 'Table 14-10: 0.99 → 1.00, 0.90 → 0.85', auto: v => { if (!has(v, 'R')) return undefined; if (KR[v.R] !== undefined) return KR[v.R]; return v.R < 0.99 ? 0.658 - 0.0759 * Math.log(1 - v.R) : 0.5 - 0.109 * Math.log(1 - v.R); } },
+            { id: 'KT', symbol: 'K_T', label: 'Temperature factor', kind: 'input', default: 1, hint: '1 for T < 250 °F (120 °C)', check: v => v.KT !== undefined && v.KT !== 1 ? 'course always assumes K_T = 1 (T < 250 °F)' : null },
+            { id: 'SFd', symbol: '(S_F)_d', label: 'Design factor of safety (bending & wear)', kind: 'input', default: 1, hint: '1.0 (guides: usually 1.00 — min strength at S_F = 1, then target 1.0–1.5)', check: v => v.SFd !== undefined && (v.SFd < 1 || v.SFd > 1.5) ? 'guides/AGMA: 1.0–1.5' : null },
+          ] },
+        { id: 'life', title: 'Design life, load cycles and stress-cycle factors Y_N, Z_N (F28–31 · M21c–e, 29)', eq: '§14-13', fig: ['cyn', 'czn', 'f14-14', 'f14-15', 'mlife'],
+          formula: 'N = n \\times 60 \\times \\tfrac{h}{day} \\times \\tfrac{days}{yr} \\times yr = 60\\,L\\,n\\,q,\\qquad Y_N = 1.3558N^{-0.0178}\\ (N\\ge3\\times10^6),\\quad Z_N = 1.4488N^{-0.023}\\ (N\\ge10^7)',
+          text: 'Life from the problem — hours/day × days/yr × years (midterm: 1750 × 60 × 6 × 200 × 1 = 1.26×10⁸) or hours; otherwise (guides) from Mott Table 9-12: <b>blank uses 20 000 h</b> (general industrial machines). AGMA strengths are for 10⁷ cycles (Y_N = Z_N = 1): to design for exactly 10⁷ cycles enter L = 10⁷/(60 n_P). Beyond the knee use the <b>upper line for normal commercial gears</b> (course; Y_N = 1.3558 N^-0.0178, Z_N = 1.4488 N^-0.023); the 1.6831 N^-0.0323 line is for high-precision applications only; below the knee the auto uses the 250 HB line (4.9404 N^-0.1045) and 2.466 N^-0.056. Tutorials also accept a graph reading (0.95 at 10⁸; Z_N 0.90 at the centre of the shaded zone). q = 1 load per revolution (2 for an idler); the gear sees N_P/m_G cycles.',
           vars: [
             { id: 'hpd', symbol: 'h/day', label: 'Hours per day (optional)', unit: 'h', kind: 'input' },
             { id: 'dpy', symbol: 'days/yr', label: 'Days per year (optional)', unit: 'd', kind: 'input' },
             { id: 'yrs', symbol: 'yr', label: 'Years of service (optional)', unit: 'yr', kind: 'input' },
-            { id: 'Lh', symbol: 'L', label: 'Design life (blank = 10⁷ cycles)', unit: 'h', kind: 'lookup', fig: 'mlife', hint: 'auto = h/day × days/yr × yr; or Mott Table 9-12; blank → AGMA 10⁷ cycles', auto: v => has(v, 'hpd', 'dpy', 'yrs') ? v.hpd * v.dpy * v.yrs : undefined },
+            { id: 'Lh', symbol: 'L', label: 'Design life', unit: 'h', kind: 'lookup', fig: 'mlife', hint: 'auto = h/day × days/yr × yr if given, else 20 000 h (Mott Table 9-12, general industrial machines)', auto: v => has(v, 'hpd', 'dpy', 'yrs') ? v.hpd * v.dpy * v.yrs : L_DEF },
             { id: 'q', symbol: 'q', label: 'Load applications per revolution', kind: 'input', default: 1 },
-            { id: 'NcP', symbol: 'N_P', label: 'Pinion load cycles', kind: 'calc', digits: 4, compute: v => has(v, 'Lh', 'nP', 'q') ? 60 * v.Lh * v.nP * v.q : 1e7, work: v => has(v, 'Lh', 'nP', 'q') ? '\\(N_P = 60(' + f(v.Lh) + ')(' + f(v.nP) + ')(' + f(v.q) + ') = ' + f(v.NcP) + '\\)' : 'no life given → AGMA reference 10⁷ cycles' },
-            { id: 'NcG', symbol: 'N_G', label: 'Gear load cycles', kind: 'calc', digits: 4, compute: v => has(v, 'Lh', 'nG', 'q') ? 60 * v.Lh * v.nG * v.q : 1e7, work: v => has(v, 'Lh', 'nG', 'q') ? '\\(N_G = 60(' + f(v.Lh) + ')(' + f(v.nG) + ')(' + f(v.q) + ') = ' + f(v.NcG) + '\\)' : null },
-            { id: 'YNP', symbol: '(Y_N)_P', label: 'Bending stress-cycle factor, pinion', kind: 'lookup', fig: 'cyn', digits: 4, auto: v => !has(v, 'Lh') ? 1 : has(v, 'NcP') ? YN_auto(v.NcP) : undefined, hint: 'auto = 1.3558 N^-0.0178 (N ≥ 10⁷, commercial line)',
-              work: v => has(v, 'Lh', 'NcP') && v.NcP >= 1e7 ? '\\((Y_N)_P = 1.3558(' + f(v.NcP, 3) + ')^{-0.0178} = ' + f(YN_auto(v.NcP), 4) + '\\)' : null },
-            { id: 'YNG', symbol: '(Y_N)_G', label: 'Bending stress-cycle factor, gear', kind: 'lookup', fig: 'cyn', digits: 4, auto: v => !has(v, 'Lh') ? 1 : has(v, 'NcG') ? YN_auto(v.NcG) : undefined },
-            { id: 'ZNP', symbol: '(Z_N)_P', label: 'Pitting stress-cycle factor, pinion', kind: 'lookup', fig: 'czn', digits: 4, auto: v => !has(v, 'Lh') ? 1 : has(v, 'NcP') ? ZN_auto(v.NcP) : undefined, hint: 'auto = 1.4488 N^-0.023 (N ≥ 10⁷, commercial line)',
-              work: v => has(v, 'Lh', 'NcP') && v.NcP >= 1e7 ? '\\((Z_N)_P = 1.4488(' + f(v.NcP, 3) + ')^{-0.023} = ' + f(ZN_auto(v.NcP), 4) + '\\)' : null },
-            { id: 'ZNG', symbol: '(Z_N)_G', label: 'Pitting stress-cycle factor, gear', kind: 'lookup', fig: 'czn', digits: 4, auto: v => !has(v, 'Lh') ? 1 : has(v, 'NcG') ? ZN_auto(v.NcG) : undefined },
-          ] },
-        { id: 'rel', title: 'Reliability K_R, temperature K_T, design safety factor', eq: '14-38', fig: ['t14-10'],
-          formula: 'K_R = 0.658 - 0.0759\\ln(1-R)\\ (0.5<R<0.99);\\quad K_R = 0.50 - 0.109\\ln(1-R)\\ (0.99\\le R\\le 0.9999)',
-          text: 'Course defaults: 99 % reliability → K_R = 1.00 "normally" (midterm: "K_R = 1.0 for reliability = 0.99 assumed"; tutorials with R = 0.90 use 0.85). K_T = 1 for T < 250 °F — always assumed. "AGMA suggests S_F of 1 to 1.5": the course solves for the <b>minimum strength with S_F = 1</b>, then picks a material so that 1.0 ≤ S_F ≤ 1.5. The same design factor is applied to bending and wear.',
-          vars: [
-            { id: 'R', symbol: 'R', label: 'Reliability', kind: 'input', default: 0.99, hint: '0.99 (course default) · 0.90 · 0.999 · 0.9999' },
-            { id: 'KR', symbol: 'K_R', label: 'Reliability factor', kind: 'lookup', fig: 't14-10', digits: 3, hint: 'Table 14-10: 0.99 → 1.00, 0.90 → 0.85', auto: v => { if (!has(v, 'R')) return undefined; if (KR[v.R] !== undefined) return KR[v.R]; return v.R < 0.99 ? 0.658 - 0.0759 * Math.log(1 - v.R) : 0.5 - 0.109 * Math.log(1 - v.R); } },
-            { id: 'KT', symbol: 'K_T', label: 'Temperature factor', kind: 'input', default: 1, hint: '1 for T < 250 °F (120 °C)', check: v => v.KT !== undefined && v.KT !== 1 ? 'course always assumes K_T = 1 (T < 250 °F)' : null },
-            { id: 'SFd', symbol: '(S_F)_d', label: 'Design factor of safety (bending & wear)', kind: 'input', default: 1, hint: '1.0 (course: solve for min strength at S_F = 1, then target 1.0–1.5)', check: v => v.SFd !== undefined && (v.SFd < 1 || v.SFd > 1.5) ? 'AGMA suggests 1.0–1.5' : null },
+            { id: 'NcP', symbol: 'N_P', label: 'Pinion load cycles', kind: 'calc', digits: 4, compute: v => has(v, 'Lh', 'nP', 'q') ? 60 * v.Lh * v.nP * v.q : undefined, work: v => v.NcP !== undefined ? '\\(N_P = 60(' + f(v.Lh) + ')(' + f(v.nP) + ')(' + f(v.q) + ') = ' + f(v.NcP) + '\\)' : null },
+            { id: 'NcG', symbol: 'N_G', label: 'Gear load cycles', kind: 'calc', digits: 4, compute: v => has(v, 'Lh', 'nG', 'q') ? 60 * v.Lh * v.nG * v.q : undefined, work: v => v.NcG !== undefined ? '\\(N_G = 60(' + f(v.Lh) + ')(' + f(v.nG) + ')(' + f(v.q) + ') = ' + f(v.NcG) + '\\)' : null },
+            { id: 'YNP', symbol: '(Y_N)_P', label: 'Bending stress-cycle factor, pinion', kind: 'lookup', fig: 'cyn', digits: 4, auto: v => has(v, 'NcP') ? YN_auto(v.NcP) : undefined, hint: 'auto = Fig. 14-14 equations (commercial line beyond the knee)', work: v => has(v, 'NcP') ? YNw('(Y_N)_P', v.NcP) : null },
+            { id: 'YNG', symbol: '(Y_N)_G', label: 'Bending stress-cycle factor, gear', kind: 'lookup', fig: 'cyn', digits: 4, auto: v => has(v, 'NcG') ? YN_auto(v.NcG) : undefined, work: v => has(v, 'NcG') ? YNw('(Y_N)_G', v.NcG) : null },
+            { id: 'ZNP', symbol: '(Z_N)_P', label: 'Pitting stress-cycle factor, pinion', kind: 'lookup', fig: 'czn', digits: 4, auto: v => has(v, 'NcP') ? ZN_auto(v.NcP) : undefined, hint: 'auto = Fig. 14-15 equations (commercial line beyond 10⁷)', work: v => has(v, 'NcP') ? ZNw('(Z_N)_P', v.NcP) : null },
+            { id: 'ZNG', symbol: '(Z_N)_G', label: 'Pitting stress-cycle factor, gear', kind: 'lookup', fig: 'czn', digits: 4, auto: v => has(v, 'NcG') ? ZN_auto(v.NcG) : undefined, work: v => has(v, 'NcG') ? ZNw('(Z_N)_G', v.NcG) : null },
           ] },
       ] },
 
       // ================= REQUIRED STRENGTH / MATERIAL =================
-      { title: 'Required strength and hardness (design)', text: 'Rearranging Eqs. 14-17 and 14-18 with σ_all = σ gives the minimum gear strengths; Figs. 14-2 and 14-5 then give the minimum Brinell hardness for a through-hardened steel of the chosen grade. The pinion normally governs; use the same material for both.', steps: [
-        { id: 'req', title: 'Required bending and contact strengths', eq: '14-17, 14-18',
+      { title: 'Required strength and hardness — design (Fizz steps 33, 35, 37–38, 40 · Mech steps 21–23, 29–30)', text: 'Rearranging Eqs. 14-17 and 14-18 with σ_all = σ gives the minimum gear strengths; Figs. 14-2 and 14-5 then give the minimum Brinell hardness for a through-hardened steel of the chosen grade. The pinion normally governs; use the same material for both.', steps: [
+        { id: 'req', title: 'Required bending and contact strengths (F33, 35 · M21–22, 29)', eq: '14-17, 14-18',
           formula: 'S_{t,req} = \\frac{\\sigma\\,(S_F)_d\\,K_T K_R}{Y_N},\\qquad S_{c,req} = \\frac{\\sigma_c\\,(S_H)_d\\,K_T K_R}{Z_N C_H}',
           vars: [
             { id: 'StreqP', symbol: 'S_{t,req,P}', label: 'Required bending strength, pinion', unit: 'psi', kind: 'calc', compute: v => has(v, 'sP', 'SFd', 'KT', 'KR', 'YNP') ? v.sP * v.SFd * v.KT * v.KR / v.YNP : undefined, work: v => v.StreqP !== undefined ? '\\(S_{t,req,P} = ' + f(v.sP) + '(' + f(v.SFd) + ')(' + f(v.KT) + ')(' + f(v.KR, 3) + ')/' + f(v.YNP, 4) + ' = ' + f(v.StreqP) + '\\ \\mathrm{psi}\\)' : null },
@@ -373,11 +374,11 @@
             { id: 'ScreqP', symbol: 'S_{c,req,P}', label: 'Required contact strength, pinion', unit: 'psi', kind: 'calc', compute: v => has(v, 'scP', 'SFd', 'KT', 'KR', 'ZNP') ? v.scP * v.SFd * v.KT * v.KR / v.ZNP : undefined, work: v => v.ScreqP !== undefined ? '\\(S_{c,req,P} = ' + f(v.scP) + '(' + f(v.SFd) + ')(' + f(v.KT) + ')(' + f(v.KR, 3) + ')/' + f(v.ZNP, 4) + ' = ' + f(v.ScreqP) + '\\ \\mathrm{psi}\\)' : null },
             { id: 'ScreqG', symbol: 'S_{c,req,G}', label: 'Required contact strength, gear (C_H = 1)', unit: 'psi', kind: 'calc', compute: v => has(v, 'scG', 'SFd', 'KT', 'KR', 'ZNG') ? v.scG * v.SFd * v.KT * v.KR / v.ZNG : undefined },
           ] },
-        { id: 'hb', title: 'Required Brinell hardness (through-hardened steel) → pick a steel', fig: ['f14-2', 'f14-5', 'mt9-8', 'mapp3a', 'mapp3b', 't14-3', 't14-6'],
+        { id: 'hb', title: 'Required Brinell hardness (through-hardened steel) → pick a steel (F37–38, 40 · M23, 30)', fig: ['f14-2', 'f14-5', 'mt9-8', 'mapp3a', 'mapp3b', 'mapp5', 't14-3', 't14-6'],
           formula: 'H_{B} = \\frac{S_t - 12\\,800}{77.3}\\ (\\text{grade 1 bending}),\\qquad H_B = \\frac{S_c - 29\\,100}{322}\\ (\\text{grade 1 contact})',
-          text: 'Grade 1 is the course default (Grade 2: S_t = 102 H_B + 16 400, S_c = 349 H_B + 34 300). Take the LARGEST hardness. <b>Course material step (Module 2 p27, Midterm P2 part 3):</b> choose an alloy and heat treatment from Mott Table 9-8 / Appendix 3 whose HB exceeds the requirement and quote its HB and % elongation (ductility) — e.g. 4140 annealed HB 197, 4140 OQT1300 HB 235, 4140 OQT1000 HB 341, 4340 OQT1000 HB 363 (16 % el.), 4340 OQT700 HB 461; "OQT1300" = oil-quenched &amp; tempered at 1300 °F; HB ≈ 2 × S_u (ksi). Then enter that HB below and confirm 1.0 ≤ S_F ≤ 1.5. Through-hardening is only valid up to ≈ 400 H_B — above that specify flame/induction hardening or carburizing (Tables 14-3 / 14-6).',
+          text: 'Grade 1 (guides: "grade 1 steel is the only one that exists"; Grade 2: S_t = 102 H_B + 16 400, S_c = 349 H_B + 34 300). Take the LARGEST hardness; same material for pinion and gear (guides). <b>Material step (guides; Module 2 p27, Midterm P2 part 3):</b> choose an alloy and heat treatment from Mott Table 9-8 / Appendix 3 ("normally"; Appendix 5 for carburized) whose HB exceeds the requirement and quote its HB and % elongation (ductility) — e.g. 4140 annealed HB 197, 4140 OQT1300 HB 235, 4140 OQT1000 HB 341, 4340 OQT1000 HB 363 (16 % el.), 4340 OQT700 HB 461; "OQT1300" = oil-quenched &amp; tempered at 1300 °F; HB ≈ 2 × S_u (ksi). Then enter that HB below and confirm 1.0 ≤ S_F ≤ 1.5. Through-hardening is only valid up to ≈ 400 H_B — above that specify flame/induction hardening or carburizing (Tables 14-3 / 14-6).',
           vars: [
-            { id: 'grade', label: 'Steel grade', kind: 'choice', options: [{ label: 'Grade 1 (course default)', value: 1 }, { label: 'Grade 2', value: 2 }], default: 1 },
+            { id: 'grade', label: 'Steel grade', kind: 'choice', options: [{ label: 'Grade 1 (guides and course default)', value: 1 }, { label: 'Grade 2', value: 2 }], default: 1 },
             { id: 'HBbP', symbol: 'H_{B,bend,P}', label: 'Hardness for pinion bending', unit: 'HB', kind: 'calc', digits: 4, compute: v => has(v, 'StreqP', 'grade') ? Math.max(0, v.grade === 2 ? (v.StreqP - 16400) / 102 : (v.StreqP - 12800) / 77.3) : undefined, work: v => v.HBbP !== undefined ? '\\(H_B = (' + f(v.StreqP) + ' - ' + (v.grade === 2 ? '16\\,400)/102' : '12\\,800)/77.3') + ' = ' + f(v.HBbP) + '\\)' : null },
             { id: 'HBbG', symbol: 'H_{B,bend,G}', label: 'Hardness for gear bending', unit: 'HB', kind: 'calc', digits: 4, compute: v => has(v, 'StreqG', 'grade') ? Math.max(0, v.grade === 2 ? (v.StreqG - 16400) / 102 : (v.StreqG - 12800) / 77.3) : undefined },
             { id: 'HBcP', symbol: 'H_{B,cont,P}', label: 'Hardness for pinion contact', unit: 'HB', kind: 'calc', digits: 4, compute: v => has(v, 'ScreqP', 'grade') ? Math.max(0, v.grade === 2 ? (v.ScreqP - 34300) / 349 : (v.ScreqP - 29100) / 322) : undefined, work: v => v.HBcP !== undefined ? '\\(H_B = (' + f(v.ScreqP) + ' - ' + (v.grade === 2 ? '34\\,300)/349' : '29\\,100)/322') + ' = ' + f(v.HBcP) + '\\)' : null },
@@ -388,22 +389,22 @@
       ] },
 
       // ================= CHECK A MATERIAL =================
-      { title: 'Check a chosen material — factors of safety', text: 'Enter the Brinell hardness of the pinion and gear you actually chose (through-hardened) — or type S_t and S_c directly from Tables 14-3/14-6 for case-hardened steels, Tables 14-4/14-7 for iron/bronze.', steps: [
-        { id: 'mat', title: 'Material strengths S_t, S_c and hardness-ratio factor C_H', eq: '14-36', fig: ['f14-2', 'f14-5', 'f14-12', 't14-3', 't14-6'],
+      { title: 'Check a chosen material — factors of safety (Fizz step 36 · Mech steps 24, 30)', text: 'Enter the Brinell hardness of the pinion and gear you actually chose (through-hardened) — or type S_t and S_c directly from Tables 14-3/14-6 for case-hardened steels, Tables 14-4/14-7 for iron/bronze.', steps: [
+        { id: 'mat', title: 'Material strengths S_t, S_c and hardness-ratio factor C_H (M24, 30)', eq: '14-36', fig: ['f14-2', 'f14-5', 'f14-12', 't14-3', 't14-6', 'mapp3a', 'mapp3b'],
           formula: 'C_H = 1 + A\'(m_G - 1),\\quad A\' = 8.98(10^{-3})\\frac{H_{BP}}{H_{BG}} - 8.29(10^{-3})\\ \\ (1.2 \\le H_{BP}/H_{BG} \\le 1.7)',
           vars: [
             { id: 'HBP', symbol: 'H_{BP}', label: 'Pinion Brinell hardness', unit: 'HB', kind: 'input' },
-            { id: 'HBG', symbol: 'H_{BG}', label: 'Gear Brinell hardness', unit: 'HB', kind: 'input', hint: 'same material → same as pinion' },
+            { id: 'HBG', symbol: 'H_{BG}', label: 'Gear Brinell hardness', unit: 'HB', kind: 'input', hint: 'auto = pinion H_B (guides: same material for both)', auto: v => v.HBP },
             { id: 'StP', symbol: '(S_t)_P', label: 'Pinion bending strength', unit: 'psi', kind: 'lookup', fig: 'f14-2', auto: v => has(v, 'HBP', 'grade') ? (v.grade === 2 ? 102 * v.HBP + 16400 : 77.3 * v.HBP + 12800) : undefined, hint: 'auto from Fig. 14-2; type Table 14-3 value for case-hardened' },
             { id: 'StG', symbol: '(S_t)_G', label: 'Gear bending strength', unit: 'psi', kind: 'lookup', fig: 'f14-2', auto: v => has(v, 'HBG', 'grade') ? (v.grade === 2 ? 102 * v.HBG + 16400 : 77.3 * v.HBG + 12800) : undefined },
             { id: 'ScP', symbol: '(S_c)_P', label: 'Pinion contact strength', unit: 'psi', kind: 'lookup', fig: 'f14-5', auto: v => has(v, 'HBP', 'grade') ? (v.grade === 2 ? 349 * v.HBP + 34300 : 322 * v.HBP + 29100) : undefined, hint: 'auto from Fig. 14-5; type Table 14-6 value for case-hardened' },
             { id: 'ScG', symbol: '(S_c)_G', label: 'Gear contact strength', unit: 'psi', kind: 'lookup', fig: 'f14-5', auto: v => has(v, 'HBG', 'grade') ? (v.grade === 2 ? 349 * v.HBG + 34300 : 322 * v.HBG + 29100) : undefined },
-            { id: 'CH', symbol: 'C_H', label: 'Hardness-ratio factor (gear only; = 1 for the pinion)', kind: 'lookup', fig: 'f14-12', digits: 4, hint: 'course: 1 for the pinion, "neglect or use 1" for the gear when same hardness; auto = Eq. 14-36 (1 if H_BP/H_BG < 1.2)',
+            { id: 'CH', symbol: 'C_H', label: 'Hardness-ratio factor (gear only, = 1 for the pinion)', kind: 'lookup', fig: 'f14-12', digits: 4, hint: 'course: 1 for the pinion, "neglect or use 1" for the gear when same hardness; auto = Eq. 14-36 (1 if H_BP/H_BG < 1.2)',
               auto: v => { if (!has(v, 'HBP', 'HBG', 'mG')) return 1; const r = v.HBP / v.HBG; const A = r < 1.2 ? 0 : r > 1.7 ? 0.00698 : 8.98e-3 * r - 8.29e-3; return 1 + A * (v.mG - 1); } },
           ] },
-        { id: 'sf', title: 'Factors of safety S_F (bending) and S_H (wear) — PASS / FAIL', eq: '14-41, 14-42', fig: ['f14-17', 'f14-18'],
+        { id: 'sf', title: 'Factors of safety S_F (bending) and S_H (wear) — PASS / FAIL (F36 · M24, 30)', eq: '14-41, 14-42', fig: ['f14-17', 'f14-18'],
           formula: 'S_F = \\frac{S_t Y_N/(K_T K_R)}{\\sigma},\\qquad S_H = \\frac{S_c Z_N C_H/(K_T K_R)}{\\sigma_c}',
-          text: 'Compare S_F with S_H² (linear-contact gears) to decide whether bending or wear is the threat. The mesh must have every factor ≥ the design factor.',
+          text: 'Fizz step 36: verify 1.0 < S_F < 1.5. Compare S_F with S_H² (linear-contact gears) to decide whether bending or wear is the threat. The mesh must have every factor ≥ the design factor.',
           vars: [
             { id: 'sallP', symbol: '\\sigma_{all,P}', label: 'Allowable bending stress, pinion', unit: 'psi', kind: 'calc', compute: v => has(v, 'StP', 'YNP', 'KT', 'KR', 'SFd') ? v.StP * v.YNP / (v.KT * v.KR * v.SFd) : undefined },
             { id: 'SFP', symbol: '(S_F)_P', label: 'Bending safety factor, pinion', kind: 'calc', digits: 3, compute: v => has(v, 'StP', 'YNP', 'KT', 'KR', 'sP') ? v.StP * v.YNP / (v.KT * v.KR) / v.sP : undefined, work: v => v.SFP !== undefined ? '\\((S_F)_P = \\frac{' + f(v.StP) + '(' + f(v.YNP, 4) + ')/[' + f(v.KT) + '(' + f(v.KR, 3) + ')]}{' + f(v.sP) + '} = ' + f(v.SFP, 3) + '\\)' : null },
@@ -425,7 +426,7 @@
 
       // ================= GEAR TRAIN =================
       { title: 'Gear train (optional) — train value', steps: [
-        { id: 'train', title: 'Compound train: speed and torque chain', eq: '13-30, 13-31', fig: ['f13-23'],
+        { id: 'train', title: 'Compound train: speed and torque chain (Fizz p.76)', eq: '13-30, 13-31', fig: ['f13-23'],
           formula: 'e = \\pm\\frac{\\prod N_{driving}}{\\prod N_{driven}} = \\frac{N_2 N_4}{N_3 N_5},\\qquad n_L = e\\,n_F,\\qquad T_L = \\frac{T_F}{|e|}\\ (\\text{no losses})',
           text: 'Fizz "Gear Trains": TV = (VR)₁(VR)₂… = n_in/n_out = N_out/N_in — the reciprocal of Shigley\'s e. Sign: an odd number of external meshes reverses rotation (e negative). Leave stage 2 blank for a single pair. Idlers cancel.',
           vars: [

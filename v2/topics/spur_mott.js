@@ -1,11 +1,14 @@
 /* Spur gears — Mott 6e (Ch. 8 kinematics, Ch. 9 design). Merged Fizz 40-step + Mech-bible procedure (both guides follow Mott).
- * Defaults follow the UBC MECH 325 course conventions (v2/COURSE_CONVENTIONS.md §0, §6, §7: Gear_Stress_2026 slides, Module 2 tutorials, Midterm 2025 — Mott route).
+ * Defaults follow the Fizz / Mech student guides (see TOPIC.assumptions), with the UBC MECH 325 course conventions noted where they differ (v2/COURSE_CONVENTIONS.md §0, §6, §7: Gear_Stress_2026 slides, Module 2 tutorials, Midterm 2025 — Mott route).
  * Verified against: Midterm 2025 P2 (10 hp, 1750 → 650 rpm, P_d=10, N_P=17, F=1.5, A_v=8, K_o=1.25, I=0.096 (Fig 9-17), 6 h/day × 200 d × 1 yr
  *   → N_G 46, D_P 1.700, v_t 778.9, W_t 423.7, W_r 154.2, K_v 1.175 (Table 9-6; Fig 9-16 ≈ 1.16), K_s 1.00, C_pf 0.0694, C_ma 0.1505, K_m 1.22,
  *     s_c 128.1 ksi (midterm 127.8 with K_v 1.16); N_c 1.26e8, Z_N 0.943, s_ac,min 135.8 ksi → HB ≥ 331 (midterm 135.5 / 330); 4340 OQT1000 HB 363 → SF 1.08 (≈ 1.10))
  * Verified against: Gear Trains Tutorial 3 / Module 2 p5–15 with Mott factors (I = 0.097, K_s = 1.00 Table 9-2, J = 0.27, R = 0.90, 10^8 cycles):
  *   K_v 1.196, K_m 1.221, s_t 12 782 psi, s_c 108.5 ksi, SF 2.54 / 0.96 — the tutorial's Shigley-factor numbers (K_s 1.088, I 0.1205 → 13 904 psi, 101.5 ksi, SF 2.34 / 1.03)
- *   are reproduced with ksMode = 2 and I = 0.1205 here, and on the Shigley page. */
+ *   are reproduced with ksMode = 2 and I = 0.1205 here, and on the Shigley page.
+ * Verified against: Mott Ex. 9-7 (3 hp, 1750 rpm, uniform/heavy K_o 1.75, P_d 12, N_P 18, A_v 11, open gearing) with the auto values →
+ *   N_G 68, F 1.00, v_t 687, W_t 144, K_v 1.35, J 0.321/0.414 (book 0.325/0.410), I 0.104 (book 0.104), K_m 1.305, s_c 122.6 ksi (book 122.9).
+ * Defaults = Fizz/Mech guide assumptions (review 2026-10); midterm bending s_t now uses the digitized J (0.297/0.391). */
 (function () {
   const has = (v, ...ids) => H.has(v, ...ids);
   const f = (x, d) => H.fmt(x, d);
@@ -157,7 +160,7 @@
           text: 'Read P_d from Fig. 9-11 with P_des and n_P ("round to the smallest number" — the smaller standard P_d). Choose N_P between 17 and 20 (17 is used until you type one). Take n_G at the middle of the allowed range, N_G = N_P·VR rounded to an integer, then the actual VR and n_G — check n_G is inside the allowed range, otherwise try another N_P.',
           formula: 'N_G = N_P\\,VR\\ (\\text{integer}),\\qquad VR = m_G = \\frac{N_G}{N_P},\\qquad n_G = n_P\\frac{N_P}{N_G}',
           vars: [
-            { id: 'phi', symbol: '\\phi', label: 'Pressure angle', unit: '°', kind: 'choice', options: [{ label: '20° full depth', value: 20 }, { label: '25° full depth', value: 25 }, { label: '14.5°', value: 14.5 }], default: 20 },
+            { id: 'phi', symbol: '\\phi', label: 'Pressure angle', kind: 'choice', options: [{ label: '20° full depth', value: 20 }, { label: '25° full depth', value: 25 }, { label: '14.5°', value: 14.5 }], default: 20 },
             { id: 'Pd', symbol: 'P_d', label: 'Diametral pitch', unit: 'teeth/in', kind: 'lookup', fig: 'f9-11', hint: 'Fig. 9-11, or given. Module given? P_d = 25.4/m', check: v => v.Pd !== undefined && [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 24, 32, 48, 64, 72, 80, 96, 120].indexOf(v.Pd) < 0 ? 'not a standard pitch (Table 8-3)' : null },
             { id: 'NP', symbol: 'N_P', label: 'Pinion teeth', kind: 'input', hint: '17 – 20 (guides); auto 17', auto: () => 17, check: v => v.NP !== undefined && v.NP < 17 && v.phi === 20 ? 'N_P < 17 → interference at 20° (Table 8-7)' : (v.NP !== undefined && v.NP !== Math.round(v.NP) ? 'must be an integer' : null) },
             { id: 'NG', symbol: 'N_G', label: 'Gear teeth', kind: 'input', hint: 'auto = round(N_P·VR_des); type the given value if specified', auto: v => has(v, 'NP', 'VRd') ? Math.round(v.NP * v.VRd) : undefined, check: v => v.NG !== undefined && v.NG !== Math.round(v.NG) ? 'must be an integer' : null },
@@ -247,7 +250,7 @@
           formula: 'K_m = 1 + C_{pf} + C_{ma},\\qquad C_{pf} = \\frac{F}{10D_P} - 0.025\\ (F\\le1),\\quad C_{pf} = \\frac{F}{10D_P} - 0.0375 + 0.0125F\\ (1\\le F<15)',
           text: 'K_s from Table 9-2 with P_d (1.00 for P_d ≥ 5 — the course\'s "typically K_s = 1", midterm); the Shigley formula 1.192(F√Y/P)^0.0535 is the accepted alternative (Tutorial 3: 1.088). C_pf: "use the equations if you can because the table is bad"; for F/D_P < 0.5 use F/D_P = 0.5. C_ma from Fig. 9-13 — guides and course: commercial enclosed gear units, C_ma = 0.127 + 0.0158F − 1.093×10⁻⁴F² (open 0.247 + 0.0167F − 0.765×10⁻⁴F²; precision 0.0675 + 0.0128F − 0.926×10⁻⁴F²; extra-precision 0.0380 + 0.0102F − 0.822×10⁻⁴F²). Midterm: C_pf = 0.0694, C_ma = 0.1505, K_m = 1.22.',
           vars: [
-            { id: 'ksMode', label: 'K_s rule', kind: 'choice', options: [{ label: 'Table 9-2 by P_d (guides; = 1 for P_d ≥ 5)', value: 1 }, { label: 'Formula 1.192 (F√Y/P)^0.0535 (Tutorial 3)', value: 2 }], default: 1 },
+            { id: 'ksMode', label: 'K_s rule', kind: 'choice', options: [{ label: 'Table 9-2 by P_d (guides: = 1 for P_d ≥ 5)', value: 1 }, { label: 'Formula 1.192 (F√Y/P)^0.0535 (Tutorial 3)', value: 2 }], default: 1 },
             { id: 'Ks', symbol: 'K_s', label: 'Size factor', kind: 'lookup', fig: 'cks', hint: 'auto = Table 9-2 (1.00 for P_d ≥ 5) or the formula with the pinion Lewis Y', auto: v => v.ksMode === 2 ? (has(v, 'F', 'NP', 'Pd') && v.NP >= 12 ? Math.max(1, 1.192 * Math.pow(v.F * Math.sqrt(lewisY(v.NP)) / v.Pd, 0.0535)) : undefined) : (has(v, 'Pd') ? KS(v.Pd) : undefined),
               work: v => v.ksMode === 2 && has(v, 'F', 'NP', 'Pd') && v.NP >= 12 ? '\\(K_s = 1.192\\left(\\frac{' + f(v.F) + '\\sqrt{' + f(lewisY(v.NP), 3) + '}}{' + f(v.Pd) + '}\\right)^{0.0535} = ' + f(Math.max(1, 1.192 * Math.pow(v.F * Math.sqrt(lewisY(v.NP)) / v.Pd, 0.0535))) + '\\)' : null },
             { id: 'Cpf', symbol: 'C_{pf}', label: 'Pinion proportion factor', kind: 'lookup', fig: 'f9-12', digits: 4, hint: 'auto = Fig. 9-12 equations',
@@ -333,7 +336,7 @@
           formula: 'HB = \\frac{s_{at}/1000 - 12.80}{0.0773}\\ (\\text{grade 1}),\\qquad HB = \\frac{s_{ac}/1000 - 29.10}{0.322}\\ (\\text{grade 1})',
           text: 'Grade 1 is the course default (Grade 2: HB = (s_at/1000 − 16.40)/0.102, HB = (s_ac/1000 − 34.30)/0.349). Choose the LARGEST. <b>Course material step (Module 2 p27, Midterm P2 part 3):</b> pick an alloy + heat treatment from Table 9-8 / Appendix 3 with at least this hardness and quote its HB and % elongation — e.g. 4140 annealed HB 197, 4140 OQT1300 HB 235, 4140 OQT1000 HB 341, 4340 OQT1000 HB 363 (16 % el.), 4340 OQT700 HB 461 ("OQT1300" = oil-quenched &amp; tempered at 1300 °F; HB ≈ 2 × s_u ksi). Same material for pinion and gear (Fizz p.48; Mech: "design using pinion values as the gear will be the same material"); Mech: "look at appendix 3 or 5 … we normally use Appendix 3". Then confirm 1.0 ≤ SF ≤ 1.5 below. HB > 400 → flame/induction hardening or carburizing (Table 9-9, Appendix 5) instead of through-hardening (Fizz step 40).',
           vars: [
-            { id: 'grade', label: 'Steel grade', kind: 'choice', options: [{ label: 'Grade 1 (course default)', value: 1 }, { label: 'Grade 2', value: 2 }], default: 1 },
+            { id: 'grade', label: 'Steel grade', kind: 'choice', options: [{ label: 'Grade 1 (guides and course default)', value: 1 }, { label: 'Grade 2', value: 2 }], default: 1 },
             { id: 'HBbP', symbol: 'HB_{bend,P}', label: 'Hardness for pinion bending', unit: 'HB', kind: 'calc', digits: 4, compute: v => has(v, 'satP', 'grade') ? Math.max(0, satHB(v.satP, v.grade)) : undefined, work: v => v.HBbP !== undefined ? '\\(HB = (' + f(v.satP / 1000) + ' - ' + (v.grade === 2 ? '16.40)/0.102' : '12.80)/0.0773') + ' = ' + f(satHB(v.satP, v.grade)) + '\\)' : null },
             { id: 'HBbG', symbol: 'HB_{bend,G}', label: 'Hardness for gear bending', unit: 'HB', kind: 'calc', digits: 4, compute: v => has(v, 'satG', 'grade') ? Math.max(0, satHB(v.satG, v.grade)) : undefined },
             { id: 'HBcP', symbol: 'HB_{cont,P}', label: 'Hardness for pinion contact', unit: 'HB', kind: 'calc', digits: 4, compute: v => has(v, 'sacP', 'grade') ? Math.max(0, sacHB(v.sacP, v.grade)) : undefined, work: v => v.HBcP !== undefined ? '\\(HB = (' + f(v.sacP / 1000) + ' - ' + (v.grade === 2 ? '34.30)/0.349' : '29.10)/0.322') + ' = ' + f(sacHB(v.sacP, v.grade)) + '\\)' : null },
