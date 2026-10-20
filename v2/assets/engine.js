@@ -109,18 +109,39 @@
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
 
   // ---------- rich text: "K_o" → K<sub>o</sub>, "10^7" → 10<sup>7</sup>, outside \( math \) and outside HTML tags ----------
+  const ENUM = /(\d(?:\.\d+)?)e([+-]?)(\d{1,3})\b(?![\p{L}])/gu;               // 3e+7 → 3×10^7
+  const texE = (m) => m.replace(ENUM, (x, a, sg, b) => a + '\\times10^{' + (sg === '-' ? '-' : '') + b.replace(/^0+(?=\d)/, '') + '}');
+  // symbol tokens in plain text → inline TeX:  K_o, N_{LP}, P_des, T_R,tot, 10^7, N^-0.0178, V_s^{0.45}, W^t_G
+  const PART = /([_^])(\{[^{}]*\}|\([^()]*\)|[-+−]?[\p{L}\p{N}.]*[\p{L}\p{N}](?:,[\p{L}\p{N}]+)*)/gu;
+  const TOK = /(?<![\p{L}\p{N}\\&#])([\p{L}][\p{L}′']{0,5}|\d+(?:\.\d+)?)((?:[_^](?:\{[^{}]*\}|\([^()]*\)|[-+−]?[\p{L}\p{N}.]*[\p{L}\p{N}](?:,[\p{L}\p{N}]+)*)){1,3})/gu;
+  const texInner = (c) => c.replace(/_([\p{L}\p{N}]+)/gu, '_{$1}').replace(/\^([-+−]?[\p{L}\p{N}.]+)/gu, '^{$1}').replace(/%/g, '\\%');
+  const texBase = (b) => { b = b.replace(/′/g, "'"); return (/^[a-z]{2,}$/.test(b)) ? '\\mathrm{' + b + '}' : b; };
+  const texSub = (c) => (/^[a-z]{2,}$/.test(c) || /,/.test(c)) ? '\\mathrm{' + c + '}' : texInner(c);
+  function tokToTex(base, tail) {
+    let t = texBase(base);
+    tail.replace(PART, (m, op, c) => {
+      let body = c;
+      if (body[0] === '{') body = texInner(body.slice(1, -1));
+      else if (body[0] === '(') body = texInner(body.slice(1, -1));
+      else body = op === '_' ? texSub(body) : texInner(body);
+      t += op + '{' + body + '}';
+      return m;
+    });
+    return '\\(' + t + '\\)';
+  }
   const SUBRE = /([\p{L}\p{N}\)\]′'*])_(\{([^{}]*)\}|[\p{L}\p{N}]+(?:,[\p{L}\p{N}]+)*)/gu;
   const SUPRE = /([\p{L}\p{N}\)\]′']|<\/sub>)\^(\{([^{}]*)\}|\(([^()]*)\)|[-+−]?[\p{L}\p{N}.]*[\p{L}\p{N}])/gu;
   const FILERE = /[\p{L}\p{N}]+(?:_[\p{L}\p{N}.]+){2,}/gu;   // Gear_Stress_2026 → Gear Stress 2026
-  const ENUM = /(\d(?:\.\d+)?)e([+-]?)(\d{1,3})\b(?![\p{L}])/gu;               // 3e+7 → 3×10^7
-  const texE = (m) => m.replace(ENUM, (x, a, sg, b) => a + '\\times10^{' + (sg === '-' ? '-' : '') + b.replace(/^0+(?=\d)/, '') + '}');
   function richSeg(s) {
-    s = s.replace(ENUM, (x, a, sg, b) => a + '×10<sup>' + (sg === '-' ? '−' : '') + b.replace(/^0+(?=\d)/, '') + '</sup>');
+    s = s.replace(ENUM, (x, a, sg, b) => '\\(' + a + '\\times10^{' + (sg === '-' ? '-' : '') + b.replace(/^0+(?=\d)/, '') + '}\\)');
     if (s.indexOf('_') < 0 && s.indexOf('^') < 0) return s;
     s = s.replace(FILERE, m => m.replace(/_/g, ' '));
-    s = s.replace(SUBRE, (m, b, sub, br) => b + '<sub>' + (br !== undefined ? br : sub) + '</sub>');
-    s = s.replace(SUPRE, (m, b, sup, br, pr) => b + '<sup>' + (br !== undefined ? richSeg(br) : pr !== undefined ? richSeg(pr) : sup) + '</sup>');
-    return s;
+    s = s.replace(TOK, (m, base, tail) => tokToTex(base, tail));
+    // leftovers (e.g. ")^2" after a bracket): HTML sub/sup
+    const parts = s.split(/(\\\([\s\S]*?\\\))/);
+    return parts.map((p, i) => i % 2 ? p : p
+      .replace(SUBRE, (m, b, sub, br) => b + '<sub>' + (br !== undefined ? br : sub) + '</sub>')
+      .replace(SUPRE, (m, b, sup, br, pr) => b + '<sup>' + (br !== undefined ? br : pr !== undefined ? pr : sup) + '</sup>')).join('');
   }
   const SEGRE = /(\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$|<\/?[A-Za-z!][^<>]*>|&[#\w]+;)/g;
   function rich(html) {
@@ -188,19 +209,21 @@
   function buildMain() {
     const main = document.getElementById('main');
     main.innerHTML = '';
-    if (T.intro) main.appendChild(el('div', 'callout', rich(T.intro)));
-    if (T.assumptions && T.assumptions.length) main.appendChild(buildAssumptions());
+    if (T.intro) main.appendChild(textBlock(T.intro, 'callout', 300));
+    placeAssumptions();
+    if (T._genAssume.length) main.appendChild(buildAssumptions(T._genAssume, 'General assumptions'));
     main.appendChild(el('div', 'legend',
       '<span class="l-in">you enter</span><span class="l-lk">look up in table / graph (yellow)</span><span class="l-ca">calculated (green)</span>'));
     let n = 0;
     (T.sections || []).forEach(sec => {
       sec._titleEl = main.appendChild(el('div', 'section-title', rich(sec.title)));
-      if (sec.text) sec._textEl = main.appendChild(el('div', 'callout', rich(sec.text)));
+      if (sec.text) sec._textEl = main.appendChild(textBlock(sec.text, 'callout', 260));
+      if (sec._assume && sec._assume.length) sec._assumeEl = main.appendChild(buildAssumptions(sec._assume, 'Assumptions for this part'));
       (sec.steps || []).forEach(st => {
         n++;
         const card = el('div', 'step'); card.id = 'step-' + (st.id || n); st._el = card;
         const h = el('h3'); h.appendChild(el('span', 'num', (st.num !== undefined ? st.num : n) + '.')); h.appendChild(el('span', '', rich(st.title || ''))); card.appendChild(h);
-        if (st.text) card.appendChild(el('div', 'text', rich(st.text)));
+        if (st.text) card.appendChild(textBlock(st.text, 'text', 260));
         const refs = [];
         const figs = st.fig ? (Array.isArray(st.fig) ? st.fig : [st.fig]) : [];
         if (st.eq) refs.push(el('span', 'chip eq', 'Eq. ' + st.eq));
@@ -220,11 +243,40 @@
     typeset([main]);
   }
 
-  function buildAssumptions() {
+  // long explanations: show ~3 lines with a "more" toggle
+  function textBlock(html, cls, limit) {
+    const wrap = el('div', cls);
+    const body = el('div', 'tb-body', rich(html)); wrap.appendChild(body);
+    if (plain(html).length > limit) {
+      wrap.classList.add('clamp');
+      const b = el('button', 'more-btn', 'more ▾'); b.type = 'button';
+      b.onclick = () => { const open = wrap.classList.toggle('expanded'); b.textContent = open ? 'less ▴' : 'more ▾'; };
+      wrap.appendChild(b);
+    }
+    return wrap;
+  }
+
+  // each assumption goes above the section it belongs to: a.section (index or title text) / a.step (step id) / the section of a.var; otherwise "general"
+  function placeAssumptions() {
+    T._genAssume = [];
+    const secs = T.sections || [];
+    secs.forEach(sec => sec._assume = []);
+    const stepById = {}; secs.forEach(sec => (sec.steps || []).forEach(st => { if (st.id) stepById[st.id] = st; }));
+    (T.assumptions || []).forEach(a => {
+      let sec = null;
+      if (typeof a.section === 'number') sec = secs[a.section];
+      else if (typeof a.section === 'string') sec = secs.find(x => plain(x.title).toLowerCase().includes(a.section.toLowerCase()));
+      if (!sec && a.step && stepById[a.step]) { a._step = stepById[a.step]; sec = secs[a._step._sec]; }
+      if (!sec && a.var && varById[a.var]) { a._step = varById[a.var]._step; sec = secs[a._step._sec]; }
+      if (sec && !a.general) sec._assume.push(a); else T._genAssume.push(a);
+    });
+  }
+
+  function buildAssumptions(list, title) {
     const box = el('details', 'assume'); box.open = true;
-    box.appendChild(el('summary', '', 'Assumptions used <span class="n">(' + T.assumptions.length + ')</span><span class="why">from the Fizz / Mech guides unless noted · values linked to a field update live; change the field to override</span>'));
+    box.appendChild(el('summary', '', title + ' <span class="n">(' + list.length + ')</span>'));
     const ul = el('ul');
-    T.assumptions.forEach(a => {
+    list.forEach(a => {
       const li = el('li'); a._li = li;
       li.appendChild(el('span', 'a-text', rich(a.text)));
       if (a.var && varById[a.var]) {
@@ -278,7 +330,7 @@
       const key = (autoVal !== null ? 'auto:' : '') + (o ? o.value : '');
       if (shown === key) return; shown = key;
       btn.innerHTML = (autoVal !== null ? '<span class="rsel-auto">auto</span>' : '') + '<span class="rsel-lab">' + rich(o ? o.label : '') + '</span><span class="rsel-car">▾</span>';
-      if (o && /\\\(/.test(o.label)) typeset([btn]);
+      if (btn.isConnected && /\\\(/.test(btn.innerHTML)) typeset([btn]);
     };
     const choose = (val) => { sel.value = val; raw[vr.id] = val; sync(); update(); };
     const open = () => { document.querySelectorAll('.rsel.open').forEach(x => x !== wrap && x.classList.remove('open')); wrap.classList.add('open'); const cur = list.querySelector('.sel'); if (cur) cur.scrollIntoView({ block: 'nearest' }); };
@@ -342,7 +394,7 @@
       // warnings
       let msg = null;
       try { if (vr.check) msg = vr.check(v); } catch (e) { msg = null; }
-      if (msg) { if (vr._warnMsg !== msg) { vr._warn.innerHTML = rich(msg); vr._warnMsg = msg; if (/\\\(/.test(msg)) typeset([vr._warn]); } vr._warn.style.display = ''; vr._el.classList.add('warned'); }
+      if (msg) { if (vr._warnMsg !== msg) { vr._warn.innerHTML = rich(msg); vr._warnMsg = msg; if (vr._warn.isConnected && /\\\(/.test(vr._warn.innerHTML)) typeset([vr._warn]); } vr._warn.style.display = ''; vr._el.classList.add('warned'); }
       else { vr._warn.style.display = 'none'; vr._warnMsg = null; vr._el.classList.remove('warned'); }
     });
     const toTypeset = [];
@@ -350,8 +402,14 @@
     (T.sections || []).forEach(sec => {
       let secVis = true; try { if (sec.when) secVis = !!sec.when(v); } catch (e) { secVis = true; }
       const anyStep = secVis && (sec.steps || []).some(st => { try { return !st.when || !!st.when(v); } catch (e) { return true; } });
-      if (sec._titleEl) sec._titleEl.style.display = anyStep ? '' : 'none';
-      if (sec._textEl) sec._textEl.style.display = anyStep ? '' : 'none';
+      if (sec._titleEl) sec._titleEl.classList.toggle('gone', !anyStep);
+      if (sec._textEl) sec._textEl.classList.toggle('gone', !anyStep);
+      if (sec._assumeEl) {
+        let shown = 0;
+        sec._assume.forEach(a => { let on = anyStep; if (on && a._step && a._step.when) { try { on = !!a._step.when(v); } catch (e) { } } a._li.classList.toggle('gone', !on); if (on) shown++; });
+        sec._assumeEl.classList.toggle('gone', !shown);
+        const n = sec._assumeEl.querySelector('summary .n'); if (n) n.textContent = '(' + shown + ')';
+      }
       sec._vis = secVis;
     });
     (T.sections || []).forEach(sec => (sec.steps || []).forEach(st => {
@@ -370,7 +428,7 @@
       }
       if (st._after) { let html = ''; try { html = st.after(v) || ''; } catch (e) { } html = rich(html); if (st._afterHtml !== html) { st._after.innerHTML = html; st._afterHtml = html; if (html) toTypeset.push(st._after); } }
     }));
-    if (toTypeset.length) typeset(toTypeset);
+    if (toTypeset.length) typeset(toTypeset.filter(x => x.isConnected));
     updateAssumptions();
     save();
   }
