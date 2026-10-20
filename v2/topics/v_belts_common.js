@@ -18,7 +18,7 @@
 //   CD 35.16, θ1 151.2°, Cθ 0.924 (auto, course 0.92), CL 1.014 (auto, course 1.01); PTab 25.7 (course; chart auto 24.7); course omits ΔPR
 //   (set 0; auto 1.63) → 23.9 hp/belt → 3 belts.
 // HW1 P3a (Mott 7-19) [mott]: 5 hp 1750 → 725, Ks 1.2, 3V → 6 hp, D1 7.95 (auto), D2 18.95 (auto), 734 rpm, V 3642, PTab 10 (auto 9.94),
-//   CD 24 → 91.49 → 90 (auto), CD 23.23, θ1 152.6°, Cθ 0.93 (auto 0.929), CL 1.07 (auto 1.070) → Ha 11.84 with the solution's ΔP 1.9,
+//   CD 24 → 91.49 → 90 (auto), CD 23.23, θ1 152.6°, Cθ 0.93 (auto 0.929), CL 1.07 (auto 1.070) → Ha 0.93(1.07)(10 + 1.9) = 11.84,
 //   1 belt. Course slip: ΔP 1.9 is read from the 5V chart (Fig 7-17); for 3V the dashed-curve gap gives ≈0.33 (auto) → 10.6 hp/belt, still 1 belt.
 // Mott Ex 7-2 [mott]: 50 hp 1160 → 675, SF 1.3, 5V, D1 12.4 → 65 hp, D2 21.1 (auto), 682 rpm, vb 3766, PTab 26.39 (auto, Mott 26.4),
 //   ΔP 1.153 (auto, Mott 1.15), CD 24 → 101.4 → 100 (auto), CD 23.30, θ1 158°, Cθ 0.94, CL 0.96 (Mott; auto 0.946/0.969) → 24.86 hp/belt, 3 belts.
@@ -210,12 +210,12 @@
     T.figures = [
       { id: 'table7-1', book: 'mott', ref: 'Table 7-1', title: 'V-belt service factors (driven machine × driver × hours/day)', src: 'figures/mott/table7-1.png', page: 273, note: 'Course primary table (slide 28). Factors are for speed reducers; ×1.2 for speed increasers (footnote 1). Midterm 2025: AC normal torque → textile machine, 10 h/day → 1.3.' },
       { id: 'table17-15', book: 'shigley', ref: 'Table 17-15', title: 'Suggested service factors Ks for V-belt drives', src: 'figures/shigley/table17-15.png', page: 925, note: 'Ranges by shock level and driver torque. Tutorial 2 Q1 (IC engine → medium-shock brick machine) took 1.4.' },
-      { id: 'ks-hours', book: 'course', ref: 'Belt service factors (slide 35)', title: 'Course table: driven-machine class × hours/day × driver (smooth / coarse starting torque)', src: 'figures/course/belt_service_factor_hours.png', note: 'Light 1.0/1.1/1.2 | 1.1/1.2/1.3; medium 1.1/1.2/1.3 | 1.2/1.3/1.4; heavy 1.2/1.3/1.4 | 1.3/1.4/1.6; very heavy 1.3/1.4/1.5 | 1.5/1.6/1.8 (<8, <16, >16 h).' },
+      { id: 'ks-hours', book: 'course', ref: 'Course Ks table', title: 'Slide 35 course table: driven-machine class × hours/day × driver (smooth / coarse starting torque)', src: 'figures/course/belt_service_factor_hours.png', note: 'Light 1.0/1.1/1.2 | 1.1/1.2/1.3; medium 1.1/1.2/1.3 | 1.2/1.3/1.4; heavy 1.2/1.3/1.4 | 1.3/1.4/1.6; very heavy 1.3/1.4/1.5 | 1.5/1.6/1.8 (<8, <16, >16 h).' },
       { id: 'fig7-13', book: 'mott', ref: 'Figure 7-13', title: 'Narrow-section belt selection chart (design power vs speed of faster shaft)', src: 'figures/mott/fig7-13.png', page: 273, note: 'On a boundary choose the larger section (Fizz p.10).' },
-      { id: 'gates-b1', book: 'course', ref: 'Gates Figure B1 (slide 32)', title: 'Gates cross-section selection chart (Super HC 3V/5V/8V and 3VX/5VX)', src: 'figures/course/gates_section_chart_b1.png', note: 'Enter with design hp (hp × service factor) and the faster-shaft rpm.' },
-      { id: 'abcd', book: 'course', ref: 'Classical A–D chart (slide 27)', title: '"Recommended Nominal V-Belt Selection" for the classical A/B/C/D sections', src: 'figures/course/vbelt_selection_chart_abcd.png' },
+      { id: 'gates-b1', book: 'course', ref: 'Gates Fig B1', title: 'Slide 32 — Gates cross-section selection chart (Super HC 3V/5V/8V and 3VX/5VX)', src: 'figures/course/gates_section_chart_b1.png', note: 'Enter with design hp (hp × service factor) and the faster-shaft rpm.' },
+      { id: 'abcd', book: 'course', ref: 'A–D chart', title: 'Slide 27 — "Recommended Nominal V-Belt Selection" for the classical A/B/C/D sections', src: 'figures/course/vbelt_selection_chart_abcd.png' },
       { id: 'table17-9', book: 'shigley', ref: 'Table 17-9', title: 'Standard V-belt sections A–E: width, thickness, minimum sheave diameter, hp range', src: 'figures/shigley/table17-9.png', page: 922 },
-      { id: 'gates-b2b3', book: 'course', ref: 'Gates Tables B2/B3 (slide 33)', title: 'NEMA minimum driver-sheave diameters for electric motors (B2: Super HC 3V/5V/8V/3VX/5VX; B3: Hi-Power A–D, Tri-Power AX/BX/CX)', src: 'figures/course/gates_nema_min_sheave_b2_b3.png', note: 'Enter with the MOTOR hp and the motor-rpm column (Tutorial 2 Q2: 60 hp, 400 rpm → 575 column → 12 in; HW1 P3b: 5 hp @ 1750 → 3.0 in).' },
+      { id: 'gates-b2b3', book: 'course', ref: 'Gates B2/B3', title: 'Slide 33 — NEMA minimum driver-sheave diameters for electric motors (B2: Super HC 3V/5V/8V/3VX/5VX; B3: Hi-Power A–D, Tri-Power AX/BX/CX)', src: 'figures/course/gates_nema_min_sheave_b2_b3.png', note: 'Enter with the MOTOR hp and the motor-rpm column (Tutorial 2 Q2: 60 hp, 400 rpm → 575 column → 12 in; HW1 P3b: 5 hp @ 1750 → 3.0 in).' },
       { id: 'fig7-14', book: 'mott', ref: 'Figure 7-14', title: 'Power rating per belt: 3V (solid VR = 1, dashed VR ≥ 3.38)', src: 'figures/mott/fig7-14.png', page: 274, note: 'Vertical lines are the standard sheave pitch diameters.' },
       { id: 'fig7-15', book: 'mott', ref: 'Figure 7-15', title: 'Power rating per belt: 5V', src: 'figures/mott/fig7-15.png', page: 275, note: 'The printed y-axis label "10" should read 16 (gridlines every 4 hp).' },
       { id: 'fig7-16', book: 'mott', ref: 'Figure 7-16', title: 'Power rating per belt: 8V (690 / 870 / 1160 rpm)', src: 'figures/mott/fig7-16.png', page: 275, note: 'The printed y-axis labels 96/107 should read 90/100.' },
@@ -230,15 +230,15 @@
       { id: 'table17-12', book: 'shigley', ref: 'Table 17-12', title: 'Horsepower ratings of standard V belts (Htab vs sheave pitch diameter and belt speed)', src: 'figures/shigley/table17-12.png', page: 924, note: 'Interpolate on belt speed; the last row of each section applies to all larger sheaves ("and up").' },
       { id: 'table17-13', book: 'shigley', ref: 'Table 17-13', title: 'Angle-of-wrap correction factor K1', src: 'figures/shigley/table17-13.png', page: 925, note: 'VV column fit: K1 = 0.143543 + 0.007468φ − 0.000015052φ² (φ in degrees).' },
       { id: 'table17-14', book: 'shigley', ref: 'Table 17-14', title: 'Belt-length correction factor K2', src: 'figures/shigley/table17-14.png', page: 925, note: 'Enter with the nominal (inside) length, e.g. B112 → 1.05, D360 → 1.10.' },
-      { id: 'gates-b10', book: 'course', ref: 'Gates Table B10 (slide 34)', title: 'Gates 3VX horsepower per belt + additional hp for speed ratio', src: 'figures/course/gates_3vx_power_rating_table_b10.png', note: 'Lecture example: 6.0 in @ 1750 rpm → 7.68 hp; VR ≈ 3 → +0.25 hp.' },
-      { id: 'gates-b4', book: 'course', ref: 'Gates Table B4 (slide 36)', title: 'Gates belt lengths (3VX800 = 80.0 in, 3V400 = 40.0 in …)', src: 'figures/course/gates_belt_sizes_table_b4.png' },
-      { id: 'gates-b6', book: 'course', ref: 'Gates Table B6 (slide 37)', title: 'Gates 3V/3VX drive table: sheave pair × belt → centre distance, colour key = hp correction factor', src: 'figures/course/gates_3v_centre_distance_table_b6.png', note: 'The hp correction combines the wrap AND length corrections (Cθ·CL or K1·K2).' },
-      { id: 'gates-ex', book: 'course', ref: 'Lecture example (slide 38)', title: 'Worked 3VX800 example: 6 / 19 in sheaves, 1750 rpm, 2 hp', src: 'figures/course/gates_3vx_example_slide38.png' },
+      { id: 'gates-b10', book: 'course', ref: 'Gates B10', title: 'Slide 34 — Gates 3VX horsepower per belt + additional hp for speed ratio', src: 'figures/course/gates_3vx_power_rating_table_b10.png', note: 'Lecture example: 6.0 in @ 1750 rpm → 7.68 hp; VR ≈ 3 → +0.25 hp.' },
+      { id: 'gates-b4', book: 'course', ref: 'Gates B4', title: 'Slide 36 — Gates belt lengths (3VX800 = 80.0 in, 3V400 = 40.0 in …)', src: 'figures/course/gates_belt_sizes_table_b4.png' },
+      { id: 'gates-b6', book: 'course', ref: 'Gates B6', title: 'Slide 37 — Gates 3V/3VX drive table: sheave pair × belt → centre distance, colour key = hp correction factor', src: 'figures/course/gates_3v_centre_distance_table_b6.png', note: 'The hp correction combines the wrap AND length corrections (Cθ·CL or K1·K2).' },
+      { id: 'gates-ex', book: 'course', ref: 'Lecture s38', title: 'Slide 38 — Worked 3VX800 example: 6 / 19 in sheaves, 1750 rpm, 2 hp', src: 'figures/course/gates_3vx_example_slide38.png' },
       { id: 'table17-16', book: 'shigley', ref: 'Table 17-16', title: 'V-belt parameters Kb (bending) and Kc (centrifugal)', src: 'figures/shigley/table17-16.png', page: 926 },
       { id: 'fig17-14', book: 'shigley', ref: 'Figure 17-14', title: 'V-belt tensions around the drive (F1, F2, Fi, Fc, Fb, T1, T2)', src: 'figures/shigley/fig17-14.png', page: 926 },
       { id: 'table17-17', book: 'shigley', ref: 'Table 17-17', title: 'Durability parameters K and b (belt life)', src: 'figures/shigley/table17-17.png', page: 927, note: 'Valid for 10^8–10^9 force peaks (3V/5V/8V also 10^9–10^10). Above 10^9 report "NP > 10^9".' },
-      { id: 'gates-d19', book: 'course', ref: 'Gates D19, D26, D27, D35 (slide 39)', title: 'Static tension per strand Tst, arc factor Kφ, constants M and Y, span length t', src: 'figures/course/gates_tension_formula_d19.png', note: 'Use the MOTOR (nominal) hp in D19. The square-root span formula on the Gates page is marked "incorrect" — use D35.' },
-      { id: 'gates-d20', book: 'course', ref: 'Gates D20–D23 (slide 40)', title: 'Minimum / maximum force to deflect one belt 1/64 in per inch of span', src: 'figures/course/gates_deflection_formula_d20_d23.png' },
+      { id: 'gates-d19', book: 'course', ref: 'Gates D19–D35', title: 'Slide 39 — Formula D19, Tables D26/D27, Formula D35: Static tension per strand Tst, arc factor Kφ, constants M and Y, span length t', src: 'figures/course/gates_tension_formula_d19.png', note: 'Use the MOTOR (nominal) hp in D19. The square-root span formula on the Gates page is marked "incorrect" — use D35.' },
+      { id: 'gates-d20', book: 'course', ref: 'Gates D20–D23', title: 'Slide 40 — Minimum / maximum force to deflect one belt 1/64 in per inch of span', src: 'figures/course/gates_deflection_formula_d20_d23.png' },
     ];
 
     const modeOpts = [
@@ -410,7 +410,7 @@
             { id: 'th2', symbol: '\\theta_2', label: 'Wrap angle on the large sheave', unit: '°', kind: 'calc', compute: v => H.has(v, 'th1') ? 360 - v.th1 : undefined },
           ],
           after: v => {
-            const t = LENG[base(v.sec)]; if (!t || !H.has(v, 'Lstd', 'Lreq') || v.mode === 'gates') return '';
+            const t = LENG[base(v.sec)]; if (!t || !H.has(v, 'Lstd', 'Lreq') || v.mode !== 'mott') return '';
             const x = v.Lreq - (H.has(v, 'Lc') ? v.Lc : 0); const lo = t.filter(a => a <= x).pop(), hi = t.find(a => a >= x);
             return (v.Lstd !== lo && v.Lstd !== hi) ? '<span style="color:#92400e">Note: ' + f(v.Lstd) + ' in is not next to the required ' + f(x) + ' in (neighbours ' + (lo || '—') + ' / ' + (hi || '—') + ') — fine only if a longer/shorter CD is wanted. (Midterm 2025: the solution wrote L = 122.9 in for CD = 32 in — the sum is 114.9 — and took 125 in.)</span>' : '';
           } },
@@ -507,7 +507,7 @@
           text: 'K<sub>φ</sub> from Table D26 at (D − d)/C (180° → 1.00; lecture 0.67 → 0.90); M from Table D27. Use the <b>motor (nominal) hp</b>, not the design hp — Tutorial 2 Q2: 251 lbf with 60 hp vs 375 lbf with 90 hp (Module 1 p24). The Mech guide says to look in Shigley for T<sub>st</sub>; the course uses this Gates formula.',
           vars: [
             { id: 'M', symbol: 'M', label: 'Constant M (Table D27)', unit: '', kind: 'lookup', fig: 'gates-d19', auto: v => GMY[v.sec] ? GMY[v.sec][0] : undefined, hint: '3VX 0.29 · 5VX 0.78 · 3V 0.46 · 5V 1.0 · 8V 2.6 · AX 0.47 · BX 0.76 · CX 1.31 · CP (C) 1.6' },
-            { id: 'Hmot', symbol: '\\text{Motor hp}', label: 'Motor (nominal) power', unit: 'hp', kind: 'input', auto: v => v.P, hint: 'auto = P (not the design power)' },
+            { id: 'Hmot', symbol: 'H_{mot}', label: 'Motor (nominal) power', unit: 'hp', kind: 'input', auto: v => v.P, hint: 'auto = P (not the design power)' },
             { id: 'Ng', symbol: 'N', label: 'Number of belts (strands)', unit: '', kind: 'input', auto: v => v.Nb, hint: 'auto = N_b from the design' },
             { id: 'Cten', symbol: 'C', label: 'Centre distance', unit: 'in', kind: 'input', auto: v => v.CD, hint: 'auto = actual CD above (or type the given C)' },
             { id: 'ddc', symbol: '(D-d)/C', label: 'Sheave-difference ratio', unit: '', kind: 'calc', digits: 3, compute: v => H.has(v, 'D1', 'D2', 'Cten') ? Math.abs(v.D2 - v.D1) / v.Cten : undefined },

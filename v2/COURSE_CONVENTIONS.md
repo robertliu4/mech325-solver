@@ -397,3 +397,11 @@ the textbook crops in `v2/figures/shigley` and `v2/figures/mott`.
 - (W^t)all = 1787 lbf in the slides uses Fe = 2 in (carried over from Shigley Ex 15-3) although the problem's F = 0.5 in; with Fe = F the allowable is ≈447 lbf and wear fails (the slides' own redesign at F = 7/8 in → 782 lbf is consistent with Fe = F). Calculators use Fe = min(F, 0.67 dm).
 - Amin = 1642 in² uses C = 8.5 in instead of the problem's C = 4.25 in (correct ≈ 506 in²).
 - Wf = −29.5 lbf is an arithmetic slip for −25.9 lbf (Hf 0.53 hp, not 0.61).
+
+### Added during V-belt rebuild — course-solution slips found (calculators follow the correct value)
+- Midterm 2025 P1: Lp written as 122.9 in for CD 32 — correct value is 114.9 in; the 125-in belt then chosen gives CD 37.10 as in the solution.
+- HW1 P3a: ΔP 1.9 hp was read from the 5V chart; the 3V value is ≈0.33 hp (still 1 belt). The table row in §2 above (ΔP 1.4, CL 1.09, 11.6 hp) does not match the handwritten solution either; calculator gives CL 1.07, 11.84 hp/belt.
+- HW1 P2: solution omits ΔPR.
+- HW1 P3b: deflection force 7.23 lbf divides by 6 instead of 16 (correct 2.71–2.89 lbf).
+- Lecture s38–40: slide states Ks = 1.2 but computes with 1.1.
+- Tutorial 1 (S 17-2): typed θ = 3.132 rad is a slip for 3.123 rad.
