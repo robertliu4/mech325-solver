@@ -99,6 +99,8 @@ a { color: var(--accent); }
 .figcard .ref { font-weight: 700; font-size: .85rem; }
 .figcard .ref.shigley { color: var(--shigley); }
 .figcard .ref.mott { color: var(--mott); }
+.figcard .ref.fizz, .figcard .ref.Fizz { color: #b45309; }
+.figcard .ref.mech, .figcard .ref.Mech { color: #b45309; }
 .figcard .ttl { font-size: .88rem; margin: 2px 0 6px; }
 .figcard img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; cursor: zoom-in; background: #fff; }
 .figcard .note { font-size: .78rem; color: var(--muted); margin-top: 5px; }

@@ -7,8 +7,8 @@
   const T = window.TOPIC;
   if (!T) { document.body.innerHTML = '<p style="padding:20px">No TOPIC defined.</p>'; return; }
 
-  const BOOKNAME = { shigley: 'Shigley 11e', mott: 'Mott 6e' };
-  const BOOKPDF = { shigley: '../original_documents/M325S.pdf', mott: '../original_documents/M325M.pdf' };
+  const BOOKNAME = { shigley: 'Shigley 11e', mott: 'Mott 6e', fizz: 'Fizz guide', mech: 'Mech guide', 'Fizz bible': 'Fizz guide', 'Mech bible': 'Mech guide' };
+  const BOOKPDF = { shigley: '../original_documents/M325S.pdf', mott: '../original_documents/M325M.pdf', fizz: '../original_documents/Mech_325_Bible_Fizz.pdf', mech: '../original_documents/Mech_325_Bible_Mech.pdf', 'Fizz bible': '../original_documents/Mech_325_Bible_Fizz.pdf', 'Mech bible': '../original_documents/Mech_325_Bible_Mech.pdf' };
   const STORE_KEY = 'm325v2:' + T.id + ':' + T.book;
 
   // ---------- helpers exposed to topic files ----------
@@ -79,25 +79,15 @@
   function recompute() {
     v = {};
     allVars.forEach(vr => { if (vr.kind !== 'calc') v[vr.id] = parseRaw(vr); });
-    // multiple passes so forward references resolve
-    for (let pass = 0; pass < 4; pass++) {
+    const autoIds = allVars.filter(vr => (vr.kind === 'lookup' || vr.kind === 'input') && vr.auto && v[vr.id] === undefined).map(vr => vr.id);
+    for (let pass = 0; pass < 6; pass++) {
       allVars.forEach(vr => {
-        if (vr.kind !== 'calc') return;
-        try { const r = vr.compute ? vr.compute(v) : undefined; v[vr.id] = (typeof r === 'number' && !isFinite(r)) ? undefined : r; }
-        catch (e) { v[vr.id] = undefined; }
-      });
-    }
-    // allow lookups with an "auto" estimate when user left blank
-    allVars.forEach(vr => {
-      if ((vr.kind === 'lookup' || vr.kind === 'input') && v[vr.id] === undefined && vr.auto) {
-        try { const r = vr.auto(v); if (typeof r === 'number' && isFinite(r)) v[vr.id] = r; } catch (e) { }
-      }
-    });
-    for (let pass = 0; pass < 3; pass++) {
-      allVars.forEach(vr => {
-        if (vr.kind !== 'calc') return;
-        try { const r = vr.compute ? vr.compute(v) : undefined; v[vr.id] = (typeof r === 'number' && !isFinite(r)) ? undefined : r; }
-        catch (e) { v[vr.id] = undefined; }
+        if (vr.kind === 'calc') {
+          try { const r = vr.compute ? vr.compute(v) : undefined; v[vr.id] = (typeof r === 'number' && !isFinite(r)) ? undefined : r; }
+          catch (e) { v[vr.id] = undefined; }
+        } else if (vr.auto && autoIds.includes(vr.id)) {
+          try { const r = vr.auto(v); v[vr.id] = (typeof r === 'number' && isFinite(r)) ? r : (typeof r === 'string' ? r : undefined); } catch (e) { v[vr.id] = undefined; }
+        }
       });
     }
   }
@@ -194,7 +184,7 @@
         const val = v[vr.id];
         vr._inp.value = (val === undefined) ? '' : (typeof val === 'number' ? H.fmt(val, vr.digits) : String(val));
       } else if (vr.auto && (raw[vr.id] === undefined || raw[vr.id] === '') && v[vr.id] !== undefined) {
-        vr._inp.placeholder = 'auto: ' + H.fmt(v[vr.id], vr.digits);
+        vr._inp.placeholder = 'auto: ' + (typeof v[vr.id] === 'number' ? H.fmt(v[vr.id], vr.digits) : v[vr.id]);
       } else if (vr.auto) { vr._inp.placeholder = vr.placeholder || ''; }
       // warnings
       let msg = null;
@@ -203,11 +193,13 @@
       else { vr._warn.style.display = 'none'; vr._el.classList.remove('warned'); }
     });
     const toTypeset = [];
+    let visN = 0;
     (T.sections || []).forEach(sec => (sec.steps || []).forEach(st => {
       // visibility
       let vis = true; try { if (st.when) vis = !!st.when(v); } catch (e) { vis = true; }
       st._el.classList.toggle('hidden', !vis);
       if (!vis) return;
+      if (st.num === undefined) { visN++; st._el.querySelector('.num').textContent = visN + '.'; }
       // work lines
       if (st._work) {
         let lines = [];
