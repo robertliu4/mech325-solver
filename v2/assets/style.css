@@ -132,3 +132,45 @@ a { color: var(--accent); }
 .result-bad { color: var(--warn-line); font-weight: 700; }
 .toast { position: fixed; bottom: 16px; right: 16px; background: #1f2937; color: #fff; padding: 8px 14px; border-radius: 8px; font-size: .85rem; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 200; }
 .toast.show { opacity: 1; }
+
+/* ---------- sub/superscripts in plain text ---------- */
+sub, sup { font-size: .72em; line-height: 0; }
+sub { vertical-align: -.25em; }
+sup { vertical-align: .45em; }
+
+/* ---------- rich dropdown (renders subscripts / math in options) ---------- */
+.rsel { position: relative; width: 100%; }
+.rsel-native { display: none; }
+.rsel-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; text-align: left;
+  padding: 7px 9px; border: 2px solid var(--line); border-radius: 8px; font-size: .95rem; background: #fff; color: var(--ink); cursor: pointer; font-family: inherit; min-height: 38px;
+}
+.rsel-btn:focus { outline: none; border-color: var(--accent); }
+.rsel-lab { flex: 1; min-width: 0; }
+.rsel-car { color: var(--muted); font-size: .8rem; }
+.rsel-list {
+  display: none; position: absolute; z-index: 60; top: calc(100% + 4px); left: 0; min-width: 100%; max-width: 440px; width: max-content;
+  max-height: 320px; overflow-y: auto; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.15); padding: 4px;
+}
+.rsel.open .rsel-list { display: block; }
+.rsel-opt { padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: .92rem; }
+.rsel-opt:hover { background: var(--accent-soft); }
+.rsel-opt.sel { background: #eef2ff; font-weight: 600; }
+.var.lookup .rsel-btn { background: var(--lookup-bg); border-color: var(--lookup-line); }
+.var.flash { box-shadow: 0 0 0 4px var(--accent-soft); border-radius: 8px; transition: box-shadow .3s; }
+
+/* ---------- assumptions panel ---------- */
+details.assume { background: #fffbeb; border: 1px solid #fcd34d; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: .9rem; }
+details.assume > summary { cursor: pointer; font-weight: 700; color: #92400e; list-style: revert; }
+details.assume > summary .n { font-weight: 400; color: #b45309; }
+details.assume > summary .why { display: block; font-weight: 400; font-size: .78rem; color: #a16207; margin: 2px 0 0 16px; }
+details.assume ul { margin: 8px 0 2px 18px; padding: 0; }
+details.assume li { margin: 4px 0; }
+details.assume .a-val { margin-left: 6px; border: 1px solid #fcd34d; background: #fff; color: #92400e; border-radius: 999px; padding: 0 8px; font-size: .78rem; cursor: pointer; }
+details.assume li.changed .a-val { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+details.assume .a-src { margin-left: 6px; font-size: .76rem; color: #a16207; }
+details.assume .a-src a { color: #a16207; }
+
+/* let the last figure cards scroll to the top of the panel */
+#figs { padding-bottom: 70vh; }
+@media (max-width: 1100px) { #figs { padding-bottom: 0; } }

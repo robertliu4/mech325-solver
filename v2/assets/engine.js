@@ -95,12 +95,56 @@
   // ---------- rendering ----------
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
 
+  // ---------- rich text: "K_o" → K<sub>o</sub>, "10^7" → 10<sup>7</sup>, outside \( math \) and outside HTML tags ----------
+  const SUBRE = /([\p{L}\p{N}\)\]′'*])_(\{([^{}]*)\}|[\p{L}\p{N}]+(?:,[\p{L}\p{N}]+)*)/gu;
+  const SUPRE = /([\p{L}\p{N}\)\]′'])\^(\{([^{}]*)\}|\(([^()]*)\)|[-+−]?[\p{L}\p{N}.]*[\p{L}\p{N}])/gu;
+  const FILERE = /[\p{L}\p{N}]+(?:_[\p{L}\p{N}.]+){2,}/gu;   // Gear_Stress_2026 → Gear Stress 2026
+  function richSeg(s) {
+    if (s.indexOf('_') < 0 && s.indexOf('^') < 0) return s;
+    s = s.replace(FILERE, m => m.replace(/_/g, ' '));
+    s = s.replace(SUBRE, (m, b, sub, br) => b + '<sub>' + (br !== undefined ? br : sub) + '</sub>');
+    s = s.replace(SUPRE, (m, b, sup, br, pr) => b + '<sup>' + (br !== undefined ? richSeg(br) : pr !== undefined ? richSeg(pr) : sup) + '</sup>');
+    return s;
+  }
+  const SEGRE = /(\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$|<\/?[A-Za-z!][^<>]*>|&[#\w]+;)/g;
+  function rich(html) {
+    if (html === undefined || html === null) return '';
+    html = String(html);
+    if (html.indexOf('_') < 0 && html.indexOf('^') < 0) return html;
+    let out = '', last = 0, m; SEGRE.lastIndex = 0;
+    while ((m = SEGRE.exec(html))) { out += richSeg(html.slice(last, m.index)) + m[0]; last = SEGRE.lastIndex; }
+    return out + richSeg(html.slice(last));
+  }
+  const SUBS = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉', a: 'ₐ', e: 'ₑ', h: 'ₕ', i: 'ᵢ', j: 'ⱼ', k: 'ₖ', l: 'ₗ', m: 'ₘ', n: 'ₙ', o: 'ₒ', p: 'ₚ', r: 'ᵣ', s: 'ₛ', t: 'ₜ', u: 'ᵤ', v: 'ᵥ', x: 'ₓ', '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎', 'β': 'ᵦ', 'γ': 'ᵧ', 'ρ': 'ᵨ', 'φ': 'ᵩ', 'χ': 'ᵪ' };
+  const SUPS = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '+': '⁺', '-': '⁻', '−': '⁻', '=': '⁼', '(': '⁽', ')': '⁾', '.': '·', '/': 'ᐟ', a: 'ᵃ', b: 'ᵇ', c: 'ᶜ', d: 'ᵈ', e: 'ᵉ', f: 'ᶠ', g: 'ᵍ', h: 'ʰ', i: 'ⁱ', j: 'ʲ', k: 'ᵏ', l: 'ˡ', m: 'ᵐ', n: 'ⁿ', o: 'ᵒ', p: 'ᵖ', r: 'ʳ', s: 'ˢ', t: 'ᵗ', u: 'ᵘ', v: 'ᵛ', w: 'ʷ', x: 'ˣ', y: 'ʸ', z: 'ᶻ' };
+  const TEXSYM = { alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', Delta: 'Δ', epsilon: 'ε', varepsilon: 'ε', eta: 'η', theta: 'θ', lambda: 'λ', mu: 'μ', nu: 'ν', pi: 'π', rho: 'ρ', sigma: 'σ', tau: 'τ', phi: 'φ', varphi: 'φ', psi: 'ψ', omega: 'ω', Omega: 'Ω', cdot: '·', times: '×', le: '≤', leq: '≤', ge: '≥', geq: '≥', approx: '≈', sqrt: '√', infty: '∞', circ: '°', prime: '′', to: '→', rightarrow: '→', pm: '±', ne: '≠', neq: '≠' };
+  const mapAll = (str, M) => { let o = ''; for (const ch of str) { if (M[ch] === undefined) return null; o += M[ch]; } return o; };
+  // plain text (tooltips, native <option>, copy-as-text): unicode sub/superscripts where possible
+  function plain(s, keepUnderscore) {
+    if (s === undefined || s === null) return '';
+    s = String(s).replace(/<\/?[A-Za-z!][^<>]*>/g, '').replace(/\\[()\[\]]/g, '')
+      .replace(/\\(?:mathrm|text|mathit|operatorname)\{([^{}]*)\}/g, '$1')
+      .replace(/\\([A-Za-z]+)/g, (m, w) => TEXSYM[w] !== undefined ? TEXSYM[w] : w)
+      .replace(/\\,|\;|\\!|\\ /g, ' ');
+    s = s.replace(FILERE, m => m.replace(/_/g, ' '));
+    s = s.replace(SUBRE, (m, b, sub, br) => { const t = br !== undefined ? br : sub; const u = mapAll(t, SUBS); return b + (u !== null ? u : (keepUnderscore ? '_' + (t.length > 1 ? '{' + t + '}' : t) : t)); });
+    s = s.replace(SUPRE, (m, b, sup, br, pr) => { const t = br !== undefined ? br : pr !== undefined ? pr : sup; const u = mapAll(t, SUPS); return b + (u !== null ? u : '^' + (t.length > 1 ? '(' + t + ')' : t)); });
+    return s.replace(/[{}]/g, '');
+  }
+  window.H.rich = rich; window.H.plain = plain;
+  const typeset = (els) => { if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(els.filter(Boolean)).catch(() => { }); };
+  // links "Fizz p.42" / "Mech p. 79" to the guide PDFs
+  function linkSrc(s) {
+    return rich(s).replace(/\b(Fizz|Mech)(?: guide| bible)?\s*pp?\.\s*(\d+)(?:\s*[–-]\s*(\d+))?/g, (m, g, p1) =>
+      '<a href="' + BOOKPDF[g.toLowerCase()] + '#page=' + p1 + '" target="_blank">' + m + '</a>');
+  }
+
   function figChip(fid) {
     const f = figById[fid];
     if (!f) return el('span', 'chip', fid);
     const isTable = /table/i.test(f.ref || '');
-    const c = el('span', 'chip' + (isTable ? ' table' : ''), (isTable ? '📋 ' : '📈 ') + f.ref);
-    c.title = f.title || '';
+    const c = el('span', 'chip' + (isTable ? ' table' : ''), (isTable ? '📋 ' : '📈 ') + rich(f.ref));
+    c.title = plain(f.title || '');
     c.onclick = () => showFig(fid);
     return c;
   }
@@ -108,18 +152,19 @@
   function buildMain() {
     const main = document.getElementById('main');
     main.innerHTML = '';
-    if (T.intro) main.appendChild(el('div', 'callout', T.intro));
+    if (T.intro) main.appendChild(el('div', 'callout', rich(T.intro)));
+    if (T.assumptions && T.assumptions.length) main.appendChild(buildAssumptions());
     main.appendChild(el('div', 'legend',
       '<span class="l-in">you enter</span><span class="l-lk">look up in table / graph (yellow)</span><span class="l-ca">calculated (green)</span>'));
     let n = 0;
     (T.sections || []).forEach(sec => {
-      main.appendChild(el('div', 'section-title', sec.title));
-      if (sec.text) main.appendChild(el('div', 'callout', sec.text));
+      main.appendChild(el('div', 'section-title', rich(sec.title)));
+      if (sec.text) main.appendChild(el('div', 'callout', rich(sec.text)));
       (sec.steps || []).forEach(st => {
         n++;
         const card = el('div', 'step'); card.id = 'step-' + (st.id || n); st._el = card;
-        const h = el('h3'); h.appendChild(el('span', 'num', (st.num !== undefined ? st.num : n) + '.')); h.appendChild(el('span', '', st.title || '')); card.appendChild(h);
-        if (st.text) card.appendChild(el('div', 'text', st.text));
+        const h = el('h3'); h.appendChild(el('span', 'num', (st.num !== undefined ? st.num : n) + '.')); h.appendChild(el('span', '', rich(st.title || ''))); card.appendChild(h);
+        if (st.text) card.appendChild(el('div', 'text', rich(st.text)));
         const refs = [];
         const figs = st.fig ? (Array.isArray(st.fig) ? st.fig : [st.fig]) : [];
         if (st.eq) refs.push(el('span', 'chip eq', 'Eq. ' + st.eq));
@@ -136,7 +181,77 @@
         main.appendChild(card);
       });
     });
-    if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([main]).catch(() => { });
+    typeset([main]);
+  }
+
+  function buildAssumptions() {
+    const box = el('details', 'assume'); box.open = true;
+    box.appendChild(el('summary', '', 'Assumptions used <span class="n">(' + T.assumptions.length + ')</span><span class="why">from the Fizz / Mech guides unless noted · values linked to a field update live; change the field to override</span>'));
+    const ul = el('ul');
+    T.assumptions.forEach(a => {
+      const li = el('li'); a._li = li;
+      li.appendChild(el('span', 'a-text', rich(a.text)));
+      if (a.var && varById[a.var]) {
+        const b = el('button', 'a-val'); b.type = 'button'; a._val = b;
+        b.onclick = () => { const vr = varById[a.var]; if (vr && vr._el) { vr._el.scrollIntoView({ behavior: 'smooth', block: 'center' }); vr._el.classList.add('flash'); setTimeout(() => vr._el.classList.remove('flash'), 1400); } };
+        li.appendChild(b);
+      }
+      if (a.src) li.appendChild(el('span', 'a-src', linkSrc(a.src)));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    return box;
+  }
+
+  function updateAssumptions() {
+    (T.assumptions || []).forEach(a => {
+      if (!a._val) return;
+      const vr = varById[a.var]; const cur = v[a.var];
+      const assumed = a.value !== undefined ? a.value : vr.default;
+      const show = (x) => { if (x === undefined || x === '') return '—'; if (vr.kind === 'choice') { const o = (vr.options || []).find(o => String(o.value !== undefined ? o.value : o) === String(x)); if (o) return plain(o.label !== undefined ? o.label : o); } return typeof x === 'number' ? H.fmt(x, vr.digits || 4) : String(x); };
+      const changed = assumed !== undefined && cur !== undefined && String(cur) !== String(assumed) && !(typeof cur === 'number' && Math.abs(cur - Number(assumed)) < 1e-9);
+      a._val.textContent = (changed ? 'you set ' : 'using ') + show(cur) + (vr.unit ? ' ' + plain(vr.unit) : '');
+      a._li.classList.toggle('changed', changed);
+    });
+  }
+
+  function buildChoice(vr) {
+    const wrap = el('div', 'rsel');
+    const sel = el('select', 'rsel-native'); sel.tabIndex = -1; sel.setAttribute('aria-hidden', 'true');
+    const btn = el('button', 'rsel-btn'); btn.type = 'button';
+    const list = el('div', 'rsel-list');
+    const opts = [];
+    if (vr.allowBlank !== false) opts.push({ value: '', label: '— select —' });
+    (vr.options || []).forEach(o => opts.push({ value: String(o.value !== undefined ? o.value : o), label: String(o.label !== undefined ? o.label : o) }));
+    opts.forEach(o => {
+      const no = el('option'); no.value = o.value; no.textContent = plain(o.label, true); sel.appendChild(no);
+      const d = el('div', 'rsel-opt', rich(o.label)); o._el = d;
+      d.onmousedown = (e) => e.preventDefault();
+      d.onclick = (e) => { e.stopPropagation(); choose(o.value); close(); btn.focus(); };
+      list.appendChild(d);
+    });
+    let shown = null;
+    const sync = () => {
+      const o = opts.find(x => x.value === sel.value) || opts[0];
+      opts.forEach(x => x._el.classList.toggle('sel', x === o));
+      if (shown === o) return; shown = o;
+      btn.innerHTML = '<span class="rsel-lab">' + rich(o ? o.label : '') + '</span><span class="rsel-car">▾</span>';
+      if (o && /\\\(/.test(o.label)) typeset([btn]);
+    };
+    const choose = (val) => { sel.value = val; raw[vr.id] = val; sync(); update(); };
+    const open = () => { document.querySelectorAll('.rsel.open').forEach(x => x !== wrap && x.classList.remove('open')); wrap.classList.add('open'); const cur = list.querySelector('.sel'); if (cur) cur.scrollIntoView({ block: 'nearest' }); };
+    const close = () => wrap.classList.remove('open');
+    btn.onclick = (e) => { e.stopPropagation(); wrap.classList.contains('open') ? close() : open(); };
+    btn.onkeydown = (e) => {
+      const i = opts.findIndex(x => x.value === sel.value);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const j = Math.min(opts.length - 1, Math.max(0, i + (e.key === 'ArrowDown' ? 1 : -1))); if (j !== i) choose(opts[j].value); }
+      else if (e.key === 'Escape') close();
+    };
+    sel.onchange = () => { raw[vr.id] = sel.value; sync(); update(); };
+    sel.value = raw[vr.id] !== undefined ? String(raw[vr.id]) : '';
+    wrap.appendChild(btn); wrap.appendChild(list); wrap.appendChild(sel);
+    vr._sync = sync; sync();
+    return { wrap, sel };
   }
 
   function buildVar(vr) {
@@ -144,18 +259,13 @@
     const d = el('div', 'var ' + kind); vr._el = d;
     const lab = el('label');
     const sym = vr.symbol ? '\\(' + vr.symbol + '\\)' : '';
-    lab.innerHTML = '<span><span class="sym">' + sym + '</span> ' + (vr.label || '') + '</span>' + (vr.unit ? '<span class="unit">' + vr.unit + '</span>' : '');
+    lab.innerHTML = '<span><span class="sym">' + sym + '</span> ' + rich(vr.label || '') + '</span>' + (vr.unit ? '<span class="unit">' + rich(vr.unit) + '</span>' : '');
     d.appendChild(lab);
     const ctl = el('div', 'ctl');
     let inp;
+    let ctlNode = null;
     if (kind === 'choice') {
-      inp = el('select');
-      (vr.options || []).forEach(o => {
-        const opt = el('option'); opt.value = String(o.value !== undefined ? o.value : o); opt.textContent = o.label !== undefined ? o.label : String(o); inp.appendChild(opt);
-      });
-      if (vr.allowBlank !== false) { const b = el('option'); b.value = ''; b.textContent = '— select —'; inp.insertBefore(b, inp.firstChild); }
-      inp.value = raw[vr.id] !== undefined ? String(raw[vr.id]) : '';
-      inp.onchange = () => { raw[vr.id] = inp.value; update(); };
+      const r = buildChoice(vr); inp = r.sel; ctlNode = r.wrap;
     } else if (kind === 'calc') {
       inp = el('input'); inp.readOnly = true; inp.tabIndex = -1;
     } else {
@@ -164,15 +274,15 @@
       inp.oninput = () => { raw[vr.id] = inp.value; update(); };
     }
     inp.id = 'v-' + vr.id; vr._inp = inp;
-    ctl.appendChild(inp);
+    ctl.appendChild(ctlNode || inp);
     if (vr.fig) {
       const f = figById[vr.fig];
-      const b = el('button', 'fig-btn', (f ? (/table/i.test(f.ref) ? '📋 ' : '📈 ') + f.ref : '📖 ' + vr.fig));
-      b.type = 'button'; b.title = f ? (f.title || '') : ''; b.onclick = () => showFig(vr.fig);
+      const b = el('button', 'fig-btn', (f ? (/table/i.test(f.ref) ? '📋 ' : '📈 ') + rich(f.ref) : '📖 ' + vr.fig));
+      b.type = 'button'; b.title = f ? plain(f.title || '') : ''; b.onclick = () => showFig(vr.fig);
       ctl.appendChild(b);
     }
     d.appendChild(ctl);
-    if (vr.hint) d.appendChild(el('div', 'hint', vr.hint));
+    if (vr.hint) d.appendChild(el('div', 'hint', rich(vr.hint)));
     const w = el('div', 'warn'); w.style.display = 'none'; d.appendChild(w); vr._warn = w;
     return d;
   }
@@ -184,13 +294,14 @@
         const val = v[vr.id];
         vr._inp.value = (val === undefined) ? '' : (typeof val === 'number' ? H.fmt(val, vr.digits) : String(val));
       } else if (vr.auto && (raw[vr.id] === undefined || raw[vr.id] === '') && v[vr.id] !== undefined) {
-        vr._inp.placeholder = 'auto: ' + (typeof v[vr.id] === 'number' ? H.fmt(v[vr.id], vr.digits) : v[vr.id]);
-      } else if (vr.auto) { vr._inp.placeholder = vr.placeholder || ''; }
+        vr._inp.placeholder = 'auto: ' + (typeof v[vr.id] === 'number' ? H.fmt(v[vr.id], vr.digits) : plain(v[vr.id]));
+      } else if (vr.auto) { vr._inp.placeholder = plain(vr.placeholder || ''); }
+      if (vr._sync) vr._sync();
       // warnings
       let msg = null;
       try { if (vr.check) msg = vr.check(v); } catch (e) { msg = null; }
-      if (msg) { vr._warn.textContent = msg; vr._warn.style.display = ''; vr._el.classList.add('warned'); }
-      else { vr._warn.style.display = 'none'; vr._el.classList.remove('warned'); }
+      if (msg) { if (vr._warnMsg !== msg) { vr._warn.innerHTML = rich(msg); vr._warnMsg = msg; if (/\\\(/.test(msg)) typeset([vr._warn]); } vr._warn.style.display = ''; vr._el.classList.add('warned'); }
+      else { vr._warn.style.display = 'none'; vr._warnMsg = null; vr._el.classList.remove('warned'); }
     });
     const toTypeset = [];
     let visN = 0;
@@ -205,12 +316,13 @@
         let lines = [];
         try { if (st.work) { const r = st.work(v); if (r) lines.push(r); } } catch (e) { }
         (st.vars || []).forEach(vr => { try { if (vr.work) { const r = vr.work(v); if (r) lines.push(r); } } catch (e) { } });
-        if (lines.length) { st._work.innerHTML = lines.map(l => '<div>' + l + '</div>').join(''); st._work.style.display = ''; toTypeset.push(st._work); }
+        if (lines.length) { st._work.innerHTML = lines.map(l => '<div>' + rich(l) + '</div>').join(''); st._work.style.display = ''; toTypeset.push(st._work); }
         else st._work.style.display = 'none';
       }
-      if (st._after) { let html = ''; try { html = st.after(v) || ''; } catch (e) { } st._after.innerHTML = html; if (html) toTypeset.push(st._after); }
+      if (st._after) { let html = ''; try { html = st.after(v) || ''; } catch (e) { } html = rich(html); if (st._afterHtml !== html) { st._after.innerHTML = html; st._afterHtml = html; if (html) toTypeset.push(st._after); } }
     }));
-    if (window.MathJax && MathJax.typesetPromise && toTypeset.length) MathJax.typesetPromise(toTypeset).catch(() => { });
+    if (toTypeset.length) typeset(toTypeset);
+    updateAssumptions();
     save();
   }
 
@@ -224,17 +336,17 @@
     (T.figures || []).forEach(f => {
       const c = el('div', 'figcard'); c.id = 'fig-' + f.id; f._el = c;
       const book = f.book || T.book;
-      c.appendChild(el('div', 'ref ' + book, (BOOKNAME[book] || book) + ' · ' + f.ref));
-      if (f.title) c.appendChild(el('div', 'ttl', f.title));
+      c.appendChild(el('div', 'ref ' + String(book).split(' ')[0], (BOOKNAME[book] || book) + ' · ' + rich(f.ref)));
+      if (f.title) c.appendChild(el('div', 'ttl', rich(f.title)));
       if (f.src) {
-        const img = el('img'); img.loading = 'lazy'; img.src = f.src; img.alt = f.ref;
+        const img = el('img'); img.decoding = 'async'; img.src = f.src; img.alt = plain(f.ref);
         img.onerror = () => { c.classList.add('missing'); img.remove(); c.appendChild(el('div', 'missing-note', 'Image not found: ' + f.src)); };
         img.onclick = () => openLightbox(f);
         c.appendChild(img);
       } else {
         c.classList.add('missing'); c.appendChild(el('div', 'missing-note', 'No image — see textbook.'));
       }
-      if (f.note) c.appendChild(el('div', 'note', f.note));
+      if (f.note) c.appendChild(el('div', 'note', rich(f.note)));
       if (f.page) {
         const pdf = BOOKPDF[book];
         c.appendChild(el('div', 'pg', 'PDF page ' + f.page + (pdf ? ' · <a href="' + pdf + '#page=' + f.page + '" target="_blank">open in textbook</a>' : '')));
@@ -244,25 +356,39 @@
     filt.oninput = () => {
       const q = filt.value.trim().toLowerCase().replace(/[–—]/g, '-');
       (T.figures || []).forEach(f => {
-        const hay = ((f.ref || '') + ' ' + (f.title || '') + ' ' + (f.note || '')).toLowerCase().replace(/[–—]/g, '-');
+        const hay = plain((f.ref || '') + ' ' + (f.title || '') + ' ' + (f.note || '')).toLowerCase() + ' ' + ((f.title || '') + ' ' + (f.note || '')).replace(/[_{}\\]/g, '').toLowerCase().replace(/[–—]/g, '-');
         f._el.style.display = (!q || hay.includes(q)) ? '' : 'none';
       });
     };
+    typeset([p]);
   }
 
   function showFig(fid) {
     const f = figById[fid]; if (!f || !f._el) return;
     const panel = document.getElementById('figpanel');
     const filt = panel.querySelector('.figfilter'); if (filt && filt.value) { filt.value = ''; filt.oninput(); }
-    f._el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const stacked = window.innerWidth <= 1100;
+    const align = (behavior) => {
+      const r = f._el.getBoundingClientRect();
+      if (stacked) window.scrollTo({ top: window.scrollY + r.top - 70, behavior });
+      else panel.scrollTo({ top: panel.scrollTop + (r.top - panel.getBoundingClientRect().top) - 8, behavior });
+    };
+    align('smooth');
+    // images above the target may still be loading and push it down: re-align once they finish
+    const pending = Array.from(panel.querySelectorAll('img')).filter(im => !im.complete && (im.compareDocumentPosition(f._el) & Node.DOCUMENT_POSITION_FOLLOWING || f._el.contains(im)));
+    if (pending.length) {
+      let left = pending.length; const t0 = Date.now();
+      const done = () => { if (--left === 0 && Date.now() - t0 < 4000) align('auto'); };
+      pending.forEach(im => { im.addEventListener('load', done, { once: true }); im.addEventListener('error', done, { once: true }); });
+    }
+    setTimeout(() => align('auto'), 700);
     f._el.classList.add('flash'); setTimeout(() => f._el.classList.remove('flash'), 1600);
-    if (window.innerWidth <= 1100) f._el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function openLightbox(f) {
     const lb = document.getElementById('lightbox');
     lb.querySelector('img').src = f.src;
-    lb.querySelector('.cap').textContent = (BOOKNAME[f.book || T.book] || '') + ' · ' + f.ref + (f.title ? ' — ' + f.title : '');
+    lb.querySelector('.cap').textContent = (BOOKNAME[f.book || T.book] || '') + ' · ' + plain(f.ref) + (f.title ? ' — ' + plain(f.title) : '');
     lb.classList.add('open');
   }
 
@@ -272,8 +398,8 @@
     const box = m.querySelector('.box');
     let rows = '', text = T.title + ' (' + (BOOKNAME[T.book] || T.book) + ')\n';
     (T.sections || []).forEach(sec => {
-      rows += '<tr><th colspan="4" style="background:#f8fafc">' + sec.title + '</th></tr>';
-      text += '\n== ' + sec.title + '\n';
+      rows += '<tr><th colspan="4" style="background:#f8fafc">' + rich(sec.title) + '</th></tr>';
+      text += '\n== ' + plain(sec.title, true) + '\n';
       (sec.steps || []).forEach(st => {
         let vis = true; try { if (st.when) vis = !!st.when(v); } catch (e) { }
         if (!vis) return;
@@ -282,29 +408,34 @@
           if (val === undefined || val === '') return;
           const s = typeof val === 'number' ? H.fmt(val, vr.digits || 5) : String(val);
           const kind = vr.kind === 'calc' ? 'calc' : vr.kind === 'lookup' ? 'lookup' : 'input';
-          rows += '<tr><td>' + (vr.symbol ? '\\(' + vr.symbol + '\\)' : '') + '</td><td>' + (vr.label || '') + '</td><td class="v">' + s + '</td><td>' + (vr.unit || '') + ' <small style="color:#9ca3af">' + kind + '</small></td></tr>';
-          text += (vr.plain || vr.id).padEnd(12) + ' = ' + s + (vr.unit ? ' ' + vr.unit : '') + '   (' + (vr.label || '') + ', ' + kind + ')\n';
+          rows += '<tr><td>' + (vr.symbol ? '\\(' + vr.symbol + '\\)' : '') + '</td><td>' + rich(vr.label || '') + '</td><td class="v">' + rich(s) + '</td><td>' + rich(vr.unit || '') + ' <small style="color:#9ca3af">' + kind + '</small></td></tr>';
+          text += plain(vr.plain || (vr.symbol ? vr.symbol : vr.id), true).padEnd(12) + ' = ' + plain(s, true) + (vr.unit ? ' ' + plain(vr.unit, true) : '') + '   (' + plain(vr.label || '', true) + ', ' + kind + ')\n';
         });
       });
     });
-    box.innerHTML = '<h2>Summary of values</h2><table>' + rows + '</table><div class="actions"><button id="copy-sum">Copy as text</button><button id="close-sum">Close</button></div>';
+    let arows = '';
+    if (T.assumptions && T.assumptions.length) {
+      text = text.replace('\n', '\n\nAssumptions:\n' + T.assumptions.map(a => '- ' + plain(a.text, true) + (a._val ? ' [' + a._val.textContent + ']' : '') + (a.src ? ' (' + plain(a.src, true) + ')' : '')).join('\n') + '\n');
+      arows = '<h3 style="margin:6px 0">Assumptions</h3><ul style="margin:0 0 12px 18px;font-size:.88rem">' + T.assumptions.map(a => '<li>' + rich(a.text) + (a._val ? ' <b>[' + a._val.textContent + ']</b>' : '') + (a.src ? ' <small style="color:#6b7280">(' + rich(a.src) + ')</small>' : '') + '</li>').join('') + '</ul>';
+    }
+    box.innerHTML = '<h2>Summary of values</h2>' + arows + '<table>' + rows + '</table><div class="actions"><button id="copy-sum">Copy as text</button><button id="close-sum">Close</button></div>';
     box.querySelector('#copy-sum').onclick = () => { navigator.clipboard.writeText(text).then(() => toast('Copied')); };
     box.querySelector('#close-sum').onclick = () => m.classList.remove('open');
     m.classList.add('open');
-    if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([box]).catch(() => { });
+    typeset([box]);
   }
 
   function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 1400); }
 
   // ---------- page skeleton ----------
   function buildPage() {
-    document.title = T.title + ' — ' + (BOOKNAME[T.book] || T.book);
+    document.title = plain(T.title) + ' — ' + (BOOKNAME[T.book] || T.book);
     document.body.innerHTML = `
       <div class="topbar">
         <a class="home" href="index.html">⌂ MECH 325</a>
-        <h1>${T.title}</h1>
+        <h1>${rich(T.title)}</h1>
         <span class="badge ${T.book}">${BOOKNAME[T.book] || T.book}</span>
-        <span class="sub">${T.subtitle || ''}</span>
+        <span class="sub">${rich(T.subtitle || '')}</span>
         <span class="spacer"></span>
         ${T.sibling ? '<a class="btn sibling" href="' + T.sibling + '">Switch to ' + (T.book === 'shigley' ? 'Mott' : 'Shigley') + ' version →</a>' : ''}
         ${T.example ? '<button id="btn-example">Load example</button>' : ''}
@@ -332,7 +463,8 @@
       Object.keys(T.example).forEach(k => { raw[k] = String(T.example[k]); const vr = varById[k]; if (vr && vr._inp) vr._inp.value = raw[k]; });
       update(); toast('Example loaded');
     };
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.getElementById('lightbox').classList.remove('open'); document.getElementById('summary').classList.remove('open'); } });
+    document.addEventListener('click', () => document.querySelectorAll('.rsel.open').forEach(x => x.classList.remove('open')));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.querySelectorAll('.rsel.open').forEach(x => x.classList.remove('open')); document.getElementById('lightbox').classList.remove('open'); document.getElementById('summary').classList.remove('open'); } });
   }
 
   function init() {

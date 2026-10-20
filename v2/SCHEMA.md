@@ -89,6 +89,25 @@ window.TOPIC = {
 before reading. Helpers: `H.fmt(x,digits)`, `H.rad`, `H.deg`, `H.interp(x, xs, ys)`.
 Computation runs in definition order with several passes, so a calc may reference a later calc, but keep order natural.
 
+### `assumptions` (shown as an "Assumptions used" panel under the intro, and in Summary / copy)
+
+```js
+assumptions: [
+  { text: 'Pressure angle φ = 20° unless the problem states otherwise', src: 'Fizz p.42 · Mech p.79', var: 'phi', value: 20 },
+  { text: 'Commercial enclosed gear units (curve 2) for C_ma', src: 'Mech p.80', var: 'gearCond' },
+  { text: 'Service factor SF = 1 when sizing (solve for minimum strength)', src: 'Fizz p.66 · Mech p.82' },
+  { text: 'K_R = 1 (99 % reliability) — course slides agree', src: 'Mech p.82 · Gear Stress s25 (course)', var: 'KR' },
+]
+```
+- `text`: one short sentence; plain text is fine — `K_o`, `N_{LP}`, `10^7` render as real sub/superscripts automatically, `\( … \)` is MathJax.
+- `src`: where it comes from. "Fizz p.N" / "Mech p.N" (PDF page = printed page) become links to the guide PDFs. Add the course source when the course states the same thing; if the course **differs**, say so in `text` ("course slides use … instead").
+- `var` (optional): id of the variable that carries this assumption. The panel shows its live value ("using 20 °") and turns red ("you set 25 °") when the student overrides it. `value` (optional) is the assumed value if it differs from the variable's `default`.
+- The variable's `default` (or `auto`) MUST equal the assumption, so the calculator really uses it.
+
+### Text formatting
+Anywhere outside math (labels, hints, step text, section titles, figure notes, `check` messages, `after`/`work` output, dropdown option labels) the engine converts `X_a`, `X_{ab}`, `X^2`, `X^{-0.0178}`, `X^(…)` into sub/superscripts, and tokens with 2+ underscores (file names like `Gear_Stress_2026`) into spaces. Dropdown options render HTML and `\( math \)`.
+Run `python3 v2/tools/textscan.py <topic>` to list any raw LaTeX-ish text that still shows up unrendered (target: 0 findings).
+
 ### Rules of content
 1. **Merge both student guides.** Walk the Fizz bible and the Mech ("Dog") bible procedures for the topic; the union of their steps is the step list. Where one has a step the other lacks (e.g. Fizz has rim-thickness factor, Mech has face-width check), include it. Where they disagree, follow the textbook and say so in `text`.
 2. **Textbook-specific.** The Shigley file uses Shigley's symbols, equation numbers, table/figure numbers and formulas (e.g. Kv from Eq. 14-27/14-28 with Qv; J from Fig 14-6; Cp Table 14-8; St/Sc Fig 14-2/14-5; Km Eq 14-30…). The Mott file uses Mott's (Kv Fig 9-16 with Av; J Fig 9-17; I Fig 9-18; Cp Table 9-9; sat/sac Fig 9-19/9-22; Km = 1 + Cpf + Cma…). Every lookup must point to a figure entry whose `ref` carries the real number from that book.
