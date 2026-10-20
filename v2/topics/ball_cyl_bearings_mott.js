@@ -1,6 +1,9 @@
 /* Ball & cylindrical roller bearings — Mott 6e Ch. 14 (Secs 14-6 .. 14-11).
  * Procedure: Fizz bible pp. 96-100 (Shigley-style Weibull) mapped onto Mott's C = Pd (Ld/1e6)^(1/k) with the
- * reliability adjustment of Eq. 14-6 / Table 14-6 (also used by Fizz p. 113 Step 21). Mech bible has no bearings unit. */
+ * reliability adjustment of Eq. 14-6 / Table 14-6 (also used by Fizz p. 113 Step 21). Mech bible unit 4 (PDF p. 129) is empty.
+ * Verified against: Mott Example Problem 14-4 (R = 1850 lb, T = 675 lb, 1150 rpm, 20 000 h, Dmin = 3.10 in, Y assumed 1.50):
+ *   P = 2049 lb, Ld = 1.38e9 rev, C = 22 807 lb -> 6316 (C = 27 878, Co = 19 447); T/Co = 0.0347, e = 0.25, Y = 1.78 (Mott's reading),
+ *   P = 2238 lb, C = 24 910 lb -> 6316 still OK -> PASS. (Also Ex. 14-3 radial only: 650 lb, 600 rpm, 30 000 h -> C = 6670 lb -> 6208.) */
 (function () {
   // Mott Table 14-5
   const TC0 = [0.014, 0.028, 0.056, 0.084, 0.110, 0.170, 0.280, 0.420, 0.560];
@@ -13,13 +16,24 @@
   window.TOPIC = {
     id: 'ball_cyl_bearings', book: 'mott',
     title: 'Ball & Cylindrical Roller Bearings',
-    subtitle: 'Mott Ch. 14 Secs 14-6 to 14-11 · Fizz pp. 96-100 · C = Pd (Ld/10⁶)^{1/k}',
+    subtitle: 'Mott Ch. 14 Secs 14-6 to 14-11 · Fizz pp. 96-101, 113 · C = Pd (Ld/10⁶)^{1/k}',
     sibling: 'ball_cyl_bearings_shigley.html',
     intro: 'Mott sizes a rolling-contact bearing by the required <b>basic dynamic load rating</b> <i>C = P<sub>d</sub>(L<sub>d</sub>/10⁶)<sup>1/k</sup></i> (Eq. 14-3) with the design life in revolutions ' +
       '<i>L<sub>d</sub> = h·rpm·60</i> and <i>k</i> = 3 (ball) or 3.33 (roller); for reliability above 90 % the catalogue life 10⁶ is multiplied by <i>C<sub>R</sub></i> from Table 14-6 (Eq. 14-6). ' +
       'A thrust load is folded into an equivalent load <i>P = VXR + YT</i> (Eq. 14-5) with <i>X</i> = 0.56 and <i>Y</i> from Table 14-5 — <i>Y</i> depends on <i>T/C<sub>o</sub></i> of the bearing, so assume <i>Y</i> = 1.50, select from Table 14-3, read <i>C<sub>o</sub></i>, re-evaluate and repeat (Example Problem 14-4). ' +
       'The Fizz bible\'s Weibull version of the same problem is in the Shigley calculator.',
-    example: { mode: 'radial + thrust', R: 1850, Tload: 675, n: 1150, Lh: 20000, rel: 90, btype: 'single-row deep-groove ball (k = 3)', ring: 'inner race rotates (V = 1.0)', Dmin: 3.10, X: 0.56, Ya: 1.50, bear1: '6316', Csel1: 27878, Co1: 19447, bear2: '6316', Csel2: 27878 },
+    example: { mode: 'radial + thrust', R: 1850, Tload: 675, n: 1150, Lh: 20000, rel: 90, btype: 'single-row deep-groove ball (k = 3)', ring: 'inner race rotates (V = 1.0)', Dmin: 3.10, X: 0.56, Ya: 1.50, bear1: '6316', bore1: 3.1496, Csel1: 27878, Co1: 19447, e1: 0.25, Yb: 1.78, bear2: '6316', Csel2: 27878 },
+
+    assumptions: [
+      { text: 'Rotation factor V = 1.0 (inner race rotates — the usual case); 1.2 if the outer race rotates', src: 'Fizz p.99 · Mott Sec. 14-9', var: 'ring' },
+      { text: 'Design life from Table 14-4 if not given; build it up as rpm × 60 × h/day × days/month × 12 × years when the usage is described', src: 'Fizz p.97 · Fizz p.113', var: 'Lh' },
+      { text: 'Reliability 90 % (catalogue L_{10}, C_R = 1) unless stated; otherwise L_1 = C_R·10^6 with C_R from Table 14-6', src: 'Fizz p.113', var: 'rel' },
+      { text: 'Load-life exponent k = 3.00 for ball bearings, 3.33 for roller bearings', src: 'Fizz p.113 · Fizz p.98', var: 'k' },
+      { text: 'Thrust case: assume T/R &gt; e first and check it once C_o of the chosen bearing is known', src: 'Fizz p.99 · Fizz p.100' },
+      { text: 'First-pass factors X = 0.56 and Y = 1.63 (middle of the table); Mott\'s own procedure assumes Y = 1.50 (Ex. 14-4)', src: 'Fizz p.99 · Mott Sec. 14-10', var: 'Ya' },
+      { text: 'Interpolate e and Y linearly in Table 14-5 at the actual T/C_o (use the first row if T/C_o &lt; 0.014)', src: 'Fizz p.100 · Fizz p.101' },
+      { text: 'Repeat until the same bearing is selected twice in a row', src: 'Fizz p.101' },
+    ],
 
     figures: [
       { id: 'fig14-1', ref: 'Figure 14-1', title: 'Single-row deep-groove ball bearing nomenclature (bore d, OD D, width B, races, cage)', src: 'figures/mott/fig14-1.png', page: 581 },
@@ -27,7 +41,7 @@
       { id: 't14-1', ref: 'Table 14-1', title: 'Comparison of bearing types: radial, thrust and misalignment capability', src: 'figures/mott/table14-1.png', page: 582 },
       { id: 't14-4', ref: 'Table 14-4', title: 'Recommended design life L10 (hours) by application', src: 'figures/mott/table14-4.png', page: 592 },
       { id: 't14-6', ref: 'Table 14-6', title: 'Life adjustment factors for reliability CR (90 % → 1.0 … 99 % → 0.21)', src: 'figures/mott/table14-6.png', page: 595 },
-      { id: 'proc', ref: 'Procedure 14-10', title: 'Mott procedure for selecting a bearing — radial and thrust load (10 steps)', src: 'figures/mott/proc14-10.png', page: 594 },
+      { id: 'proc', ref: 'Sec. 14-10 procedure', title: 'Mott procedure for selecting a bearing — radial and thrust load (10 steps)', src: 'figures/mott/proc14-10.png', page: 594 },
       { id: 't14-5', ref: 'Table 14-5', title: 'Radial and thrust factors e, Y vs T/Co for single-row deep-groove ball bearings (X = 0.56)', src: 'figures/mott/table14-5.png', page: 594,
         note: 'Interpolate between rows for the actual T/Co. Mott Ex. 14-4 reads e ≈ 0.25 and Y = 1.78 at T/Co = 0.0347.' },
       { id: 't14-3a', ref: 'Table 14-3', title: 'Dimensions for single-row deep-groove ball bearings 6000–6308 (bore 10–40 mm)', src: 'figures/mott/table14-3a.png', page: 589,
@@ -95,10 +109,10 @@
       { title: 'Radial + thrust (Mott Sec. 14-10) — iteration 1', steps: [
         { id: 'P1', title: 'Steps 1–2 — assume Y, equivalent load', eq: '14-5', fig: ['proc', 't14-5'], when: thrust,
           formula: 'P = V X R + Y T',
-          text: 'X = 0.56 for all rows of Table 14-5; Y = 1.50 is a reasonable first guess (middle of the range). Fizz uses 1.63 (Shigley\'s middle row) — either works.',
+          text: 'X = 0.56 for all rows of Table 14-5. First-guess Y: the Fizz guide uses 1.63 (middle of the table, pre-filled); Mott\'s procedure uses 1.50 (Ex. 14-4). Either converges to the same bearing.',
           vars: [
             { id: 'X', symbol: 'X', label: 'Radial factor', unit: '', kind: 'lookup', fig: 't14-5', default: 0.56 },
-            { id: 'Ya', symbol: 'Y', label: 'Assumed thrust factor', unit: '', kind: 'lookup', fig: 't14-5', default: 1.5 },
+            { id: 'Ya', symbol: 'Y', label: 'Assumed thrust factor', unit: '', kind: 'lookup', fig: 't14-5', default: 1.63, hint: 'Fizz 1.63; Mott Ex. 14-4 uses 1.50' },
             { id: 'P1', symbol: 'P', label: 'Equivalent load (1st)', unit: 'lb', kind: 'calc', digits: 4, compute: v => H.has(v, 'V', 'X', 'R', 'Ya', 'Tload') ? v.V * v.X * v.R + v.Ya * v.Tload : undefined,
               work: v => v.P1 !== undefined ? '\\(P = (' + H.fmt(v.V) + ')(' + H.fmt(v.X) + ')(' + H.fmt(v.R) + ') + ' + H.fmt(v.Ya) + '(' + H.fmt(v.Tload) + ') = ' + H.fmt(v.P1) + '\\text{ lb}\\)' : null },
           ] },
@@ -113,7 +127,8 @@
             { id: 'Co1', symbol: 'C_o', label: 'Catalogue static Co', unit: 'lb', kind: 'lookup', fig: 't14-3b' },
           ] },
         { id: 'Y1', title: 'Steps 6–9 — T/Co, e, check T/R > e, new Y, recompute P and C', fig: ['t14-5'], when: thrust,
-          text: 'If <i>T/R &lt; e</i> the thrust is negligible: use <i>P = VR</i> (Eq. 14-4) and proceed as pure radial. Otherwise read <i>Y</i> from Table 14-5 at the actual <i>T/C<sub>o</sub></i> (auto = linear interpolation; override with your reading).',
+          text: 'If <i>T/R &lt; e</i> the thrust is negligible: use <i>P = VR</i> (Eq. 14-4) and proceed as pure radial. Otherwise read <i>Y</i> from Table 14-5 at the actual <i>T/C<sub>o</sub></i> (auto = linear interpolation; override with your reading). ' +
+            'Note: Mott Ex. 14-4 reads e ≈ 0.25 and Y = 1.78 at T/C<sub>o</sub> = 0.0347 (the example uses those); straight-line interpolation of the table gives e = 0.23, Y = 1.92 — the same 6316 bearing results either way.',
           vars: [
             { id: 'TCo1', symbol: 'T/C_o', label: 'Thrust ratio', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tload', 'Co1') && v.Co1 > 0 ? v.Tload / v.Co1 : undefined },
             { id: 'e1', symbol: 'e', label: 'Limit ratio e', unit: '', kind: 'lookup', fig: 't14-5', auto: v => v.TCo1 !== undefined ? H.interp(v.TCo1, TC0, E) : undefined },

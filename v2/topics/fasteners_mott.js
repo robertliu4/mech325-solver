@@ -6,6 +6,10 @@
 // AISC allowables for the Mott shear-joint sizing).
 // Verified against: Mott Example 20-1 (P 3500 lb, a 12 in, 4 bolts at (±2.0, ±1.5) in, A325 τallow 17.5 ksi): Fs 875, M 42 000, r 2.50,
 //   Σr² 25, F1 4200, R1 4928 lb, As 0.282 in², D 0.599 → 5/8 in — reproduced.
+// Verified against: Mott Example 19-1 (the `example`: 12 000 lb clamp, 3 bolts, SAE 5, K 0.15) → P 4000 lb, σall 63.75 ksi, At,req 0.0627 in²
+//   → ⅜-16 UNC (At 0.0775), T = KDP = 225 lb·in — reproduced.
+// Guide assumptions (Fizz pp.146–156, Shigley-based; the Mech guide's fastener unit, p.131, is empty) plus Mott's own defaults are listed in
+//   `assumptions` and carried by the field defaults.
 // Verified against: Shigley Example 8-7 (16 kN at 425 mm, M16 × 4, r 96 mm) → 21.0 kN, 104 MPa, bearing 131 MPa — reproduced.
 // Bolt grades: [label, unitSystem, [ [dmax, Sp, Sut, Sy, Se], ... ] ]  (US: in & kpsi, Table 8-9/8-10/8-17; SI: mm & MPa, Table 8-11/8-17)
 const BOLT_GRADES = {
@@ -45,6 +49,21 @@ window.TOPIC = {
   intro: '<b>Mott covers only part of this topic.</b> Mott Ch. 19 gives the thread areas (Eqs. 19-1 / 19-2, Tables 19-4 / 19-5), bolt grades (Tables 19-1 … 19-3), the clamping-load rule (0.75 × proof load) and the tightening torque T = K D P (Eq. 19-3, K = 0.15 commercial / 0.20 clean-dry) — that is the first step below (Example 19-1). Joint stiffness, the joint constant C, load / yield / separation factors and fatigue are not in Mott, so the remaining steps use Shigley\'s equations and tables (marked “Shigley 11e” in the figure panel), exactly as the Fizz guide does. The full Fizz §5.4 bolted-joint procedure on Shigley\'s equations: bolt length and grip (Table 8-7), bolt stiffness k<sub>b</sub> (Eq. 8-17), member stiffness k<sub>m</sub> (frusta Eq. 8-20, same-material Eq. 8-22, or Wileman Eq. 8-23 / Table 8-8), joint constant C, proof strength and preload (Tables 8-9 … 8-11, Eq. 8-31), wrench torque (Eq. 8-27, Table 8-15), and the static factors n<sub>p</sub>, n<sub>L</sub>, n<sub>0</sub> (Eqs. 8-28 … 8-30). If a fluctuating load is given, the fatigue factor with Table 8-17 endurance strengths and Goodman (Eq. 8-38), or Gerber / ASME-elliptic for repeated loading (Eqs. 8-46, 8-47). '
     + 'Units: US (in, lbf, psi; strengths from the tables in kpsi are converted) or SI (mm, N, MPa). Mott 19-6 thread-stripping (length of engagement) is added after the sizing step and Mott 20-3 / Shigley 8-12 eccentric shear joints as step 7. <b>Course note:</b> MECH 325 provides only the Module 5 reading guide for fasteners (Mott 19-2, 19-4, 19-6, 20-3 listed as alternatives / beneficial to Shigley 8-3 … 8-12) and no worked numbers, so the textbook defaults apply unchanged.',
   example: { units: 'US', Pclamp: 12000, Nm: 3, grade: 'sae5', d: 0.375, tpi: 16, Km: 0.15, Ptot: 12000, N: 3, preload: 0.75, K: 0.15 },
+
+  assumptions: [
+    { text: 'Mott sizing: allowable bolt stress = 0.75 × proof strength (maximum clamping load 0.75 × proof load) — same as the Fizz non-permanent preload', src: 'Mott §19-4 · Fizz p.153', var: 'fprf' },
+    { text: 'Mott tightening torque T = K D P with K = 0.15 (average commercial conditions, any lubricant; 0.20 clean and dry) — the Shigley step below keeps Table 8-15 (0.20 if not stated)', src: 'Mott Eq. 19-3', var: 'Km' },
+    { text: 'Bolt length L rounded up to the nearest ¼ in (SI: next 5 mm) above l + H (nut) or h + 1.5d (cap screw)', src: 'Fizz p.147', var: 'L' },
+    { text: 'Steel bolt E = 30 Mpsi (207 GPa) unless stated — Shigley Table A-5', src: 'Shigley Table A-5', var: 'Eb' },
+    { text: 'Member pressure cone at 30° from a washer-face diameter 1.5d under the head and nut, widening to mid-grip and then converging (Eqs. 8-20, 8-22, 8-23 all assume this)', src: 'Fizz p.149', var: 'f1D' },
+    { text: 'Hole diameter d in Eq. 8-20: the bolt nominal diameter for plates, the inner diameter for washers; same-material members with the same hole may be merged into one frustum', src: 'Fizz p.150', var: 'f1d' },
+    { text: 'Identical top and bottom halves: compute the top half and halve it, k_m = k_top/2', src: 'Fizz pp.150–151' },
+    { text: 'Preload when not given: F_i = 0.75 A_t S_p for non-permanent, reused fasteners (0.90 A_t S_p for permanent joints)', src: 'Fizz p.153', var: 'preload' },
+    { text: 'Torque factor K from Table 8-15, K = 0.20 when the bolt condition is not stated (Shigley §8-8)', src: 'Fizz p.153 · Shigley §8-8', var: 'K' },
+    { text: 'A wrench torque of about 1000 lbf·in is already "VERY high" for a hand wrench (homework solutions)', src: 'Fizz p.153', var: 'T' },
+    { text: 'Fatigue: Goodman with the fully corrected S_e of Table 8-17 (rolled threads, K_f included); repeated load 0 → P (P_min = 0) unless stated', src: 'Fizz pp.154–155', var: 'Pmin' },
+    { text: 'Shear joints: n_d = 1.5 (Shigley Ex. 8-6), bolt shear yield 0.577 S_y; Mott 20-1 sizes with the AISC allowable shear stress of Table 20-1 (A325 / A449: 17.5 ksi) — not in the guides', src: 'Shigley Ex. 8-6 · Mott Table 20-1', var: 'tall' },
+  ],
 
   figures: [
     { id: 'table19-1', ref: 'Table 19-1', title: 'SAE grades of steels for fasteners (tensile, yield, proof strength, ksi)', src: 'figures/mott/table19-1.png', page: 710 },
@@ -126,7 +145,7 @@ window.TOPIC = {
           { id: 'Ad', symbol: 'A_d', label: 'Major-diameter area', unit: 'in² / mm²', kind: 'calc', digits: 4, compute: v => H.has(v, 'd') ? Math.PI * v.d * v.d / 4 : undefined },
           { id: 'At', symbol: 'A_t', label: 'Tensile-stress area', unit: 'in² / mm²', kind: 'lookup', fig: 'table19-4', hint: 'Table 19-4 / 19-5 (auto = formula; ⅝-11: 0.226 in²)', auto: v => { if (!H.has(v, 'd')) return undefined;
               if (FS_SI(v)) return H.has(v, 'pitch') ? 0.7854 * Math.pow(v.d - 0.9382 * v.pitch, 2) : undefined; return H.has(v, 'tpi') ? 0.7854 * Math.pow(v.d - 0.9743 / v.tpi, 2) : undefined; } },
-          { id: 'Eb', symbol: 'E', label: 'Bolt modulus', unit: 'psi / MPa', kind: 'input', default: 30e6, hint: 'steel 30e6 psi / 207 000 MPa' },
+          { id: 'Eb', symbol: 'E', label: 'Bolt modulus', unit: 'psi / MPa', kind: 'input', auto: v => FS_SI(v) ? 207000 : 30e6, hint: 'steel 30e6 psi / 207 000 MPa (auto by unit system)' },
         ] },
       { id: 'grip', title: 'Grip length and bolt length (Table 8-7)', fig: ['table8-7', 'fig8-13'],
         formula: '(a)\\; l = \\sum t \\;\\; L > l + H \\qquad (b)\\; l = \\begin{cases} h + t_2/2 & t_2 < d \\\\ h + d/2 & t_2 \\ge d\\end{cases} \\;\\; L > h + 1.5d',
@@ -179,27 +198,38 @@ window.TOPIC = {
             work: v => H.has(v, 'km823') ? '\\(k_m = ' + H.fmt(v.Em, 3) + '(' + H.fmt(v.d) + ')(' + H.fmt(v.Aw, 5) + ')\\exp[' + H.fmt(v.Bw, 5) + '(' + H.fmt(v.d) + ')/' + H.fmt(v.l, 4) + '] = ' + H.fmt(v.km823, 4) + '\\)' : null },
         ] },
       { id: 'frusta', title: 'Frusta stack (Eq. 8-20) — frusta 1 and 2', fig: ['fig8-17', 'fig8-15'],
-        text: 'Number the frusta from the bolt head towards the nut (Example 8-2: steel washer + steel plate as one frustum, then the cast iron above mid-grip, then the cast iron below). D is the diameter at the <i>narrow</i> end of each frustum: 1.5d for the first and last, D<sub>prev</sub> + 1.155 t<sub>prev</sub> while expanding. Leave unused rows blank.',
+        text: 'Number the frusta from the bolt head towards the nut (Example 8-2: steel washer + steel plate as one frustum, then the cast iron above mid-grip, then the cast iron below). D is the diameter at the <i>narrow</i> end of each frustum: 1.5d for the first and last, D<sub>prev</sub> + 1.155 t<sub>prev</sub> while expanding. Fizz p.150: d in Eq. 8-20 is the hole diameter of that member — the bolt nominal diameter for plates (auto), the washer inner diameter for a washer; members of the same material and hole diameter can be merged into one frustum. Leave unused rows blank.',
         vars: [
-          { id: 'f1t', symbol: 't_1', label: 'Frustum 1 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f1D', symbol: 'D_1', label: 'Frustum 1 narrow diameter', unit: 'in / mm', kind: 'lookup', fig: 'fig8-17', hint: 'washer-face diameter dw = 1.5d (Fig. 8-17)', auto: v => H.has(v, 'd') ? 1.5 * v.d : undefined }, { id: 'f1E', symbol: 'E_1', label: 'Frustum 1 modulus', unit: 'psi / MPa', kind: 'input' },
-          { id: 'f1k', symbol: 'k_1', label: 'k1', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f1t', 'f1D', 'f1E', 'd') ? frust(v.f1E, v.d, v.f1t, v.f1D) : undefined },
-          { id: 'f2t', symbol: 't_2', label: 'Frustum 2 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f2D', symbol: 'D_2', label: 'Frustum 2 narrow diameter', unit: 'in / mm', kind: 'input', hint: 'expanding: D1 + 1.155 t1' }, { id: 'f2E', symbol: 'E_2', label: 'Frustum 2 modulus', unit: 'psi / MPa', kind: 'input' },
-          { id: 'f2k', symbol: 'k_2', label: 'k2', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f2t', 'f2D', 'f2E', 'd') ? frust(v.f2E, v.d, v.f2t, v.f2D) : undefined },
+          { id: 'f1t', symbol: 't_1', label: 'Frustum 1 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f1D', symbol: 'D_1', label: 'Frustum 1 narrow-end diameter', unit: 'in / mm', kind: 'lookup', fig: 'fig8-17', hint: 'washer-face diameter 1.5d at the head / nut (Fizz p.149)', auto: v => H.has(v, 'd') ? 1.5 * v.d : undefined },
+          { id: 'f1E', symbol: 'E_1', label: 'Frustum 1 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f1d', symbol: 'd_1', label: 'Frustum 1 hole diameter d in Eq. 8-20', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'plate: bolt nominal d (auto); washer: its inner diameter (Fizz p.150)' },
+          { id: 'f2t', symbol: 't_2', label: 'Frustum 2 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f2D', symbol: 'D_2', label: 'Frustum 2 narrow-end diameter', unit: 'in / mm', kind: 'input', hint: 'expanding: previous D + 1.155 t; last frustum at the nut: 1.5d' },
+          { id: 'f2E', symbol: 'E_2', label: 'Frustum 2 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f2d', symbol: 'd_2', label: 'Frustum 2 hole diameter d in Eq. 8-20', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'plate: bolt nominal d (auto); washer: its inner diameter (Fizz p.150)' },
         ],
         when: v => v.kmm === 'frusta' },
       { id: 'frusta2', title: 'Frusta 3 and 4', fig: ['fig8-17'], text: 'Leave unused rows blank.',
         vars: [
-          { id: 'f3t', symbol: 't_3', label: 'Frustum 3 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f3D', symbol: 'D_3', label: 'Frustum 3 narrow diameter', unit: 'in / mm', kind: 'input' }, { id: 'f3E', symbol: 'E_3', label: 'Frustum 3 modulus', unit: 'psi / MPa', kind: 'input' },
-          { id: 'f3k', symbol: 'k_3', label: 'k3', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f3t', 'f3D', 'f3E', 'd') ? frust(v.f3E, v.d, v.f3t, v.f3D) : undefined },
-          { id: 'f4t', symbol: 't_4', label: 'Frustum 4 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f4D', symbol: 'D_4', label: 'Frustum 4 narrow diameter', unit: 'in / mm', kind: 'input' }, { id: 'f4E', symbol: 'E_4', label: 'Frustum 4 modulus', unit: 'psi / MPa', kind: 'input' },
-          { id: 'f4k', symbol: 'k_4', label: 'k4', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f4t', 'f4D', 'f4E', 'd') ? frust(v.f4E, v.d, v.f4t, v.f4D) : undefined },
+          { id: 'f3t', symbol: 't_3', label: 'Frustum 3 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f3D', symbol: 'D_3', label: 'Frustum 3 narrow-end diameter', unit: 'in / mm', kind: 'input', hint: 'expanding: previous D + 1.155 t; last frustum at the nut: 1.5d' },
+          { id: 'f3E', symbol: 'E_3', label: 'Frustum 3 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f3d', symbol: 'd_3', label: 'Frustum 3 hole diameter d in Eq. 8-20', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'plate: bolt nominal d (auto); washer: its inner diameter (Fizz p.150)' },
+          { id: 'f4t', symbol: 't_4', label: 'Frustum 4 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f4D', symbol: 'D_4', label: 'Frustum 4 narrow-end diameter', unit: 'in / mm', kind: 'input', hint: 'expanding: previous D + 1.155 t; last frustum at the nut: 1.5d' },
+          { id: 'f4E', symbol: 'E_4', label: 'Frustum 4 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f4d', symbol: 'd_4', label: 'Frustum 4 hole diameter d in Eq. 8-20', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'plate: bolt nominal d (auto); washer: its inner diameter (Fizz p.150)' },
         ],
         when: v => v.kmm === 'frusta' },
-      { id: 'frusta3', title: 'Frustum 5 and the combined member stiffness', fig: ['fig8-17'],
-        formula: '\\frac{1}{k_m} = \\frac{1}{k_1} + \\frac{1}{k_2} + \\cdots',
+      { id: 'frusta3', title: 'Frustum 5', fig: ['fig8-17'], text: 'Leave blank if not needed.',
         vars: [
-          { id: 'f5t', symbol: 't_5', label: 'Frustum 5 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f5D', symbol: 'D_5', label: 'Frustum 5 narrow diameter', unit: 'in / mm', kind: 'input' }, { id: 'f5E', symbol: 'E_5', label: 'Frustum 5 modulus', unit: 'psi / MPa', kind: 'input' },
-          { id: 'f5k', symbol: 'k_5', label: 'k5', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f5t', 'f5D', 'f5E', 'd') ? frust(v.f5E, v.d, v.f5t, v.f5D) : undefined },
+          { id: 'f5t', symbol: 't_5', label: 'Frustum 5 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f5D', symbol: 'D_5', label: 'Frustum 5 narrow-end diameter', unit: 'in / mm', kind: 'input', hint: 'expanding: previous D + 1.155 t; last frustum at the nut: 1.5d' },
+          { id: 'f5E', symbol: 'E_5', label: 'Frustum 5 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f5d', symbol: 'd_5', label: 'Frustum 5 hole diameter d in Eq. 8-20', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'plate: bolt nominal d (auto); washer: its inner diameter (Fizz p.150)' },
+        ],
+        when: v => v.kmm === 'frusta' },
+      { id: 'frustak', title: 'Frustum stiffnesses and the combined member stiffness', eq: '8-20', fig: ['fig8-17'],
+        formula: 'k_i = \\frac{0.5774\\pi E_i d_i}{\\ln\\dfrac{(1.155t_i + D_i - d_i)(D_i + d_i)}{(1.155t_i + D_i + d_i)(D_i - d_i)}} \\qquad \\frac{1}{k_m} = \\frac{1}{k_1} + \\frac{1}{k_2} + \\cdots',
+        text: 'Fizz p.150–151: if the top and bottom halves are identical, compute the top half and halve it (k<sub>m</sub> = k<sub>top</sub>/2).',
+        vars: [
+          { id: 'f1k', symbol: 'k_1', label: 'k1', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f1t', 'f1D', 'f1E', 'f1d') ? frust(v.f1E, v.f1d, v.f1t, v.f1D) : undefined,
+            work: v => H.has(v, 'f1k') ? '\\(k_1 = \\dfrac{0.5774\\pi(' + H.fmt(v.f1E, 3) + ')(' + H.fmt(v.f1d) + ')}{\\ln\\dfrac{[1.155(' + H.fmt(v.f1t) + ') + ' + H.fmt(v.f1D, 4) + ' - ' + H.fmt(v.f1d) + '](' + H.fmt(v.f1D, 4) + ' + ' + H.fmt(v.f1d) + ')}{[1.155(' + H.fmt(v.f1t) + ') + ' + H.fmt(v.f1D, 4) + ' + ' + H.fmt(v.f1d) + '](' + H.fmt(v.f1D, 4) + ' - ' + H.fmt(v.f1d) + ')}} = ' + H.fmt(v.f1k, 4) + '\\)' : null },
+          { id: 'f2k', symbol: 'k_2', label: 'k2', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f2t', 'f2D', 'f2E', 'f2d') ? frust(v.f2E, v.f2d, v.f2t, v.f2D) : undefined },
+          { id: 'f3k', symbol: 'k_3', label: 'k3', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f3t', 'f3D', 'f3E', 'f3d') ? frust(v.f3E, v.f3d, v.f3t, v.f3D) : undefined },
+          { id: 'f4k', symbol: 'k_4', label: 'k4', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f4t', 'f4D', 'f4E', 'f4d') ? frust(v.f4E, v.f4d, v.f4t, v.f4D) : undefined },
+          { id: 'f5k', symbol: 'k_5', label: 'k5', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f5t', 'f5D', 'f5E', 'f5d') ? frust(v.f5E, v.f5d, v.f5t, v.f5D) : undefined },
           { id: 'kmfr', symbol: 'k_m^{(frusta)}', label: 'km = 1 / Σ(1/ki)', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => { const ks = ['f1k', 'f2k', 'f3k', 'f4k', 'f5k'].map(k => v[k]).filter(x => x !== undefined && x > 0); return ks.length ? 1 / ks.reduce((s, k) => s + 1 / k, 0) : undefined; },
             work: v => H.has(v, 'kmfr') ? '\\(\\dfrac{1}{k_m} = ' + ['f1k', 'f2k', 'f3k', 'f4k', 'f5k'].filter(k => v[k] > 0).map(k => '\\dfrac{1}{' + H.fmt(v[k], 4) + '}').join(' + ') + ' \\Rightarrow k_m = ' + H.fmt(v.kmfr, 4) + '\\)' : null },
         ],
@@ -239,10 +269,11 @@ window.TOPIC = {
       { id: 'tq', title: 'Preload stress and wrench torque', eq: '8-27', fig: ['table8-15'], formula: 'T = K F_i d',
         vars: [
           { id: 'sigi', symbol: '\\sigma_i', label: 'Preload stress Fi/At', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fi', 'At') ? v.Fi / v.At : undefined },
-          { id: 'K', symbol: 'K', label: 'Torque factor', kind: 'lookup', fig: 'table8-15', default: 0.2, hint: 'Shigley Table 8-15 (0.2 default); Mott: 0.15 / 0.20' },
+          { id: 'K', symbol: 'K', label: 'Torque factor', kind: 'lookup', fig: 'table8-15', default: 0.2, hint: 'Shigley Table 8-15: 0.30 black, 0.20 zinc-plated, 0.18 lubricated, 0.16 cadmium (0.20 if not stated); Mott: 0.15 / 0.20' },
           { id: 'T', symbol: 'T', label: 'Wrench torque', unit: 'lbf·in / N·mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'K', 'Fi', 'd') ? v.K * v.Fi * v.d : undefined,
             work: v => H.has(v, 'T') ? '\\(T = ' + H.fmt(v.K) + '(' + H.fmt(v.Fi, 4) + ')(' + H.fmt(v.d) + ') = ' + H.fmt(v.T, 4) + '\\)' : null },
-        ] },
+        ],
+        after: v => { if (!H.has(v, 'T')) return ''; const lim = FS_SI(v) ? 113000 : 1000; return v.T > lim ? '<span class="result-bad">T = ' + H.fmt(v.T, 4) + (FS_SI(v) ? ' N·mm' : ' lbf·in') + ' — above ≈ 1000 lbf·in (113 N·m), which the homework solutions call "VERY high" for a hand wrench (Fizz p.153): use a torque multiplier / turn-of-nut, or more, smaller bolts.</span>' : '<span class="result-ok">T = ' + H.fmt(v.T, 4) + (FS_SI(v) ? ' N·mm' : ' lbf·in') + ' — achievable with a hand torque wrench (below ≈ 1000 lbf·in).</span>'; } },
     ] },
 
     { title: 'Step 5: Static factors of safety', steps: [
@@ -342,7 +373,7 @@ window.TOPIC = {
             work: v => H.has(v, 'sigb') ? '\\(\\sigma_b = ' + H.fmt(v.Fres, 4) + '/[' + H.fmt(v.tmem) + '(' + H.fmt(v.dsj) + ')] = ' + H.fmt(v.sigb, 4) + '\\)' : null },
         ] },
       { id: 'sjfos', title: 'Shear-joint factors of safety', fig: ['table20-1'], when: v => v.sj === 'shear',
-        formula: 'n_{shear} = \\frac{0.577 S_y}{\\tau} \\qquad n_{bear} = \\frac{S_y}{\\sigma_b}' + ' \\\\qquad A_{s,req} = \\\\frac{F}{\\\\tau_{allow}}\\\\ (\\\\text{Mott 20-1})',
+        formula: 'n_{shear} = \\frac{0.577 S_y}{\\tau} \\qquad n_{bear} = \\frac{S_y}{\\sigma_b}' + ' \\qquad A_{s,req} = \\frac{F}{\\tau_{allow}}\\ (\\text{Mott 20-1})',
         text: 'Shigley Example 8-6 style: shear yield 0.577 S<sub>y</sub> (distortion energy) for the bolt; bearing against S<sub>y</sub> of the bolt or the member, whichever is weaker. Mott Example 20-1 instead sizes the bolt from the AISC allowable shear stress of Table 20-1 (friction-type connection, standard holes).',
         vars: [
           { id: 'Syb', symbol: 'S_{y,bolt}', label: 'Bolt yield strength', unit: 'psi / MPa', kind: 'input', auto: v => v.Sy, hint: 'auto = grade from step 4' },

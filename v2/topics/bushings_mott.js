@@ -1,7 +1,10 @@
 /* Boundary-lubricated plain bearings — Mott 6e Ch. 16 Sec. 16-5 (pV method).
  * Fizz bible pp. 92-95 follows Shigley's Oiles procedure; this file keeps the same step order but uses Mott's
  * symbols (p, V, pV), Mott's design rule (design pV = 2·pV, material from Table 16-1) and Fig. 16-4 clearance.
- * Steps the Fizz bible needs that Mott lacks (thermal Lmin, wear factor K, Oiles limits) use Shigley tables flagged book:'shigley'. */
+ * Steps the Fizz bible needs that Mott lacks (thermal Lmin, wear factor K, Oiles limits) use Shigley tables flagged book:'shigley'.
+ * Mech bible unit 4 (PDF p. 129) is empty.
+ * Verified against: Mott Example Problem 16-1 (150 lb, 500 rpm, Dmin = 1.50 in, L/D = 1): p = 66.7 psi, V = 196 ft/min,
+ *   pV = 13 100, design pV = 26 200 -> high-tin babbitt (30 000), Cd = 0.002 in -> PASS. */
 window.TOPIC = {
   id: 'bushings', book: 'mott',
   title: 'Bushings — Boundary-Lubricated Bearings',
@@ -13,9 +16,22 @@ window.TOPIC = {
     'U.S. units: lb, rpm, in, psi, ft/min (SI alternative noted where Mott gives it).',
   example: { F: 150, n: 500, Dmin: 1.5, D: 1.5, LD: 1.0, L: 1.5, nd: 1, fs: 0.03, Tf: '', Tinf: 70, hCR: 2.7, J: 778, pVrated: 30000, matName: 'Babbitt high-tin (89%)', rule: 'Mott: rated ≥ 2·pV', Cd: 0.002 },
 
+  assumptions: [
+    { text: 'Mott procedure: trial D = D_{min}, L/D = 1 (dry or oil-impregnated porous bearings; 1.5 for carbon-graphite), always within 0.5–2.0', src: 'Mott Sec. 16-5 steps 1–2', var: 'LD' },
+    { text: 'Acceptance: design pV = 2·(pV) must not exceed the rated pV of the Table 16-1 material (Mott). The Fizz route instead compares the plain PV with the Oiles limit', src: 'Mott Sec. 16-5 step 8 · Fizz p.95', var: 'rule' },
+    { text: 'Fizz route: bushing assumed Oiles 500 SP — PV &lt; 46 700, P_{max} &lt; 3560 psi, V &lt; 100 ft/min, T &lt; 300 °F (Shigley Table 12-11); K = 0.6×10^{-10}', src: 'Fizz p.94 · Fizz p.95', var: 'Plim' },
+    { text: 'Fizz thermal step: f_s = 0.03 (Oiles 500SP, Shigley Table 12-10)', src: 'Fizz p.93', var: 'fs' },
+    { text: 'ħ_{CR} = 2.7 Btu/(h·ft²·°F) and J = 778 ft·lbf/Btu unless given', src: 'Fizz p.93', var: 'hCR' },
+    { text: 'Ambient T_{∞} = 70 °F if no value is given', src: 'Fizz p.94', var: 'Tinf' },
+    { text: 'Fizz route: T_f = 300 °F (Oiles 500 SP maximum) when not given; left blank on the Mott route, so the thermal L_{min} is skipped', src: 'Fizz p.93 · Fizz p.95', var: 'Tf', value: 300 },
+    { text: 'Design factor on the load n_d = 1 (Mott uses F directly; the guides give no value)', src: 'Mott Ex. 16-1', var: 'nd' },
+    { text: 'Diametral clearance ≈ 0.001 in per inch of journal diameter until read from Fig. 16-4', src: 'Mott Sec. 16-5 step 11', var: 'Cd' },
+    { text: 'Linear wear is only checked when the question gives a maximum wear (Oiles K)', src: 'Fizz p.95' },
+  ],
+
   figures: [
     { id: 'fig16-1', ref: 'Figure 16-1', title: 'Bearing geometry: journal, bearing, radial clearance Cr = (Db − Dj)/2, diametral clearance Cd = Db − Dj', src: 'figures/mott/fig16-1.png', page: 632 },
-    { id: 'proc', ref: 'Procedure 16-5', title: 'Mott design procedure for boundary-lubricated plain surface bearings (Steps 1-11)', src: 'figures/mott/proc16-5.png', page: 638 },
+    { id: 'proc', ref: 'Sec. 16-5 procedure', title: 'Mott design procedure for boundary-lubricated plain surface bearings (Steps 1-11)', src: 'figures/mott/proc16-5.png', page: 638 },
     { id: 't16-1', ref: 'Table 16-1', title: 'Typical performance parameters (rated pV) for bearing materials in boundary lubrication', src: 'figures/mott/table16-1.png', page: 637,
       note: 'Choose the first material whose rated pV ≥ design pV = 2·(pV). psi·fpm and MPa·m/s columns; 1 psi·fpm = 3.50×10⁻⁵ MPa·m/s.' },
     { id: 'fig16-4', ref: 'Figure 16-4', title: 'Minimum recommended diametral clearance vs journal diameter and speed', src: 'figures/mott/fig16-4.png', page: 638,
@@ -39,10 +55,10 @@ window.TOPIC = {
         ] },
       { id: 'thermal', title: 'Fizz Step 2 — minimum length from temperature rise (Shigley Eq. 12-49)', fig: ['t12-10'],
         formula: 'L \\ge \\frac{720\\, f_s\\, n_d F n}{J\\, \\hbar_{CR}\\,(T_f - T_\\infty)}',
-        text: 'Mott has no equivalent; the Fizz bible always runs this first. Defaults <i>T<sub>∞</sub></i> = 70 °F, <i>ħ<sub>CR</sub></i> = 2.7, <i>J</i> = 778. Skip (leave <i>T<sub>f</sub></i> blank) if the problem is a pure Mott pV design.',
+        text: 'Mott has no equivalent; the Fizz bible always runs this first. Defaults <i>T<sub>∞</sub></i> = 70 °F, <i>ħ<sub>CR</sub></i> = 2.7, <i>J</i> = 778. With the Fizz/Oiles acceptance rule (Step 9 below) a blank <i>T<sub>f</sub></i> uses 300 °F (Oiles 500 SP); on the Mott route leave it blank to skip this step.',
         vars: [
           { id: 'fs', symbol: 'f_s', label: 'Coefficient of friction', unit: '', kind: 'lookup', fig: 't12-10', default: 0.03 },
-          { id: 'Tf', symbol: 'T_f', label: 'Max. bearing temperature', unit: '°F', kind: 'input' },
+          { id: 'Tf', symbol: 'T_f', label: 'Max. bearing temperature', unit: '°F', kind: 'input', auto: v => v.rule === 'Fizz/Oiles: limit > pV' ? 300 : undefined, hint: 'Fizz route: blank → 300 °F (Oiles 500 SP); Mott route: leave blank to skip' },
           { id: 'Tinf', symbol: 'T_\\infty', label: 'Ambient temperature', unit: '°F', kind: 'input', default: 70 },
           { id: 'hCR', symbol: '\\hbar_{CR}', label: 'Heat-transfer coefficient', unit: 'Btu/(h·ft²·°F)', kind: 'input', default: 2.7 },
           { id: 'J', symbol: 'J', label: 'Mechanical equivalent of heat', unit: 'ft·lbf/Btu', kind: 'input', default: 778 },
@@ -98,7 +114,7 @@ window.TOPIC = {
         text: 'From Table 16-1 pick a material with rated <i>pV</i> ≥ (<i>pV</i>)<sub>design</sub>. Fizz/Oiles style instead: compare the un-doubled <i>pV</i> to the limiting PV of Table 12-9 (e.g. 46 700 for Oiles 500) and also check <i>p<sub>max</sub></i> &lt; 3560 psi and <i>V</i> &lt; 100 ft/min (Table 12-11).',
         vars: [
           { id: 'matName', label: 'Material chosen', kind: 'input', type: 'text', hint: 'e.g. Babbitt high-tin, Porous bronze, Oiles 500' },
-          { id: 'pVrated', symbol: '(pV)_{rated}', label: 'Rated / limiting pV of the material', unit: 'psi·fpm', kind: 'lookup', fig: 't16-1' },
+          { id: 'pVrated', symbol: '(pV)_{rated}', label: 'Rated / limiting pV of the material', unit: 'psi·fpm', kind: 'lookup', fig: 't16-1', auto: v => v.rule === 'Fizz/Oiles: limit > pV' ? 46700 : undefined, hint: 'Table 16-1; Fizz/Oiles rule → 46 700 (Oiles 500)' },
           { id: 'rule', label: 'Acceptance rule', kind: 'choice', type: 'text', default: 'Mott: rated ≥ 2·pV', options: ['Mott: rated ≥ 2·pV', 'Fizz/Oiles: limit > pV'] },
           { id: 'Plim', symbol: 'p_{max,lim}', label: 'Max. pressure limit (Oiles style only)', unit: 'psi', kind: 'lookup', fig: 't12-11', default: 3560 },
           { id: 'Vlim', symbol: 'V_{max}', label: 'Max. velocity limit (Oiles style only)', unit: 'ft/min', kind: 'lookup', fig: 't12-11', default: 100 },
@@ -117,7 +133,7 @@ window.TOPIC = {
         formula: 'w = \\frac{K\\, n_d F n\\, t}{3L}',
         text: 'Mott does not give a wear equation; the Fizz bible uses Shigley\'s with the Oiles wear factor <i>K</i>. Leave blank if not required.',
         vars: [
-          { id: 'K', symbol: 'K', label: 'Wear factor', unit: 'in³·min/(lbf·ft·h)', kind: 'lookup', fig: 't12-9', hint: 'Oiles 500: 0.6e-10' },
+          { id: 'K', symbol: 'K', label: 'Wear factor', unit: 'in³·min/(lbf·ft·h)', kind: 'lookup', fig: 't12-9', default: 0.6e-10, hint: 'Oiles 500: 0.6e-10 (Shigley Table 12-9)' },
           { id: 't', symbol: 't', label: 'Operating time', unit: 'h', kind: 'input' },
           { id: 'wmax', symbol: 'w_{max}', label: 'Allowable wear', unit: 'in', kind: 'input' },
           { id: 'w', symbol: 'w', label: 'Radial wear', unit: 'in', kind: 'calc', digits: 4,
@@ -125,7 +141,7 @@ window.TOPIC = {
             work: v => v.w !== undefined ? '\\(w = \\dfrac{' + H.fmt(v.K) + '(' + H.fmt(v.nd) + ')(' + H.fmt(v.F) + ')(' + H.fmt(v.n) + ')(' + H.fmt(v.t) + ')}{3(' + H.fmt(v.L) + ')} = ' + H.fmt(v.w) + '\\text{ in}\\)' : null },
         ],
         after: v => (v.w === undefined || v.wmax === undefined) ? '' : v.w < v.wmax ? '<span class="result-ok">w &lt; w_max ✔</span>' : '<span class="result-bad">w ≥ w_max ✘ — lengthen the bushing</span>' },
-      { id: 'clr', title: 'Nominal diametral clearance', eq: '16-?', fig: ['fig16-4', 'fig16-1'],
+      { id: 'clr', title: 'Nominal diametral clearance', fig: ['fig16-4', 'fig16-1'],
         formula: 'C_d = D_b - D_j = 2C_r \\qquad C_d \\approx 0.001\\ \\text{in per inch of } D \\ \\text{(rule of thumb)}',
         text: 'Mott Step 11: read the minimum recommended clearance from Fig. 16-4 for the journal diameter and speed (Ex. 16-1: D = 1.50 in, 500 rpm → C<sub>d</sub> = 0.002 in).',
         vars: [

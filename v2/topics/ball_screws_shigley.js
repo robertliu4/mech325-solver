@@ -1,3 +1,8 @@
+// Ball screws — Mott Ch. 17-3 / 17-4 (Fizz §5.2 procedure, Fizz pp.127–128; the Mech guide has no ball-screw unit).
+// Guide assumptions are listed in `assumptions` and carried by the field defaults (24 h/day, 365 days/yr, e = 0.90).
+// Verified against: Mott Example Problem 17-3 (12 500 lb, 15-in stroke × 2, 8 cycles/day, 10 yr, 15 in in 12 s) → travel 8.76 × 10⁵ in,
+//   2-in screw (2 tpi, lead 0.50 in), Tu = 0.177FL = 1106 (1105) lb·in, 150 rpm, 2.63 hp — reproduced. Expected life from the traced chart
+//   (18 800 lb at 10⁶ in) is 3.4 × 10⁶ in = 3.9× required; Mott reads ≈ 3.2 × 10⁶ in (3.65×) off the printed chart.
 // Rated load (lb) at 1.0e6 in travel life, read off Mott Figure 17-8 (pixel-traced); 1/2-in value confirmed by Mott text (1000 lb).
 const BS_SIZES = [
   { label: '3 in, 1½ tpi, lead 0.667 in', value: 3, tpi: 1.5, L: 0.667, P6: 38000 },
@@ -19,6 +24,16 @@ window.TOPIC = {
     + 'US units: lb, in, in/s, lb·in, hp. Travel life in inches follows the Fizz guide: distance per cycle × cycles per hour × 24 h/day × 365 days/yr × years. '
     + '<b>Course source:</b> the MECH 325 Module #5 reading guide requires Mott 17-3 (life, torque, power) and 17-4 (column buckling and critical speed) — no course slides, tutorials or worked numbers exist for ball screws, so Mott\'s equations and Example Problem 17-3 are the reference; the Thomson ball-screw catalogue (Canvas) is the beneficial reading for real selection data.',
   example: { F: 12500, dist: 30, cyc: 8, basis: 'day', hrs: 24, days: 365, yrs: 10, size: 2, Vreq: 1.25 },
+
+  assumptions: [
+    { text: 'Travel life = distance per cycle × cycles per hour × 24 h/day × 365 days/yr × years — the machine is assumed to run around the clock', src: 'Fizz p.127', var: 'hrs' },
+    { text: 'Operating days per year = 365', src: 'Fizz p.127', var: 'days' },
+    { text: 'Distance per cycle counts both strokes when the nut goes out and back (Mott Example 17-3: 2 × 15 in)', src: 'Mott Ex. 17-3' },
+    { text: 'Screw chosen from the Mott Figure 17-8 load / travel-life chart: first line at or above the load at the required life (rated loads pre-filled from a trace of the chart)', src: 'Fizz pp.127–128', var: 'P6' },
+    { text: 'Ball-screw efficiency e = 0.90, which gives T_u = 0.177 F L', src: 'Fizz p.128 · Mott Eq. 17-13', var: 'eff' },
+    { text: 'Speed and power: n = 60 V/L, P = T_u n/63 000 (hp)', src: 'Fizz p.128' },
+    { text: 'Critical speed: run below 0.80 n_c with SF = 2 (Mott: 1.25–3.0) and simply supported ends (K_s = 1) unless the supports are described — Mott 17-4, not in the guides', src: 'Mott §17-4', var: 'SF' },
+  ],
 
   figures: [
     { id: 'fig17-3', ref: 'Figure 17-3', title: 'Ball bearing screw — recirculating balls, ball nut, return tube', src: 'figures/mott/fig17-3.png', page: 660, book: 'mott' },
@@ -116,7 +131,7 @@ window.TOPIC = {
 
     { title: 'Result', steps: [
       { id: 'result', title: 'Selected ball screw', fig: ['fig17-8'],
-        text: 'Life (Figure 17-8), critical speed (n < 0.8 n<sub>c</sub>) and column buckling (P<sub>cr</sub>/F ≥ SF) must all pass. Mott Example 17-3: 12 500 lb, 15-in stroke × 2, 8 cycles/day, 10 yr → 8.76 × 10⁵ in → 2-in screw, T<sub>u</sub> = 1106 lb·in, 150 rpm, 2.63 hp, expected life ≈ 3.2 × 10⁶ in (3.65× required).',
+        text: 'Life (Figure 17-8), critical speed (n < 0.8 n<sub>c</sub>) and column buckling (P<sub>cr</sub>/F ≥ SF) must all pass. Mott Example 17-3: 12 500 lb, 15-in stroke × 2, 8 cycles/day, 10 yr → 8.76 × 10⁵ in → 2-in screw, T<sub>u</sub> = 1106 lb·in, 150 rpm, 2.63 hp, expected life ≈ 3.2 × 10⁶ in read off the printed chart (3.65× required; the traced rated load 18 800 lb gives 3.4 × 10⁶ in).',
         vars: [
           { id: 'Tures', symbol: 'T_u', label: 'Driving torque', unit: 'lb·in', kind: 'calc', compute: v => v.Tu },
           { id: 'Pres', symbol: 'P', label: 'Power', unit: 'hp', kind: 'calc', digits: 4, compute: v => v.P },

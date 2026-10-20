@@ -1,5 +1,8 @@
 /* Ball & cylindrical roller bearings — Shigley 11e Ch. 11 (Secs 11-3 .. 11-8).
- * Procedure: Fizz bible pp. 96-100 (radial only + radial & thrust with Y2 iteration). Mech bible has no bearings unit. */
+ * Procedure: Fizz bible pp. 96-101 (radial only + radial & thrust with Y2 iteration). Mech bible unit 4 (PDF p. 129) is empty.
+ * Verified against: Shigley Ex. 11-7(b) (angular-contact ball bearing at C, 25 hp, T = 2404 lbf·in, Fr = 464.4 lbf, Fa = 344 lbf,
+ *   R = 0.96 for 4 bearings, 10 kh, af = 1.2, Eq. 11-10): nD = 655.4 rev/min, xD = 393, Fe = 821 lbf -> C10 = 53.1 kN -> 02-60 (C0 35.5);
+ *   Fa/C0 = 0.0431 -> Y2 = 1.84, Fe = 893 lbf, C10 = 57.7 kN -> 02-65 (C10 63.7, C0 41.5); Fa/C0 = 0.0369 -> Y2 = 1.90, C10 = 59.1 kN -> 02-65 again -> PASS. */
 (function () {
   // Table 11-1 data for auto-interpolation
   const FaC0 = [0.014, 0.021, 0.028, 0.042, 0.056, 0.070, 0.084, 0.110, 0.17, 0.28, 0.42, 0.56];
@@ -14,13 +17,28 @@
   window.TOPIC = {
     id: 'ball_cyl_bearings', book: 'shigley',
     title: 'Ball & Cylindrical Roller Bearings',
-    subtitle: 'Shigley Ch. 11 Secs 11-3 to 11-8 · Fizz pp. 96-100 · Weibull C10 method',
+    subtitle: 'Shigley Ch. 11 Secs 11-3 to 11-8 · Fizz pp. 96-101 · Weibull C10 method',
     sibling: 'ball_cyl_bearings_mott.html',
     intro: 'Find the catalogue rating <i>C<sub>10</sub></i> a deep-groove / angular-contact ball bearing or a cylindrical roller bearing must have, then pick it from Table 11-2 or 11-3. ' +
       'Radial-only loads go straight to Eq. (11-9); a thrust component needs the equivalent load <i>F<sub>e</sub> = X<sub>i</sub>VF<sub>r</sub> + Y<sub>i</sub>F<sub>a</sub></i> (Eq. 11-12) with ' +
       '<i>Y<sub>2</sub></i> from Table 11-1 — which depends on the <i>C<sub>0</sub></i> of the bearing you have not chosen yet, so the Fizz bible iterates: assume <i>Y<sub>2</sub></i> = 1.63, size, pick, read <i>C<sub>0</sub></i>, re-interpolate, repeat until the same bearing comes up twice. ' +
       'Two iteration rounds are laid out below (Shigley Ex. 11-7 converges in two).',
     example: { mode: 'radial + thrust', unit: 'lbf', H: 25, T: 2404, Fx: 356.6, Fy: 297.5, Fa: 344, Rtot: 0.96, nb: 4, LDh: 10000, mfr: 2, af: 1.2, btype: 'angular-contact ball (a = 3)', ring: 'inner ring rotates (V = 1)', relEq: 'Eq. 11-10 (1 − R_D)', X2: 0.56, Y2a: 1.63, C10sel1: 55.9, C0sel1: 35.5, C10sel2: 63.7, C0sel2: 41.5, C10sel3: 63.7 },
+
+    assumptions: [
+      { text: 'Speed from n_D = 63 025 H/T when it is not given directly', src: 'Fizz p.96', var: 'nD' },
+      { text: 'Reliability per bearing R_D = (R_{tot})^{1/n} only when the reliability of the whole set is given; otherwise R_D = 0.90 (catalogue L_{10})', src: 'Fizz p.96 · Fizz p.113', var: 'RD' },
+      { text: 'Design life from Table 11-4 for the type of machine if the question does not give it', src: 'Fizz p.97', var: 'LDh' },
+      { text: 'Weibull parameters of manufacturer 2 (SKF, common for ball and straight roller bearings): L_{10} = 10^6 rev, x_0 = 0.02, θ = 4.459, b = 1.483 — Tables 11-2/11-3 are on this basis', src: 'Fizz p.97', var: 'mfr' },
+      { text: 'Application factor a_f from Table 11-5 if not given; 1.2 is pre-filled (Shigley Ex. 11-7)', src: 'Fizz p.97 · Shigley Ex. 11-7', var: 'af' },
+      { text: 'Load-life exponent a = 3 for ball bearings, 10/3 for cylindrical rollers', src: 'Fizz p.98', var: 'a' },
+      { text: 'Reliability term written as [ln(1/R_D)]^{1/b} (Eq. 11-9); Shigley\'s examples use the (1 − R_D) form of Eq. 11-10 — almost identical for R_D ≥ 0.9', src: 'Fizz p.98', var: 'relEq' },
+      { text: 'Rotation factor V = 1 (inner ring rotates); 1.2 only if the outer ring rotates', src: 'Fizz p.99', var: 'ring' },
+      { text: 'Thrust case: first assume F_a/(V F_r) &gt; e and check it once C_0 is known', src: 'Fizz p.99 · Fizz p.100' },
+      { text: 'First-pass factors from the middle of Table 11-1: X_2 = 0.56, Y_2 = 1.63', src: 'Fizz p.99', var: 'Y2a' },
+      { text: 'Use F_a/C_0 = 0.014 when it is smaller (Table 11-1 footnote); interpolate e and Y_2 linearly', src: 'Fizz p.100 · Fizz p.101' },
+      { text: 'Re-size with C_{10,new} = (F_{e,new}/F_{e,old}) C_{10,old}; stop when the same bearing is selected twice in a row', src: 'Fizz p.101 · Fizz p.106' },
+    ],
 
     figures: [
       { id: 'fig11-1', ref: 'Figure 11-1', title: 'Nomenclature of a ball bearing (bore, OD, width, races, separator)', src: 'figures/shigley/fig11-1.png', page: 598 },
@@ -67,7 +85,7 @@
         { id: 'rel', title: 'Step 3 — reliability of each bearing', formula: 'R_D = R_i = \\sqrt[n]{R_{tot}}',
           text: 'If the problem gives the reliability of the whole set of <i>n</i> bearings, each bearing needs <i>R<sub>tot</sub><sup>1/n</sup></i> (Shigley Sec. 11-5: R = R<sub>A</sub>R<sub>B</sub>). Ex. 11-7: ⁴√0.96 = 0.99.',
           vars: [
-            { id: 'Rtot', symbol: 'R_{tot}', label: 'Reliability goal of the ensemble', unit: '', kind: 'input', default: 0.90 },
+            { id: 'Rtot', symbol: 'R_{tot}', label: 'Reliability goal of the ensemble', unit: '', kind: 'input', default: 0.90, hint: '0.90 (catalogue) if none is given' },
             { id: 'nb', symbol: 'n', label: 'Number of bearings sharing the goal', unit: '', kind: 'input', default: 1 },
             { id: 'RD', symbol: 'R_D', label: 'Design reliability per bearing', unit: '', kind: 'calc', digits: 5, compute: v => H.has(v, 'Rtot', 'nb') && v.nb > 0 ? Math.pow(v.Rtot, 1 / v.nb) : undefined,
               work: v => v.RD !== undefined ? '\\(R_D = ' + H.fmt(v.Rtot) + '^{1/' + H.fmt(v.nb) + '} = ' + H.fmt(v.RD, 5) + '\\)' : null },

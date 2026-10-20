@@ -1,5 +1,8 @@
 /* Tapered roller bearings — Shigley 11e Ch. 11 Sec. 11-9 (Timken method).
- * Procedure: Fizz bible pp. 101-106 (K iteration). Mech bible has no bearings unit. */
+ * Procedure: Fizz bible pp. 101-106 (K iteration). Mech bible unit 4 (PDF p. 129) is empty.
+ * Verified against: Shigley Ex. 11-8 (FrA = 2170 N, FrB = 2654 N, Fae = 1690 N, 800 rev/min, 5000 h, pair R = 0.99, af = 1, Eq. 11-10):
+ *   trial 1 (K = 1.5): FiA = 680, FiB = 832, FeA = 4651 N, xD = 2.67, C10A = 11 486 (11 478 with exact sqrt 0.99), C10B = 6554 -> 15100/15245 (K = 1.67, 12 100 N);
+ *   trial 2: FeA = 4938 N, C10A = 12 195 N (kept, pair R = 0.9946 >= 0.99). */
 (function () {
   const lnTerm = v => v.relEq === 'Eq. 11-10 (1 − R_D)' ? (1 - v.RD) : Math.log(1 / v.RD);
   const bracket = v => H.has(v, 'xD', 'x0', 'th', 'b', 'RD') && v.RD > 0 && v.RD < 1 ? v.xD / (v.x0 + (v.th - v.x0) * Math.pow(lnTerm(v), 1 / v.b)) : undefined;
@@ -27,6 +30,19 @@
       'Each equivalent load goes through the Weibull catalogue-rating equation with Timken\'s parameters (<i>x<sub>0</sub></i> = 0, θ = 4.48, b = 1.5, rating life 90×10⁶ rev, a = 10/3), the cup/cone is picked from the catalogue page (Fig. 11-15), ' +
       'and because <i>K</i> belongs to the chosen bearing the Fizz bible iterates from <i>K</i> = 1.5 until the same bearing is selected twice. Shigley Ex. 11-8 is the loaded example.',
     example: { unit: 'N', RzA: 1327, RyA: 1717, RzB: 2653, RyB: 53.3, Fae: 1690, nD: 800, LDh: 5000, Rtot: 0.99, nb: 2, af: 1, relEq: 'Eq. 11-10 (1 − R_D)', KA1: 1.5, KB1: 1.5, coneA1: '15100 / 15245', C10Acat1: 12100, KA2: 1.67, coneB1: '15100 / 15245', C10Bcat1: 12100, KB2: 1.67, coneA2: '15100 / 15245', C10Acat2: 12100, KA3: 1.67, coneB2: '15100 / 15245', C10Bcat2: 12100, KB3: 1.67 },
+
+    assumptions: [
+      { text: 'Bearing A is the one that carries the external axial load: F_{ae} = F_a acts toward A', src: 'Fizz p.102' },
+      { text: 'Initial K_A = K_B = 1.5 for the induced loads F_i = 0.47F_r/K (0.75 for a steep-angle bearing); replace with the catalogue K and repeat', src: 'Fizz p.102 · Shigley Ex. 11-8', var: 'KA1' },
+      { text: 'If an equivalent load comes out below the radial load, use the radial load', src: 'Shigley Sec. 11-9' },
+      { text: 'Design life from Table 11-4 if not given', src: 'Fizz p.102', var: 'LDh' },
+      { text: 'Timken (manufacturer 1) Weibull set for tapered rollers: L_{10} = 90×10^6 rev, x_0 = 0, θ = 4.48, b = 1.5', src: 'Fizz p.102 · Fizz p.103', var: 'L10' },
+      { text: 'R_D = (R_{tot})^{1/n} only when the reliability of the bearing set is given; otherwise each bearing at 0.90', src: 'Fizz p.103', var: 'RD' },
+      { text: 'Load-life exponent a = 10/3 for tapered roller bearings', src: 'Fizz p.103' },
+      { text: 'Application factor a_f = 1 unless the question or Table 11-5 says otherwise (Shigley Ex. 11-8)', src: 'Shigley Ex. 11-8', var: 'af' },
+      { text: 'Reliability term [ln(1/R_D)]^{1/b} as Fizz writes it (Eq. 11-9); Shigley Ex. 11-8 uses (1 − R_D) (Eq. 11-10)', src: 'Fizz p.103', var: 'relEq' },
+      { text: 'Select on the one-row radial rating; repeat with the new K values until the same bearings come up twice in a row', src: 'Fizz p.103 · Fizz p.105' },
+    ],
 
     figures: [
       { id: 'fig11-13', ref: 'Figure 11-13', title: 'Nomenclature of a tapered roller bearing — cone, cup, rollers, cage; G = effective load centre, a = its offset', src: 'figures/shigley/fig11-13.png', page: 618 },
@@ -61,7 +77,7 @@
           ] },
         { id: 'life', title: 'Steps 4–6 — life, Weibull parameters, reliability, application factor', eq: '11-3', fig: ['t11-4', 't11-6', 't11-5'],
           formula: 'x_D = \\frac{60\\,\\mathcal{L}_D\\, n_D}{L_{10}} \\qquad R_D = \\sqrt[n]{R_{tot}}',
-          text: 'Timken (manufacturer 1) rates at 90×10⁶ revolutions. Ex. 11-8: 5000 h at 800 rev/min → x<sub>D</sub> = 2.67; pair reliability 0.99 → R<sub>D</sub> = √0.99 = 0.995 each.',
+          text: 'Timken (manufacturer 1) rates at 90×10⁶ revolutions. Ex. 11-8: 5000 h at 800 rev/min → x<sub>D</sub> = 2.67; pair reliability 0.99 (n = 2) → R<sub>D</sub> = √0.99 = 0.995 each. With no reliability given each bearing is designed at 0.90 (n = 1).',
           vars: [
             { id: 'nD', symbol: 'n_D', label: 'Shaft speed', unit: 'rev/min', kind: 'input' },
             { id: 'LDh', symbol: '\\mathcal{L}_D', label: 'Design life', unit: 'h', kind: 'lookup', fig: 't11-4' },
@@ -71,8 +87,8 @@
             { id: 'b', symbol: 'b', label: 'Weibull b', unit: '', kind: 'lookup', fig: 't11-6', default: 1.5 },
             { id: 'xD', symbol: 'x_D', label: 'Multiple of rating life', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'LDh', 'nD', 'L10') && v.L10 > 0 ? 60 * v.LDh * v.nD / v.L10 : undefined,
               work: v => v.xD !== undefined ? '\\(x_D = \\dfrac{60(' + H.fmt(v.LDh) + ')(' + H.fmt(v.nD) + ')}{' + H.fmt(v.L10) + '} = ' + H.fmt(v.xD) + '\\)' : null },
-            { id: 'Rtot', symbol: 'R_{tot}', label: 'Reliability goal of the pair', unit: '', kind: 'input', default: 0.90 },
-            { id: 'nb', symbol: 'n', label: 'Number of bearings', unit: '', kind: 'input', default: 2 },
+            { id: 'Rtot', symbol: 'R_{tot}', label: 'Reliability goal (of the whole set when n ≥ 2)', unit: '', kind: 'input', default: 0.90, hint: '0.90 (catalogue) per bearing if none is given' },
+            { id: 'nb', symbol: 'n', label: 'Number of bearings sharing that goal', unit: '', kind: 'input', default: 1, hint: 'enter 2 when the reliability is given for the pair (Ex. 11-8)' },
             { id: 'RD', symbol: 'R_D', label: 'Design reliability per bearing', unit: '', kind: 'calc', digits: 5, compute: v => H.has(v, 'Rtot', 'nb') && v.nb > 0 ? Math.pow(v.Rtot, 1 / v.nb) : undefined },
             { id: 'af', symbol: 'a_f', label: 'Application factor', unit: '', kind: 'lookup', fig: 't11-5', default: 1 },
             { id: 'relEq', label: 'Reliability term', kind: 'choice', type: 'text', default: 'Eq. 11-9 ln(1/R_D)', options: ['Eq. 11-9 ln(1/R_D)', 'Eq. 11-10 (1 − R_D)'] },
@@ -158,8 +174,9 @@
             { id: 'RA', symbol: 'R_A', label: 'Reliability of bearing A', unit: '', kind: 'calc', digits: 6, compute: v => R24(v, v.C10Acat2 !== undefined ? v.C10Acat2 : v.C10Acat1, v.FeA2 !== undefined ? v.FeA2 : v.FeA1) },
             { id: 'RB', symbol: 'R_B', label: 'Reliability of bearing B', unit: '', kind: 'calc', digits: 6, compute: v => R24(v, v.C10Bcat2 !== undefined ? v.C10Bcat2 : v.C10Bcat1, v.FeB2 !== undefined ? v.FeB2 : v.FeB1) },
             { id: 'Rp', symbol: 'R', label: 'Reliability of the pair', unit: '', kind: 'calc', digits: 6, compute: v => H.has(v, 'RA', 'RB') ? v.RA * v.RB : undefined },
+            { id: 'Rgoal', symbol: 'R_{goal}', label: 'Pair goal R_D²', unit: '', kind: 'calc', digits: 6, compute: v => v.RD !== undefined ? v.RD * v.RD : undefined },
           ],
-          after: v => !H.has(v, 'Rp', 'Rtot') ? '' : v.Rp >= v.Rtot ? '<span class="result-ok">R = ' + H.fmt(v.Rp, 6) + ' ≥ goal ' + H.fmt(v.Rtot) + ' ✔ — Bearing A: ' + (v.coneA2 || v.coneA1 || '') + ', Bearing B: ' + (v.coneB2 || v.coneB1 || '') + '</span>' : '<span class="result-bad">R = ' + H.fmt(v.Rp, 6) + ' &lt; goal ' + H.fmt(v.Rtot) + ' — choose the next larger bearing for the heavily loaded side.</span>' },
+          after: v => !H.has(v, 'Rp', 'Rgoal') ? '' : v.Rp >= v.Rgoal - 1e-9 ? '<span class="result-ok">R = ' + H.fmt(v.Rp, 6) + ' ≥ goal ' + H.fmt(v.Rgoal, 4) + ' ✔ — Bearing A: ' + (v.coneA2 || v.coneA1 || '') + ', Bearing B: ' + (v.coneB2 || v.coneB1 || '') + '</span>' : '<span class="result-bad">R = ' + H.fmt(v.Rp, 6) + ' &lt; goal ' + H.fmt(v.Rgoal, 4) + ' — choose the next larger bearing for the heavily loaded side.</span>' },
       ] },
     ],
   };

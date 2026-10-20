@@ -2,6 +2,9 @@
 // Course alignment (v2/COURSE_CONVENTIONS.md §14): the Module 5 reading guide lists Mott 17-2 as the alternative to Shigley 8-1/8-2 for
 // power-screw torque, efficiency and power. No course worked numbers exist, so textbook defaults apply (f = 0.15 lubricated steel/steel,
 // fc = 0 with a rolling thrust bearing, nut length rounded up to ¼ in). The `example` is Mott Example 17-1/17-2 (12 500 lb, 1½-4 Acme).
+// Guide assumptions (Fizz pp.123–127; the Mech guide has no power-screw unit) are listed in `assumptions` and carried by the field defaults.
+// Verified against: Mott Examples 17-1 / 17-2 (F 12 500 lb, σd 10 000, τd 5000 psi, f 0.15, 15 in in 12 s) → At,req 1.25 in² → 1½-4 Acme,
+//   h 1.07 → 1.25 in, λ 3.39°, Tu 1809 (1814 unrounded), Td 796, e 27.5 %, n 300 rpm, P 8.61 (8.64) hp — reproduced.
 window.TOPIC = {
   id: 'power_screws', book: 'mott',
   title: 'Power Screws — Selection, Torque & Efficiency',
@@ -11,6 +14,16 @@ window.TOPIC = {
     + 'US units (lbf, in, psi, lbf·in, hp) as in Mott; for metric trapezoidal screws use N, mm, MPa and the SI power option. Mott does not give thread-root stresses — see the Shigley version for those. <b>Course note:</b> MECH 325 provides only the Module 5 reading guide (Mott 17-2 or Shigley 8-1/8-2) and no worked numbers for power screws, so the textbook defaults apply unchanged.',
   example: { F: 12500, sigd: 10000, taud: 5000, thread: 14.5, f: 0.15, Atsel: 1.266, Asr: 2.341, D: 1.5, tpi: 4, Dp: 1.3429, Dr: 1.1965, ns: 1, fc: 0, units: 'US', Vreq: 1.25 },
 
+  assumptions: [
+    { text: 'Allowable σ_d (screw) and τ_d (nut threads) come from the problem; the screw is the first Table 17-1 / 17-1M row with A_t ≥ F/σ_d', src: 'Fizz p.123 · Fizz p.125' },
+    { text: 'Nut / yoke length rounded up to the nearest ¼ in (1.10 → 1.25, 1.58 → 1.75)', src: 'Fizz p.126', var: 'hr' },
+    { text: 'Single-start thread: lead L = pitch p = 1/n (all Table 17-1 screws)', src: 'Fizz pp.126–127', var: 'ns' },
+    { text: 'Thread angle φ = 14.5° for Acme (square 0°, metric trapezoidal 15°)', src: 'Fizz p.126', var: 'thread' },
+    { text: 'f = 0.15 (well-lubricated steel screw in a steel nut, conservative) when no friction coefficient is given — Mott 17-2; the guides give no value', src: 'Mott §17-2', var: 'f' },
+    { text: 'Collar friction f_c = 0 when there is a roller (thrust) bearing, unless stated otherwise', src: 'Fizz p.126', var: 'fc' },
+    { text: 'Efficiency and speed use the raising torque T_u (with the collar term): e = FL/(2πT_u), n = 63 000 P/T_u (hp, lb·in)', src: 'Fizz p.127', var: 'e' },
+  ],
+
   figures: [
     { id: 'fig17-2', ref: 'Figure 17-2', title: 'Three forms of power screw threads: square, Acme (2φ = 29°), buttress', src: 'figures/mott/fig17-2.png', page: 660 },
     { id: 'table17-1', ref: 'Table 17-1', title: 'Preferred Acme screw threads — D, n, p, Dr, Dp, At, As (per inch of engagement)', src: 'figures/mott/table17-1.png', page: 662,
@@ -18,7 +31,7 @@ window.TOPIC = {
     { id: 'table17-1m', ref: 'Table 17-1M', title: 'Metric trapezoidal power screws (ISO): D, p, Dp, Dr, At', src: 'figures/mott/table17-1m.png', page: 663, note: 'φ = 15° for trapezoidal threads. Single-start designs; no shear-area column.' },
     { id: 'fig17-5', ref: 'Figure 17-5', title: 'Screw-thread force analysis: load pushed up (a) and down (b) the unrolled thread', src: 'figures/mott/fig17-5.png', page: 663 },
     { id: 'fig17-6', ref: 'Figure 17-6', title: 'Force normal to a square vs. an Acme thread (F → F/cos φ)', src: 'figures/mott/fig17-6.png', page: 665 },
-    { id: 'fizz-anatomy', ref: 'Fizz p.123 anatomy', title: 'Power screw anatomy — mean diameter, pitch, lead angle λ, helix angle ψ', src: 'figures/bibles/fizz_p123_power_screw_anatomy.png' },
+    { id: 'fizz-anatomy', ref: 'Fizz p.123 anatomy', title: 'Power screw anatomy — mean diameter, pitch, lead angle λ, helix angle ψ', src: 'figures/bibles/fizz_p123_power_screw_anatomy.png', book: 'fizz' },
     { id: 'table8-5', ref: 'Table 8-5', title: 'Coefficients of friction for threaded pairs', src: 'figures/shigley/table8-5.png', page: 454, book: 'shigley', note: 'Mott only says f = 0.15 is conservative for lubricated steel on steel; Shigley table shown for other pairs.' },
     { id: 'table8-6', ref: 'Table 8-6', title: 'Thrust-collar friction coefficients', src: 'figures/shigley/table8-6.png', page: 454, book: 'shigley', note: 'Mott has no collar table. fc = 0 for a rolling-element thrust bearing (Fizz).' },
   ],

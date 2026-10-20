@@ -1,5 +1,8 @@
 /* Shafts & keys — Mott 6e Ch. 12 (Eq. 12-24 / 12-16) with Ch. 5 endurance factors and Ch. 11 keys.
- * Procedure: Fizz bible pp. 106-122 (31 steps) — this is the bible's native method. Mech bible has no shafts unit. */
+ * Procedure: Fizz bible pp. 106-122 (31 steps) — this is the bible's native method. Mech bible unit 5 (PDF p. 130) is empty.
+ * Verified against: Mott Design Example 12-1, point C left (SAE 1144 OQT 1000: su 118, sy 83 ksi, sn = 42 ksi, Cs = 0.75, CR = 0.81, N = 2,
+ *   Mx = 12 230, My = 16 800 -> M = 20 780 lb·in, T = 21 000 lb·in, profile keyseat Kt = 2.0): s'n = 25.5 ksi, D = 3.22 in, specified 4.000 in;
+ *   Mott Example Problem 11-1 key (D = 2.00 in, T = 2965 lb·in, 1/2 sq SAE 1018, N = 3): L = 0.659 in -> 1.50 in, S = 1.718 in, T = 2.223 in. */
 (function () {
   const CM = { 'Wrought steel': 1.00, 'Cast steel': 0.80, 'Powdered steel': 0.76, 'Malleable cast iron': 0.80, 'Gray cast iron': 0.70, 'Ductile cast iron': 0.66 };
   const CR = { 0.5: 1.0, 0.9: 0.90, 0.99: 0.81, 0.999: 0.75 };
@@ -18,7 +21,28 @@
     intro: '<b>Section A</b> follows the Fizz 31-step procedure (Mott Design Example 12-1): torque <i>T</i> = 63 000<i>P</i>/<i>n</i> (Step 1), forces from each gear / sheave (Step 2), FBD, reactions and shear-moment-torque diagrams by hand (Steps 3-8), stress-concentration factors <i>K<sub>t</sub></i> (Step 9), material and the modified endurance strength ' +
       '<i>s′<sub>n</sub> = s<sub>n</sub>C<sub>m</sub>C<sub>st</sub>C<sub>R</sub>C<sub>s</sub></i> (Steps 10-16), then the diameter <i>D</i> from Eq. (12-24) — or Eq. (12-16) where only shear acts (Step 17), ×1.06 at ring grooves (Step 18), most-restrictive value per section (Step 19), second pass with a better <i>C<sub>s</sub></i> (Step 20), bearing-bore and preferred-size rounding (Steps 21-25). ' +
       'Enter the loads for one critical point at a time (left / centre / right of each component). <b>Section B</b> is the key design of Steps 26-31 (Mott Ch. 11). Units: hp, rpm, lb, in, psi/ksi. Loaded example: Mott Ex. 12-1 point C (left) and Ex. 11-1 key.',
-    example: { P: 200, n: 600, ctype: 'spur gear', Dp: 10, phi: 20, N: 2, Mx: 12230, My: 16800, V: 0, feat: 'Profile keyseat', mat: 'SAE 1144 OQT 1000', su: 118, sy: 83, steel: 'Wrought steel', stress: 'bending (Cst = 1.0)', surf: 'Machined or cold drawn', sn: 42, rel: 0.99, Dguess: 4, Cs: 0.75, ring: 'no', Dsel: 4.0, dkey: 2.0, Tkey: 2965, W: 0.5, Hk: 0.5, syk: 54, Nk: 3, Lhub: 1.75, Lsel: 1.5 },
+    example: { P: 200, n: 600, ctype: 'spur gear', Dp: 10, phi: 20, N: 2, Mx: 12230, My: 16800, V: 0, feat: 'Profile keyseat', mat: 'SAE 1144 OQT 1000', su: 118, sy: 83, steel: 'Wrought steel', stress: 'bending (Cst = 1.0)', surf: 'Machined or cold drawn', sn: 42, rel: 0.99, Dguess: 4, Cs: 0.75, ring: 'no', Dsel: 4.0, dkey: 2.0, Tkey: 2965, W: 0.5, Hk: 0.5, keymat: 'SAE 1018', syk: 54, Nk: 3, Lhub: 1.75, Lsel: 1.5, Ck: 0.005 },
+
+    assumptions: [
+      { text: 'Torque T = 63 000 P/n (P in hp); the torques along the shaft must sum to zero', src: 'Fizz p.106' },
+      { text: 'Pressure angle φ = 20° unless the problem states otherwise', src: 'Fizz p.42', var: 'phi' },
+      { text: 'Belt tension ratio F_1/F_2 = 5 for V-belts and 3 for flat belts if not given → F_{shaft} = (2T/D)(k + 1)/(k − 1) = 1.5 or 2.0 × 2T/D', src: 'Fizz p.107', var: 'kb_' },
+      { text: 'Keyseats are profile keyseats (K_t = 2.0) unless told otherwise; sled-runner 1.6', src: 'Fizz p.108 · Fizz p.109' },
+      { text: 'Gears and sheaves sit against well-rounded fillets (K_t = 1.5)', src: 'Fizz p.109' },
+      { text: 'Bearing seats: well-rounded fillet (1.5) on the small-diameter side, press fit at the seat (K_t = 1), sharp fillet (2.5) on the large-diameter side', src: 'Fizz p.109' },
+      { text: 'Retaining-ring grooves K_t = 3.0 on the small side of gears, and the computed diameter ×1.06', src: 'Fizz p.109 · Fizz p.112' },
+      { text: 'Wrought steel, C_m = 1.00, if the material type is not specified', src: 'Fizz p.109', var: 'steel' },
+      { text: 'Bending stress, C_{st} = 1.0 (almost always)', src: 'Fizz p.109', var: 'stress' },
+      { text: 'Surface machined or cold drawn when not specified (s_n from that curve of Fig. 5-11)', src: 'Fizz p.110', var: 'surf' },
+      { text: 'Reliability 99 % as the safe guess → C_R = 0.81', src: 'Fizz p.111', var: 'rel' },
+      { text: 'First-pass size factor C_s = 0.8 (≈ 2 in shaft); redo with a better C_s if the diameters come out far from 2 in (Mott Ex. 12-1 guesses 0.75)', src: 'Fizz p.111 · Fizz p.112', var: 'Cs', value: 0.8 },
+      { text: 'Shaft design factor N = 3 (Mott uses 2.5–3; Ex. 12-1 uses 2); the guide gives no shaft value', src: 'Mott Sec. 12-5', var: 'N' },
+      { text: 'Bearing at a seat: L_2 = rpm × 60 × h/day × days/month × 12 × years, L_1 = C_R·10^6 for reliability ≠ 90 %, k = 3.00 ball / 3.33 tapered (see the bearing calculators)', src: 'Fizz p.113' },
+      { text: 'Key material SAE 1018 (s_y = 54 ksi), weaker than the shaft so Eq. 11-5 applies', src: 'Fizz p.119', var: 'syk' },
+      { text: 'Key design factor N = 3 if not given', src: 'Fizz p.121', var: 'Nk' },
+      { text: 'Key length: over ~2 in is too long (increase the shaft diameter); 1–1.5 in is good, under 1 in best; round up to a standard size', src: 'Fizz p.122' },
+      { text: 'Keyseat allowance C = +0.005 in clearance for parallel keys (−0.020 in for taper keys)', src: 'Fizz p.122', var: 'Ck' },
+    ],
 
     figures: [
       { id: 'fig12-2', ref: 'Figure 12-2', title: 'Proposed shaft geometry: sharp fillets at bearing seats (r3, r5), well-rounded at gears (r1, r2, r4), profile keyseats at A and C, retaining-ring groove', src: 'figures/mott/fig12-2.png', page: 529 },
@@ -39,7 +63,7 @@
       { id: 't11-1', ref: 'Table 11-1', title: 'Key size (W, H) vs shaft diameter, inch and metric', src: 'figures/mott/table11-1.png', page: 490, note: 'Sizes above the horizontal line are square.' },
       { id: 't11-4', ref: 'Table 11-4', title: 'Materials used for keys — su, sy (SAE 1018: sy = 54 ksi)', src: 'figures/mott/table11-4.png', page: 493 },
       { id: 'fig11-4', ref: 'Figure 11-4', title: 'Forces on a key: shear area WL, bearing area L(H/2), F = T/(D/2)', src: 'figures/mott/fig11-4.png', page: 494 },
-      { id: 'proc11', ref: 'Procedure 11-4', title: 'Mott design procedure for parallel keys (10 steps)', src: 'figures/mott/proc11-4.png', page: 494 },
+      { id: 'proc11', ref: 'Sec. 11-4 procedure', title: 'Mott design procedure for parallel keys (10 steps)', src: 'figures/mott/proc11-4.png', page: 494 },
       { id: 'fig11-2', ref: 'Figure 11-2', title: 'Dimensions for parallel keyseats: chordal height Y, shaft keyseat S, hub keyway T', src: 'figures/mott/fig11-2.png', page: 491 },
       { id: 't11-2', ref: 'Table 11-2', title: 'Suggested fillet radii and key chamfers', src: 'figures/mott/table11-2.png', page: 491 },
     ],
@@ -117,7 +141,7 @@
             'C<sub>s</sub> needs the diameter: Fizz guesses 0.8 (≈ 2 in); Mott Ex. 12-1 guesses 0.75 for a large shaft. Enter a trial diameter for the Table 5-4 estimate, or type C<sub>s</sub> directly.',
           vars: [
             { id: 'steel', label: 'Material type (Cm)', kind: 'choice', type: 'text', default: 'Wrought steel', options: Object.keys(CM) },
-            { id: 'Cm', symbol: 'C_m', label: 'Material factor', unit: '', kind: 'lookup', fig: 'fig5-11a', auto: v => CM[v.steel] },
+            { id: 'Cm', symbol: 'C_m', label: 'Material factor', unit: '', kind: 'calc', digits: 3, compute: v => CM[v.steel] },
             { id: 'stress', label: 'Type of stress (Cst)', kind: 'choice', type: 'text', default: 'bending (Cst = 1.0)', options: ['bending (Cst = 1.0)', 'axial tension (Cst = 0.8)'] },
             { id: 'Cst', symbol: 'C_{st}', label: 'Type-of-stress factor', unit: '', kind: 'calc', digits: 2, compute: v => v.stress ? (/axial/.test(v.stress) ? 0.8 : 1) : undefined },
             { id: 'surf', label: 'Surface condition (Fig. 5-11 curve)', kind: 'choice', type: 'text', default: 'Machined or cold drawn', options: Object.keys(SN) },
@@ -135,7 +159,7 @@
       { title: 'Section A · Diameter (Steps 17–25)', steps: [
         { id: 'dia', title: 'Steps 17–18 — minimum diameter', eq: '12-24 / 12-16', fig: ['ta2-1'],
           formula: "D = \\left[\\frac{32N}{\\pi}\\sqrt{\\left(\\frac{K_t M}{s'_n}\\right)^2 + \\frac{3}{4}\\left(\\frac{T}{s_y}\\right)^2}\\right]^{1/3} \\qquad D = \\sqrt{\\frac{2.94\\,K_t V N}{s'_n}}\\ \\text{(shear only)}",
-          text: 'Eq. (12-24) for bending and/or torsion (use it even with M = 0 or T = 0). Eq. (12-16) where only vertical shear acts (bearing seats at the ends of the torque path); the larger governs. Mott uses N = 2.5–3 (Fizz: assume 3 if not given); Ex. 12-1 uses 2. Retaining-ring groove: multiply by 1.06 (Fizz Step 18).',
+          text: 'Eq. (12-24) for bending and/or torsion (use it even with M = 0 or T = 0). Eq. (12-16) where only vertical shear acts (bearing seats at the ends of the torque path); the larger governs. Mott typically uses N = 2.5–3 (default 3); Ex. 12-1 uses 2. (The Fizz "assume 3 if not given" is stated for the key, Step 28.) Retaining-ring groove: multiply by 1.06 (Fizz Step 18).',
           vars: [
             { id: 'N', symbol: 'N', label: 'Design factor', unit: '', kind: 'input', default: 3 },
             { id: 'D24', symbol: 'D_{12\\text{-}24}', label: 'Diameter from Eq. 12-24', unit: 'in', kind: 'calc', digits: 4, compute: v => D24(v, v.Kt, v.M, v.T),

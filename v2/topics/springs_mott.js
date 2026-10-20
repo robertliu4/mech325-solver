@@ -6,7 +6,11 @@
 // Verified against: Mott Example 18-4 (extension, A227, Fo 26.75 lb @ 4.25 in, Fi 16.25 @ 3.50, OD 0.625, Dm trial 0.5, τd 110 → 120 ksi,
 //   Dw 0.072) → k 14.0, Dwt 0.072, Dm 0.553, C 7.68, K 1.19, τo 120 ksi, Na 16.3, body 1.25 in, Lf 2.21 (→ 2.50 chosen), fo 1.75,
 //   FI 2.25 lb, τI 10 100 psi — reproduced.
-// Verified against: Mott Example 18-2 / 18-3 trial 2 (A231, Fo 12 @ 1.25, Fi 8 @ 1.75, Dw 0.0625) → k 8.0, Lf 2.75, C ≈ 8.6 — the `example`.
+// Verified against: Mott Example 18-2, Method 1 spreadsheet Fig. 18-16 (the `example`: A231, Fo 12 lb @ 1.25 in, Fi 8 lb @ 1.75 in, Dm 0.60,
+//   τdi 130 ksi, Dw 0.0625, τd 145 ksi, τmax 170 ksi) → k 8.00, Lf 2.75, Dwt 0.055, OD 0.663, ID 0.538, Na 12.36, C 9.60, K 1.15,
+//   τo 86 459 psi, Ls 0.898, Fs 14.82 lb, τs 106 768 psi, Lf/Dm 4.58, cc 0.029, Dhole ≥ 0.669 — reproduced.
+// Guide assumptions: the Fizz spring pages (pp.128–146) follow Shigley; those that carry over to Mott's method are listed in `assumptions`
+//   together with Mott's own defaults (the Mech guide's spring unit, p.131, is empty).
 // Mott Table 18-4: G and E (psi, GPa)
 const MOTT_G = {
   A227: ['Hard-drawn steel A227 (Fig. 18-8)', 11.5e6, 79.3, 28.6e6, 197], A228: ['Music wire A228 (Fig. 18-9)', 11.85e6, 81.7, 29.0e6, 200],
@@ -29,6 +33,18 @@ window.TOPIC = {
     + '<b>Design mode</b> (Example 18-2, Method 1): two force–length points → rate k and free length; a trial mean diameter and design stress give a trial wire size (Eq. 18-7); pick a standard wire (Table 18-2), then check stress at the operating load against the average-service curve and at solid length against the light-service curve, find the coils (Eq. 18-8), lengths, buckling (Fig. 18-15), coil clearance and hole size. '
     + '<b>Analysis mode</b> (Example 18-1): a measured spring (Lf, OD, Dw, N) is checked the same way. <b>Extension mode</b> (Mott 18-7, Example 18-4): same body stress and coil equations, then body length D<sub>w</sub>(N<sub>a</sub> + 1) + end loops, initial force F<sub>I</sub> = F<sub>o</sub> − k f<sub>o</sub>, initial-tension stress vs Figure 18-21 and the end-loop stresses σ<sub>A</sub>, τ<sub>B</sub> (Eqs. 18-13 … 18-16). Units: US (lb, in, psi) or SI (N, mm, MPa). <b>Course note:</b> MECH 325 provides only the Module 5 reading guide for springs (Mott 18-1 … 18-4 and the 18-6 design example required; 18-5, 18-7, 18-8 beneficial) and no worked numbers, so the textbook defaults apply unchanged.',
   example: { units: 'US', mode: 'design', Fo: 12, Lo: 1.25, Fi: 8, Li: 1.75, mat: 'A231', service: 'avg', Dmt: 0.6, tdi: 130000, Dw: 0.0625, td: 145000, tmax: 170000, ends: 'sg', Dhole: 0.75 },
+
+  assumptions: [
+    { text: 'Squared-and-ground ends (ends that sit on flat plates must be squared and ground): N_a = N − 2, L_s = D_w N', src: 'Fizz p.131 · Fizz p.146', var: 'ends' },
+    { text: 'Design stress from the "average service" curve of Figs. 18-8 … 18-13; the light-service curve is the maximum allowable stress for the solid-height check — Mott 18-4', src: 'Mott §18-4', var: 'service' },
+    { text: 'Trial wire diameter with Wahl factor K ≈ 1.2 (Eq. 18-7, Method 1); Method 2 also assumes C ≈ 7 — Mott 18-6', src: 'Mott §18-6' },
+    { text: 'Spring index best between 4 and 12 (Fizz); Mott asks for C ≥ 5 (forming cracks below 5), typically 5–12', src: 'Fizz p.129 · Mott §18-4', var: 'C' },
+    { text: 'Stress with the Wahl factor K (Mott Eq. 18-5); the Shigley-based Fizz guide uses the Bergsträsser K_B, about 1 % lower', src: 'Fizz p.129', var: 'K' },
+    { text: 'Fixed ends on flat plates (Fig. 18-15 curve A): no buckling when L_f/D_m < 5.2 — the same limit as Fizz\'s steel rule L_0 < 2.63 D/α with α = 0.5', src: 'Fizz p.131 · Mott Fig. 18-15', var: 'curve' },
+    { text: 'Coil clearance at the operating length > D_w/10; hole diameter > OD + D_w/10; pitch angle below about 12° — Mott 18-3 / 18-6', src: 'Mott §18-3' },
+    { text: 'The Fizz (Shigley) design conditions 3 ≤ N_a ≤ 15 and n_s ≥ 1.2 at solid height do not apply here: Mott checks τ_o ≤ τ_d and τ_s ≤ τ_max from the charts', src: 'Fizz p.136' },
+    { text: 'Extension springs: full loop at each end adds one ID per end; loop radius R_1 = D_m/2 and bend radius R_2 = 2.5 D_w (C_2 = 5) unless the drawing gives them; loop torsion limited to 0.9 τ_d, loop bending to ≈ τ_d/0.6 (torsion-spring charts; Shigley Table 10-7 ratio 0.45/0.75) — Mott 18-7', src: 'Mott Ex. 18-4', var: 'R2' },
+  ],
 
   figures: [
     { id: 'fig18-5', ref: 'Figure 18-5', title: 'Notation for diameters: OD, Dm, ID, Dw', src: 'figures/mott/fig18-5.png', page: 677 },

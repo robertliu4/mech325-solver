@@ -1,5 +1,7 @@
 /* Boundary-lubricated bearings (bushings) — Shigley 11e, Ch. 12 Sec. 12-15.
- * Procedure: Fizz bible pp. 92-95 (Shigley Ex. 12-10 method). Mech bible has no bearings unit. */
+ * Procedure: Fizz bible pp. 92-95 (Shigley Ex. 12-10 method). Mech bible unit 4 (PDF p. 129) is empty.
+ * Verified against: Shigley Ex. 12-10 (F = 50 lbf, 300 rev/min, nd = 2, Oiles 500): Lmin = 1.34 in, ID 3/4 x OD 1 1/8 x L 1 1/2,
+ *   Pmax = 113 psi, P = 88.9 psi, V = 58.9 ft/min, PV = 5240, w = 0.000320 in after 800 h -> PASS. */
 window.TOPIC = {
   id: 'bushings', book: 'shigley',
   title: 'Bushings — Boundary-Lubricated Bearings',
@@ -9,7 +11,21 @@ window.TOPIC = {
     'Procedure (Fizz p. 93 = Shigley Example 12-10): read material data from Tables 12-9/12-10, size the minimum length from the temperature-rise ' +
     'equation (12-49), pick a stock bushing from Table 12-12, check <i>L/D</i>, then verify <i>P<sub>max</sub></i>, <i>V</i>, <i>PV</i> and wear against the ' +
     'service limits in Table 12-11 (or Table 12-8 / 12-9 for other materials). Units: lbf, rpm, in, °F, psi, ft/min.',
-  example: { F: 50, N: 300, nd: 2, Tf: 300, Tinf: 70, hCR: 2.7, J: 778, mat: 'Oiles 500', fs: 0.03, K: 0.6e-10, PVlim: 46700, Pmaxlim: 3560, Vlim: 100, ID: 0.75, OD: 1.125, L: 1.5, t: 800, wmax: 0.001 },
+  example: { F: 50, N: 300, nd: 2, Tf: 300, Tinf: 70, hCR: 2.7, J: 778, mat: 'Oiles 500', fs: 0.03, K: 0.6e-10, PVlim: 46700, Pmaxlim: 3560, Vlim: 100, Tlim: 300, ID: 0.75, OD: 1.125, L: 1.5, t: 800, wmax: 0.001 },
+
+  assumptions: [
+    { text: 'Bushing is an Oiles 500 SP unless another material is named: K = 0.6×10^{-10}, limiting PV = 46 700 psi·ft/min (Table 12-9)', src: 'Fizz p.93 · Fizz p.94', var: 'mat' },
+    { text: 'Friction coefficient f_s = 0.03 (Oiles 500SP row of Table 12-10)', src: 'Fizz p.93', var: 'fs' },
+    { text: 'ħ_{CR} = 2.7 Btu/(h·ft²·°F) unless the question gives another value', src: 'Fizz p.93', var: 'hCR' },
+    { text: 'J = 778 ft·lbf/Btu', src: 'Fizz p.93', var: 'J' },
+    { text: 'Ambient T_{∞} = 70 °F if no value is given (the textbook value)', src: 'Fizz p.94', var: 'Tinf' },
+    { text: 'T_f = the maximum (lubricant / bushing) temperature — 300 °F for Oiles 500 SP (Table 12-11) when the question gives none', src: 'Fizz p.93 · Fizz p.95 · Shigley Ex. 12-10', var: 'Tf', value: 300 },
+    { text: 'Design factor n_d = 1 when none is given (the guides give no value; Shigley Ex. 12-10 uses 2)', src: 'Shigley Ex. 12-10', var: 'nd' },
+    { text: 'Pick the smallest stock bushing in Table 12-12 with L ≥ L_{min}, and ID bigger than the shaft diameter if one is given', src: 'Fizz p.94' },
+    { text: 'Keep 0.5 ≤ L/D ≤ 2, otherwise choose another bushing (Eq. 12-44; Fizz p.94 prints the inequality reversed)', src: 'Fizz p.94' },
+    { text: 'Service-range limits of Oiles 500 SP: P_{max} &lt; 3560 psi, V &lt; 100 ft/min, PV &lt; 46 700, T &lt; 300 °F (Table 12-11)', src: 'Fizz p.94 · Fizz p.95', var: 'Pmaxlim' },
+    { text: 'Linear wear w is only checked when the question gives a maximum wear', src: 'Fizz p.95' },
+  ],
 
   figures: [
     { id: 'fig12-39', ref: 'Figure 12-39', title: 'Sliding block subjected to wear (definition of K)', src: 'figures/shigley/fig12-39.png', page: 693 },
@@ -29,13 +45,13 @@ window.TOPIC = {
   sections: [
     { title: 'Inputs', steps: [
       { id: 'in', title: 'Problem data', fig: ['fig12-41'],
-        text: 'Radial load, journal speed, design factor and the temperature limits. Fizz p. 93: use <i>T<sub>∞</sub></i> = 70 °F, ' +
-          '<i>ħ<sub>CR</sub></i> = 2.7 Btu/(h·ft²·°F) and <i>J</i> = 778 ft·lbf/Btu unless the question gives other values.',
+        text: 'Radial load, journal speed, design factor and the temperature limits. Fizz pp. 93-94: use <i>T<sub>∞</sub></i> = 70 °F, ' +
+          '<i>ħ<sub>CR</sub></i> = 2.7 Btu/(h·ft²·°F) and <i>J</i> = 778 ft·lbf/Btu unless the question gives other values; <i>T<sub>f</sub></i> left blank uses the material temperature limit (300 °F for Oiles 500 SP).',
         vars: [
           { id: 'F', symbol: 'F', label: 'Radial load', unit: 'lbf', kind: 'input' },
           { id: 'N', symbol: 'N', label: 'Journal speed', unit: 'rev/min', kind: 'input' },
-          { id: 'nd', symbol: 'n_d', label: 'Design factor', unit: '', kind: 'input', default: 1, hint: 'applied to F everywhere (Shigley uses nd·F)' },
-          { id: 'Tf', symbol: 'T_f', label: 'Max. lubricant / bushing temperature', unit: '°F', kind: 'input', hint: 'Oiles 500 SP limit is 300 °F (Table 12-11)' },
+          { id: 'nd', symbol: 'n_d', label: 'Design factor', unit: '', kind: 'input', default: 1, hint: 'applied to F everywhere (Shigley uses n_d F); Ex. 12-10 uses 2' },
+          { id: 'Tf', symbol: 'T_f', label: 'Max. lubricant / bushing temperature', unit: '°F', kind: 'input', auto: v => v.Tlim, hint: 'blank → material limit T_max (300 °F for Oiles 500 SP, Table 12-11)' },
           { id: 'Tinf', symbol: 'T_\\infty', label: 'Ambient temperature', unit: '°F', kind: 'input', default: 70 },
           { id: 'hCR', symbol: '\\hbar_{CR}', label: 'Combined heat-transfer coefficient', unit: 'Btu/(h·ft²·°F)', kind: 'input', default: 2.7 },
           { id: 'J', symbol: 'J', label: 'Mechanical equivalent of heat', unit: 'ft·lbf/Btu', kind: 'input', default: 778 },

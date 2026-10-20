@@ -1,3 +1,12 @@
+// Fluid power — Parker Design Engineers Handbook + Esposito Ch. 6 (course) · Fizz §3 (pp.76–91) + Mech Unit 3 (pp.116–128) procedures.
+// Neither textbook covers fluid power, so the Shigley and Mott files are identical apart from id/book/sibling.
+// Guide assumptions are listed in `assumptions` and carried by the field defaults (1000 psi, μ ignored unless given, F = Fw + Ff + Fa,
+//   g formula, 15 ft/s, schedule 80, 0.85 pump efficiency, 3-phase motor).
+// Example (hand-checked, guide procedure): 5000 lb lifted (case 4) with μ 0.1 to 50 ft/min in 1 in, 24-in stroke, mounting I, 1000 psi →
+//   g 0.129, Fa 646, F = 5000 + 500 + 646 = 6146 lb, Lb 12 in, d_bore,req 2.80 → 3¼ in (8296 lb push), Q 21.55 gpm, d_p,min 0.766 →
+//   1-in sch 80 (9.6 ft/s), HP = 21.55(1000)/(1714 × 0.85) = 14.8 → 15 hp.
+// Probe-checked: Esposito 6-17M (40/20 mm, 0.0016 m³/s, 5000 N → 3.98 MPa, 1.27 m/s, 6.37 kW; 5.31 MPa, 1.70 m/s, 8.50 kW), Example 6-6
+//   cushion (→ 856 psi), Parker b-6 (6000 lb, 120 ft/min in ½ in → g 1.49, 8930 lb; Parker rounds g to 1.50 → 9000 lb).
 // Standard sizes from the Parker Design Engineers Handbook tables (reproduced in both student guides)
 const ROD_STD = [0.625, 1, 1.375, 1.75, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5];
 const BORE_STD = [1, 1.5, 2, 2.5, 3.25, 4, 5, 6, 7, 8, 10, 12, 14];
@@ -24,6 +33,23 @@ window.TOPIC = {
     + 'Procedure (Parker b-5 … b-7 as in both guides): load → acceleration force factor g (Graph b-2 or g = 0.0000517 v²/s) → total thrust → stroke factor &amp; basic length (Table b-4) → minimum rod diameter (Graph b-1) → bore from working pressure (Table b-1 or F = pA; regular or regenerative circuit) → extension / retraction check (Esposito 6-1 … 6-5) → pump flow (gpm, Parker i-8/i-9) → pipe size (≤ 15 ft/s, Table b-5) → motor horsepower (Table c-1, 85 % pump efficiency) → cushion pressure (Esposito 6-10/6-11) → result. '
     + 'Parker convention: <b>select the pump and motor for 10–25 % more pressure than the actuator needs</b> (line losses) — the "loss allowance" input does this. US units throughout: lb, in, ft/min, psi, gpm, hp (the Esposito check step also takes SI for the metric practice problems).',
   example: { p: 1000, loss: 0, L: 24, Fw: 5000, mu: 0.1, loadcase: 'v4', v: 50, s: 1, mount: 'I', drod: 1, circuit: 'regular', mode: 'push', dbore: 3.25, sched: 80, eff: 0.85 },
+
+  assumptions: [
+    { text: 'Relief-valve (operating) pressure = 1000 psi when the problem does not give one', src: 'Mech p.118 · Mech p.117', var: 'p' },
+    { text: 'Fixed-displacement pump (constant gpm) with a relief valve holding the pressure constant; in the regular (non-regenerative) circuit the retraction is faster and weaker than the extension', src: 'Fizz p.77', var: 'circuit' },
+    { text: 'The full relief pressure acts at the cylinder (no line loss), as in both guides; the Parker handbook (course) sizes the pump 10–25 % above the cylinder pressure — enter that as the loss allowance', src: 'Mech p.118', var: 'loss' },
+    { text: 'Load friction only if a coefficient of friction is given, otherwise ignored; cylinder friction is insignificant (chart note)', src: 'Fizz p.78 · Fizz p.79', var: 'mu' },
+    { text: 'Total thrust F = F_w + F_f + F_a — weight, friction and acceleration all add (load case 4); the Mech guide instead picks the chart formula for the actual motion (horizontal F = Wg ± f, vertical F = Wg ± W)', src: 'Fizz p.79 · Mech p.122', var: 'loadcase' },
+    { text: 'Acceleration force factor from g = 0.0000517 v²/s (v in ft/min, s in in) — "more reliable" than reading the chart', src: 'Fizz p.78 · Mech p.122', var: 'g' },
+    { text: 'Rod from the rod-selection graph at (thrust, basic length L_b = kL), rounded up to the next standard rod', src: 'Fizz p.80 · Mech p.119', var: 'drod' },
+    { text: 'Bore rounded up to the next standard size (Table b-1 push force ≥ thrust at the operating pressure); for pull deduct the rod; if the rod is not offered for that bore, take a larger bore', src: 'Fizz p.84 · Mech p.118 · Mech p.122', var: 'dbore' },
+    { text: 'Extension flow uses the full bore (rod = 0): Q = v_p A_p (12/231) gpm', src: 'Fizz p.84 · Mech p.123', var: 'Q' },
+    { text: 'Maximum line velocity 15 ft/s ("we always use"); take the smallest pipe that meets it', src: 'Fizz p.85 · Mech p.123', var: 'vmax' },
+    { text: 'Schedule 80 pipe ("just assume Schedule 80" — the proper schedule depends on pressure and material)', src: 'Fizz p.85', var: 'sched' },
+    { text: 'Motor horsepower HP = Q p/(1714 × 0.85) — 0.85 is the assumed pump efficiency (Parker Table c-1)', src: 'Fizz p.88 · Mech p.123', var: 'eff' },
+    { text: 'Next standard 3-phase motor (industrial supply); voltage and starter details chosen arbitrarily', src: 'Fizz p.88 · Mech p.123 · Mech p.124', var: 'HPmotor' },
+    { text: 'Hydraulic power P = pQ/1714 (no efficiency) with 1 in³/s = 60/231 gpm; accumulators are not calculated in this course', src: 'Fizz pp.89–91', var: 'Phyd' },
+  ],
 
   figures: [
     { id: 'keyeq', ref: 'Esposito §6.10 key equations', title: 'Esposito Ch. 6 key equations 6-1 … 6-11: cylinder force, velocity, power (US & SI), lever classes, cushion deceleration and pressure', src: 'figures/course/fluid_esposito_6-10_key_equations.png', book: 'course', note: 'Fluid Power Practice Problems.pdf p.1. HP = vF/550 = Q p/1714; kW = v F = Q p (m³/s × kPa).' },
@@ -120,7 +146,7 @@ window.TOPIC = {
           { id: 'mu', symbol: '\\mu', label: 'Coefficient of friction (if given)', kind: 'input', default: 0 },
           { id: 'theta', symbol: '\\theta', label: 'Incline angle (case 6 only)', unit: '°', kind: 'input', default: 30 },
           { id: 'Ffg', symbol: 'F_{f,given}', label: 'Friction force if given directly', unit: 'lb', kind: 'input' },
-          { id: 'loadcase', label: 'Load case (chart formula)', kind: 'choice', type: 'text', options: [{ label: '(1) Horizontal: F = Wg', value: 'h1' }, { label: '(2) Horizontal, accelerate + friction: F = Wg + f', value: 'h2' }, { label: '(3) Horizontal, decelerate with friction: F = Wg − f', value: 'h3' }, { label: '(4) Vertical up (accel up / decel down): F = Wg + W', value: 'v4' }, { label: '(5) Vertical down (accel down / decel up): F = Wg − W', value: 'v5' }, { label: '(6) Up an incline: F = W(sin θ + μ cos θ) + Wg', value: 'inc' }, { label: 'Static only: F = W + f (no acceleration)', value: 'static' }], default: 'h2' },
+          { id: 'loadcase', label: 'Load case (chart formula)', kind: 'choice', type: 'text', options: [{ label: '(1) Horizontal: F = Wg', value: 'h1' }, { label: '(2) Horizontal, accelerate + friction: F = Wg + f', value: 'h2' }, { label: '(3) Horizontal, decelerate with friction: F = Wg − f', value: 'h3' }, { label: '(4) Vertical up (accel up / decel down): F = Wg + W — Fizz default F = F_w + F_f + F_a', value: 'v4' }, { label: '(5) Vertical down (accel down / decel up): F = Wg − W', value: 'v5' }, { label: '(6) Up an incline: F = W(sin θ + μ cos θ) + Wg', value: 'inc' }, { label: 'Static only: F = W + f (no acceleration)', value: 'static' }], default: 'v4' },
           { id: 'Ff', symbol: 'F_f', label: 'Friction force', unit: 'lb', kind: 'calc', compute: v => H.has(v, 'Ffg') ? v.Ffg : (H.has(v, 'Fw', 'mu') ? (v.loadcase === 'inc' && H.has(v, 'theta') ? v.mu * v.Fw * Math.cos(H.rad(v.theta)) : v.mu * v.Fw) : undefined),
             work: v => (!H.has(v, 'Ffg') && H.has(v, 'Ff') && v.mu > 0) ? '\\(F_f = ' + H.fmt(v.mu) + '(' + H.fmt(v.Fw) + ')' + (v.loadcase === 'inc' ? '\\cos ' + H.fmt(v.theta) + '^\\circ' : '') + ' = ' + H.fmt(v.Ff) + '\\ \\text{lb}\\)' : null },
         ] },

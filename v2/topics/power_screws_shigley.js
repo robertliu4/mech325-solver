@@ -2,6 +2,9 @@
 // Course alignment (v2/COURSE_CONVENTIONS.md §14): the Module 5 reading guide requires Shigley 8-1, 8-2 (power-screw torque, efficiency,
 // body and thread stresses) "or Mott 17-2". No course worked numbers exist, so textbook defaults apply (f ≈ 0.10–0.15, fc = 0 for a rolling
 // thrust bearing, first-thread load share 0.38 F). The `example` is Shigley Example 8-1 (32 × 4 mm double-start square thread, 6.4 kN).
+// Guide assumptions (Fizz pp.123–127; the Mech guide has no power-screw unit) are listed in `assumptions` and carried by the field defaults.
+// Verified against: Shigley Example 8-1 (d 32, p 4, 2 starts, F 6.4 kN, f = fc = 0.08, dc 40 mm) → dm 30, dr 28, l 8 mm, TR 15.94 + Tc 10.24
+//   = 26.18 N·m, TL −0.466 + 10.24 = 9.77 N·m, e 0.311, τ 6.07, σ −10.39, σB −12.9, σx 41.5, τzx −4.04, σ′ 49.2 MPa — reproduced.
 const TB = v => (v.Tbody !== undefined ? v.Tbody : v.TRt);
 window.TOPIC = {
   id: 'power_screws', book: 'shigley',
@@ -13,6 +16,16 @@ window.TOPIC = {
     + 'Work in <b>one consistent unit system</b>: lbf-in-psi <i>or</i> N-mm-MPa. Torques come out in lbf·in or N·mm. Leave the sizing inputs blank if the screw is already specified. <b>Course note:</b> MECH 325 provides only the Module 5 reading guide (Shigley 8-1, 8-2 or Mott 17-2) and no worked numbers for power screws, so the textbook defaults apply unchanged.',
   example: { F: 6400, thread: 0, d: 32, p: 4, ns: 2, f: 0.08, fc: 0.08, dc: 40, nt: 1, share: 0.38, units: 'SI' },
 
+  assumptions: [
+    { text: 'Allowable σ_d (screw) and τ_d (nut threads) come from the problem; the screw is the first Acme-table row (Mott Table 17-1 / 17-1M) with A_t ≥ F/σ_d', src: 'Fizz p.123 · Fizz p.125' },
+    { text: 'Nut / yoke length rounded up to the nearest ¼ in (1.10 → 1.25, 1.58 → 1.75)', src: 'Fizz p.126', var: 'hr' },
+    { text: 'Thread angle: Acme α = 14.5° (2α = 29°) unless the screw is square (0°) or metric trapezoidal (15°)', src: 'Fizz p.126', var: 'thread' },
+    { text: 'Single-start thread unless stated, so lead l = pitch p (Fizz writes p in λ, e and V)', src: 'Fizz pp.126–127', var: 'ns' },
+    { text: 'Collar friction f_c = 0 when the collar runs on a roller / ball thrust bearing, unless stated otherwise', src: 'Fizz p.126', var: 'fc' },
+    { text: 'Efficiency and speed use the total raising torque (thread + collar): e = Fl/(2πT_R), n = 63 000 P/T_R (hp, lbf·in) — as in Shigley Ex. 8-1', src: 'Fizz p.127', var: 'e' },
+    { text: 'Thread-root stresses: the first engaged thread carries 0.38 F (n_t = 1) — Shigley 8-2; the guides do not cover thread stresses', src: 'Shigley §8-2', var: 'share' },
+  ],
+
   figures: [
     { id: 'fig8-1', ref: 'Figure 8-1', title: 'Screw-thread terminology (major / pitch / minor diameter, pitch, thread angle 2α)', src: 'figures/shigley/fig8-1.png', page: 443 },
     { id: 'fig8-3', ref: 'Figure 8-3', title: 'Square and Acme thread profiles', src: 'figures/shigley/fig8-3.png', page: 446, note: 'Square: thread depth = width = p/2, dm = d − p/2, dr = d − p. Acme: 2α = 29°.' },
@@ -21,7 +34,7 @@ window.TOPIC = {
       note: 'Fizz step 2: choose the first row whose tensile stress area At ≥ required. Note As (shear area per 1 in of engagement) for the nut-length step. Shigley has no equivalent table.' },
     { id: 'table17-1m', ref: 'Table 17-1M', title: 'Metric trapezoidal power screws (ISO) — D, p, Dp, Dr, At', src: 'figures/mott/table17-1m.png', page: 663, book: 'mott' },
     { id: 'fig8-5', ref: 'Figure 8-5 / 8-6', title: 'Portion of a power screw; unrolled-thread force diagrams for lifting (a) and lowering (b)', src: 'figures/shigley/fig8-5-6.png', page: 448 },
-    { id: 'fizz-anatomy', ref: 'Fizz p.123 anatomy', title: 'Power screw anatomy — dm, p, λ, ψ, nut reactions', src: 'figures/bibles/fizz_p123_power_screw_anatomy.png', book: 'mott', note: 'Student-guide sketch (same as Shigley Fig. 8-5).' },
+    { id: 'fizz-anatomy', ref: 'Fizz p.123 anatomy', title: 'Power screw anatomy — dm, p, λ, ψ, nut reactions', src: 'figures/bibles/fizz_p123_power_screw_anatomy.png', book: 'fizz', note: 'Student-guide sketch (same as Shigley Fig. 8-5).' },
     { id: 'fig8-7', ref: 'Figure 8-7', title: '(a) Normal thread force increased by thread angle α; (b) thrust collar of frictional diameter dc', src: 'figures/shigley/fig8-7.png', page: 450 },
     { id: 'table8-5', ref: 'Table 8-5', title: 'Coefficients of friction f for threaded pairs', src: 'figures/shigley/table8-5.png', page: 454, note: 'Sliding f in power screws is about 0.10–0.15; Mott suggests 0.15 for lubricated steel on steel.' },
     { id: 'table8-6', ref: 'Table 8-6', title: 'Thrust-collar friction coefficients (running / starting)', src: 'figures/shigley/table8-6.png', page: 454, note: 'If the collar is a rolling-element thrust bearing, take fc = 0 (Fizz guide).' },

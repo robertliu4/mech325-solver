@@ -5,6 +5,10 @@
 // fractions, Zimmerli data, Table 10-7 fractions for extension springs. Mode 4 adds the 10-11 extension-spring analysis (Example 10-6).
 // Verified against: Shigley Example 10-6 (hard-drawn 0.035 in, OD 0.248, r1 0.106, r2 0.089, Fi 1.19 lbf, Nb 12.17, F 5.25 lbf) → C 6.086,
 //   KB 1.234, Na 12.57, k 17.91, L0 0.817, τi 15.1 kpsi (preferred 14.2–21.2), Sut 264.7, n 1.45, σA 156.9 kpsi, nA 1.27, nB 1.35 — reproduced.
+// Verified against: Shigley Example 10-2, d = 0.080 column (the `example`, mode 1) → C 10.53, D 0.843, OD 0.923, Na 10.1, Ls 0.964, L0 3.264,
+//   (L0)cr 4.43, ns 1.2, fom −0.417 (same as the Fizz p.143 table) — reproduced. Mode 2 also reproduces Shigley Example 10-3 (A227, plain ends,
+//   18 lbf @ 2.25 in, Fs 24 lbf: C 10 → d 0.0916 → 13 ga 0.0915, ns 1.198, Na 16.4; C 12 → d 0.1001 → 12 ga 0.1055, ns 1.32, Na 10.97, L0 4.263 (4.266 with Nt rounded to 11), α < 0.78).
+// Guide assumptions (Fizz pp.128–146; the Mech guide's spring unit, p.131, is empty) are listed in `assumptions`; the field defaults carry them.
 // ---- material data: Shigley Table 10-4 (A, m, relative cost) and Table 10-5 (E, G) ----
 // A_us in kpsi·in^m, A_si in MPa·mm^m. G/E in Mpsi (US) -> x1e6 psi; GPa (SI) -> x1e3 MPa.
 const SPR_MAT = {
@@ -27,7 +31,8 @@ const CMP = v => v.mode !== 'ext';
 const SI = v => v.units === 'SI';
 const dIn = v => (v.d === undefined ? undefined : (SI(v) ? v.d / 25.4 : v.d));   // wire dia in inches for table ranges
 const matRow = v => { const M = SPR_MAT[v.mat]; if (!M || dIn(v) === undefined) return undefined; return M.rows.find(r => dIn(v) <= r.dmax) || M.rows[M.rows.length - 1]; };
-const matG = v => { const M = SPR_MAT[v.mat]; if (!M || dIn(v) === undefined) return undefined; return M.G.find(r => dIn(v) <= r[0]) || M.G[M.G.length - 1]; };
+// Table 10-5 row for E, G: before d is known use the "d > 0.064 in" row (Fizz p.137 / Shigley Ex. 10-2 a-priori values); once d is chosen use its row.
+const matG = v => { const M = SPR_MAT[v.mat]; if (!M) return undefined; const d = dIn(v) === undefined ? 0.0641 : dIn(v); return M.G.find(r => d <= r[0]) || M.G[M.G.length - 1]; };
 const KU = v => SI(v) ? 1 : 1000;          // kpsi -> psi
 const ENDS = { plain: [0, 'Na', 'd(Nt+1)', 'pNa+d'], pg: [1, 'Na+1', 'dNt', 'p(Na+1)'], sq: [2, 'Na+2', 'd(Nt+1)', 'pNa+3d'], sg: [2, 'Na+2', 'dNt', 'pNa+2d'] };
 const Ne = v => ENDS[v.ends] ? ENDS[v.ends][0] : undefined;
@@ -39,9 +44,25 @@ window.TOPIC = {
   title: 'Helical Compression Springs — Static & Fatigue Design',
   subtitle: 'Shigley Ch. 10-1 … 10-9 · Fizz guide §5.3 ("iterate d" and "calculate from C" paths)',
   sibling: 'springs_mott.html',
-  intro: 'Designs or checks a round-wire helical compression spring. Pick a <b>mode</b>: (1) <i>choose d</i> — Fizz "iterate wire diameter" / Shigley Fig. 10-3 &amp; Example 10-2: the spring index C comes from Eq. 10-23 so that n<sub>s</sub> = 1.2 at closure; run it once per candidate wire size and compare with the fom; (2) <i>choose C</i> — Fizz "calculate based on C" / Example 10-3: solve for d, then pick the next standard wire (Table A-28); (3) <i>spring given</i> — analyse a known d, D, N<sub>t</sub>, L<sub>0</sub> (Examples 10-1, 10-4). '
+  intro: 'Designs or checks a round-wire helical compression spring. Pick a <b>mode</b>: (1) <i>choose d</i> — Fizz "iterate wire diameter" / Shigley Fig. 10-3 &amp; Example 10-2: the spring index C comes from Eq. 10-23 so that n<sub>s</sub> = 1.2 at closure; run it once per candidate wire size and compare with the fom; (2) <i>choose C</i> (default) — Fizz "calculate based on C (seems better)" / Example 10-3: solve for d, then pick the next standard wire (Table A-28); (3) <i>spring given</i> — analyse a known d, D, N<sub>t</sub>, L<sub>0</sub> (Examples 10-1, 10-4). '
     + 'Then rate, coils, lengths (Table 10-1), buckling (Table 10-2 / Eq. 10-13), the design-condition checks (Eqs. 10-18 … 10-21), critical frequency and, if F<sub>min</sub> is given, fatigue with Zimmerli data (Eqs. 10-28 … 10-33). Units: US (lbf, in, psi) or SI (N, mm, MPa) — pick once. Mode 4 (<i>extension spring given</i>, Shigley 10-11 / Example 10-6) adds body coils → N<sub>a</sub> = N<sub>b</sub> + G/E, free length (Eq. 10-39), initial-tension check (Eq. 10-41) and the hook stresses σ<sub>A</sub>, τ<sub>B</sub> (Eqs. 10-34 … 10-37) against Table 10-7. <b>Course note:</b> MECH 325 provides only the Module 5 reading guide for springs (Shigley 10-1 … 10-4, 10-9, 10-11 required; 10-5 … 10-8, 10-12 beneficial) and no worked numbers, so the textbook defaults (ξ = 0.15, n<sub>s</sub> = 1.2, Table 10-6 / 10-7 fractions, Zimmerli data) apply unchanged.',
   example: { units: 'US', Fmax: 20, ymax: 2, xi: 0.15, nsd: 1.2, mat: 'A228', set: 0, ends: 'sg', mode: 'd', d: 0.080, alpha: 0.5, gamma: 0.284 },
+
+  assumptions: [
+    { text: 'Fractional overrun to closure ξ = 0.15, i.e. F_s = 1.15 F_max (unless the problem gives the solid-height force)', src: 'Fizz p.138 · Fizz p.136', var: 'xi' },
+    { text: 'Design factor at solid height (n_s)_d = 1.2 as a start (checked again at the end)', src: 'Fizz p.138', var: 'nsd' },
+    { text: '"Calculating based on C" is the preferred path: start with C = 10 (the value Shigley Example 10-3 uses), solve d, then take the Table A-28 wire that most closely fits; mode 1 iterates d instead (Example 10-2)', src: 'Fizz p.143 · Fizz p.145', var: 'mode' },
+    { text: 'Trial spring index C = 10; if N_a falls outside 3–15, change C within 4–12', src: 'Fizz p.145', var: 'Ctry' },
+    { text: 'E and G from Table 10-5 assuming d > 0.064 in (music wire E = 28.5, G = 11.75 Mpsi) until d is chosen; then the row of the actual d is read, as Shigley\'s Example 10-2 table does (d = 0.063 in → G = 11.85 Mpsi, N_a = 39.1)', src: 'Fizz p.137 · Shigley Ex. 10-2', var: 'G' },
+    { text: 'As-wound spring (no set removal): S_sy = Table 10-6 fraction × S_ut — 0.45 music wire / cold-drawn, 0.50 hardened & tempered, 0.35 stainless / nonferrous; set removed (Fig. 10-3): 0.65 S_ut. Fizz p.133 also quotes Samónov\'s S_sy = 0.56 S_ut (Eq. 10-16), which the procedure does not use', src: 'Fizz p.139 · Fizz p.142 · Fizz p.144', var: 'frac' },
+    { text: 'Squared-and-ground ends (ends that sit on flat plates must be squared and ground)', src: 'Fizz p.131 · Fizz p.146', var: 'ends' },
+    { text: 'Spring index from Eq. 10-23: take the larger of the two roots', src: 'Fizz p.137', var: 'C' },
+    { text: 'Shear stress with the Bergsträsser factor K_B = (4C + 2)/(4C − 3) (Wahl K_W shown for reference)', src: 'Fizz p.129', var: 'KB' },
+    { text: 'Spring between flat parallel surfaces (fixed ends), α = 0.5; absolute stability for steel when L_0 < 2.63 D/α', src: 'Fizz p.131 · Fizz p.146', var: 'alpha' },
+    { text: 'Design conditions 4 ≤ C ≤ 12, 3 ≤ N_a ≤ 15, ξ ≥ 0.15, n_s ≥ 1.2; of the feasible wires the largest (least negative) fom wins', src: 'Fizz p.136 · Fizz p.143', var: 'fom' },
+    { text: 'Surge: both ends always on plates, f = ½√(kg/W); keep f 15–20× the operating frequency (15× checked). Steel γ = 0.284 lbf/in³ (7.65 × 10^-5 N/mm³) — Shigley §10-8', src: 'Fizz p.135', var: 'gamma' },
+    { text: 'Fatigue: Zimmerli data, unpeened S_sa = 35 kpsi, S_sm = 55 kpsi (peened 57.5 / 77.5), S_su = 0.67 S_ut; Gerber by default (Fizz lists Goodman and Gerber)', src: 'Fizz p.135', var: 'peen' },
+  ],
 
   figures: [
     { id: 'fig10-1', ref: 'Figure 10-1', title: 'Axially loaded helical spring; wire sees direct shear F and torsion T = FD/2', src: 'figures/shigley/fig10-1.png', page: 547 },
@@ -94,14 +115,14 @@ window.TOPIC = {
       { id: 'mode', title: 'Design mode and the decision variable', fig: ['fig10-3', 'tableA-28a', 'tableA-28b'],
         text: '<b>Mode 1 (choose d):</b> enter a trial standard wire diameter; C follows from Eq. 10-23. <b>Mode 2 (choose C):</b> enter a trial C (10 is usual); d is solved, then enter the next standard wire size. <b>Mode 3 (spring given):</b> enter d and D (or OD − d), plus Nt and L0 if known.',
         vars: [
-          { id: 'mode', label: 'Mode', kind: 'choice', type: 'text', options: [{ label: '1 · Choose wire diameter d (Fig. 10-3 / Ex. 10-2)', value: 'd' }, { label: '2 · Choose spring index C, solve d (Ex. 10-3)', value: 'C' }, { label: '3 · Spring given: d and D known (Ex. 10-1 / 10-4)', value: 'given' }, { label: '4 · Extension spring given: d, D, Nb, Fi, hook radii (10-11 / Ex. 10-6)', value: 'ext' }], default: 'd' },
+          { id: 'mode', label: 'Mode', kind: 'choice', type: 'text', options: [{ label: '1 · Choose wire diameter d (Fig. 10-3 / Ex. 10-2)', value: 'd' }, { label: '2 · Choose spring index C, solve d (Ex. 10-3)', value: 'C' }, { label: '3 · Spring given: d and D known (Ex. 10-1 / 10-4)', value: 'given' }, { label: '4 · Extension spring given: d, D, Nb, Fi, hook radii (10-11 / Ex. 10-6)', value: 'ext' }], default: 'C' },
           { id: 'Ctry', symbol: 'C_{trial}', label: 'Trial spring index', kind: 'input', default: 10, hint: 'mode 2 only; 4–12' },
           { id: 'dcalc', symbol: 'd_{calc}', label: 'Wire diameter required for ns at C (mode 2)', unit: 'in / mm', kind: 'calc', digits: 4,
             compute: v => { if (v.mode !== 'C' || !H.has(v, 'Ctry', 'Fmax', 'nsd', 'frac', 'A', 'm')) return undefined;
               const KB = (4 * v.Ctry + 2) / (4 * v.Ctry - 3); const Fs = v.Fsg !== undefined ? v.Fsg : (H.has(v, 'xi') ? (1 + v.xi) * v.Fmax : undefined); if (Fs === undefined) return undefined;
               return Math.pow(8 * v.nsd * Fs * KB * v.Ctry / (PI * v.frac * v.A * KU(v)), 1 / (2 - v.m)); },
             work: v => v.dcalc !== undefined ? '\\(d = \\left[\\dfrac{8\\,n_s F_s K_B C}{\\pi\\,(' + H.fmt(v.frac) + ')\\,A' + (SI(v) ? '' : '\\times10^3') + '}\\right]^{1/(2-m)} = ' + H.fmt(v.dcalc, 4) + '\\)  (Example 10-3 Eq. 5: 0.163 K_B C/A for F_s = 24 lbf, n_s = 1.2)' : null },
-          { id: 'd', symbol: 'd', label: 'Wire diameter (standard size, Table A-28)', unit: 'in / mm', kind: 'lookup', fig: 'tableA-28a', hint: 'Table A-28; mode 2: next gauge ≥ d_calc' },
+          { id: 'd', symbol: 'd', label: 'Wire diameter (standard size, Table A-28)', unit: 'in / mm', kind: 'lookup', fig: 'tableA-28a', hint: 'Table A-28; mode 2: the gauge closest to d_calc (Fizz p.145) — Shigley Ex. 10-3 then checks n_s and moves up a gauge if needed' },
           { id: 'Dg', symbol: 'D', label: 'Mean coil diameter (modes 3, 4)', unit: 'in / mm', kind: 'input', hint: 'D = OD − d' },
           { id: 'Ntg', symbol: 'N_t', label: 'Total coils, if given (mode 3)', kind: 'input' },
           { id: 'L0g', symbol: 'L_0', label: 'Free length, if given (mode 3)', unit: 'in / mm', kind: 'input' },
@@ -229,7 +250,7 @@ window.TOPIC = {
         formula: 'W = \\frac{\\pi^2 d^2 D N_a \\gamma}{4} \\qquad f = \\frac{1}{2}\\sqrt{\\frac{k g}{W}}\\ (\\text{both ends on plates}),\\quad f = \\frac{1}{4}\\sqrt{\\frac{kg}{W}}\\ (\\text{one end free})',
         text: 'Keep the fundamental frequency 15–20× the operating frequency. Steel: γ = 0.284 lbf/in³ (7.65×10⁻⁵ N/mm³); g = 386 in/s² (9810 mm/s²).',
         vars: [
-          { id: 'gamma', symbol: '\\gamma', label: 'Specific weight of wire', unit: 'lbf/in³ / N/mm³', kind: 'input', default: 0.284, hint: 'steel 0.284 lbf/in³ = 7.65e-5 N/mm³' },
+          { id: 'gamma', symbol: '\\gamma', label: 'Specific weight of wire', unit: 'lbf/in³ / N/mm³', kind: 'input', auto: v => SI(v) ? 7.65e-5 : 0.284, hint: 'steel 0.284 lbf/in³ = 7.65e-5 N/mm³ (auto by unit system)' },
           { id: 'W', symbol: 'W', label: 'Weight of active coils', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'd', 'D', 'Na', 'gamma') ? PI * PI * v.d * v.d * v.D * v.Na * v.gamma / 4 : undefined },
           { id: 'fn', symbol: 'f', label: 'Fundamental frequency (both ends on plates)', unit: 'Hz', kind: 'calc', digits: 4, compute: v => H.has(v, 'k', 'W') && v.W > 0 ? 0.5 * Math.sqrt(v.k * (SI(v) ? 9810 : 386.1) / v.W) : undefined,
             work: v => H.has(v, 'k', 'W') && v.W > 0 ? '\\(f = \\tfrac12\\sqrt{' + H.fmt(v.k, 4) + '(' + (SI(v) ? '9810' : '386') + ')/' + H.fmt(v.W, 4) + '} = ' + H.fmt(v.fn, 4) + '\\ \\text{Hz}\\)' : null },

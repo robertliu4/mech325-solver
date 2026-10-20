@@ -1,6 +1,9 @@
 /* Tapered roller bearings — Mott 6e Ch. 14 Sec. 14-13 (ABMA equivalent-load method, thrust factor Y).
  * Procedure: Fizz bible pp. 101-106 (Timken K iteration) expressed with Mott's Y factors: Mott's Y plays the role of Shigley's K
- * (FiA = 0.47Fr/K  ⇔  0.5·Fr/Y). Mech bible has no bearings unit. */
+ * (FiA = 0.47Fr/K  ⇔  0.5·Fr/Y). Mech bible unit 4 (PDF p. 129) is empty.
+ * Verified against: Mott Example Problem 14-5 (FrA = 2720 lb, FrB = 4080 lb, TA = 2500 lb, 350 rpm, 4000 h, Y assumed 1.75):
+ *   PA = 7503 lb, PB = 4080 lb, Ld = 8.4e7, CA = 28 400 lb, CB = 15 400 lb -> A: d = 2.5000 (C = 29 300, Y = 1.65), B: d = 1.7500 (C = 21 400, Y = 1.50);
+ *   recheck PA = 7457 lb, CA = 28 200 lb -> both still OK -> PASS. */
 (function () {
   const CRtab = { 90: 1.0, 95: 0.62, 96: 0.53, 97: 0.44, 98: 0.33, 99: 0.21 };
   const Creq = (v, P) => H.has(v, 'Ld', 'CR', 'k') && P !== undefined && v.CR > 0 ? P * Math.pow(v.Ld / (v.CR * 1e6), 1 / v.k) : undefined;
@@ -18,9 +21,19 @@
     sibling: 'tapered_bearings_shigley.html',
     intro: 'Mott follows the ABMA approach: for the bearing <b>A</b> that resists the thrust, <i>P<sub>A</sub> = 0.4F<sub>rA</sub> + 0.5(Y<sub>A</sub>/Y<sub>B</sub>)F<sub>rB</sub> + Y<sub>A</sub>T<sub>A</sub></i> (Eq. 14-7) and <i>P<sub>B</sub> = F<sub>rB</sub></i> (Eq. 14-8); ' +
       'the middle term is the thrust induced by bearing B\'s radial load (same physics as Shigley\'s 0.47F<sub>r</sub>/K). If P<sub>A</sub> comes out below F<sub>rA</sub>, bearing B carries the net thrust instead (Eq. 14-9). ' +
-      'The thrust factor <i>Y</i> (1.07–2.26) belongs to the specific bearing, so assume <i>Y</i> = 1.75, compute the required <i>C = P(L<sub>d</sub>/10⁶)<sup>0.30</sup></i> with <i>k</i> = 3.33, select from Table 14-7, re-evaluate with the catalogue <i>Y</i> values and repeat until the selection is stable (Example Problem 14-5). ' +
+      'The thrust factor <i>Y</i> (1.07–2.26) belongs to the specific bearing, so assume <i>Y</i> (Fizz: 1.5; Mott Ex. 14-5: 1.75), compute the required <i>C = P(L<sub>d</sub>/10⁶)<sup>0.30</sup></i> with <i>k</i> = 3.33, select from Table 14-7, re-evaluate with the catalogue <i>Y</i> values and repeat until the selection is stable (Example Problem 14-5). ' +
       'Timken-style Weibull reliability is in the Shigley version; here higher reliability uses C<sub>R</sub> from Table 14-6.',
-    example: { unit: 'lb', FrA: 2720, FrB: 4080, TA: 2500, n: 350, Lh: 4000, rel: 90, YA1: 1.75, YB1: 1.75, bearA1: 'd = 2.5000 in', CA1: 29300, YA2: 1.65, bearB1: 'd = 1.7500 in', CB1: 21400, YB2: 1.50, bearA2: 'd = 2.5000 in', CA2: 29300, YA3: 1.65, bearB2: 'd = 1.7500 in', CB2: 21400, YB3: 1.50 },
+    example: { unit: 'lb', FrA: 2720, FrB: 4080, TA: 2500, n: 350, Lh: 4000, rel: 90, k: 3.33, YA1: 1.75, YB1: 1.75, bearA1: 'd = 2.5000 in', CA1: 29300, YA2: 1.65, bearB1: 'd = 1.7500 in', CB1: 21400, YB2: 1.50, bearA2: 'd = 2.5000 in', CA2: 29300, YA3: 1.65, bearB2: 'd = 1.7500 in', CB2: 21400, YB3: 1.50 },
+
+    assumptions: [
+      { text: 'Bearing A is the one that carries (resists) the external thrust T_A', src: 'Fizz p.102' },
+      { text: 'First pass Y_A = Y_B = 1.5 — Fizz starts with K_A = K_B = 1.5 and Mott\'s Y plays the role of K; Mott Ex. 14-5 assumes 1.75', src: 'Fizz p.102 · Mott Ex. 14-5', var: 'YA1' },
+      { text: 'If P_A comes out below F_{rA}, use P_A = F_{rA} and Eq. 14-9 for P_B', src: 'Mott Sec. 14-13' },
+      { text: 'Design life from Table 14-4 if not given', src: 'Fizz p.102', var: 'Lh' },
+      { text: 'Reliability 90 % (C_R = 1) unless stated; otherwise L_1 = C_R·10^6 from Table 14-6', src: 'Fizz p.113', var: 'rel' },
+      { text: 'Load-life exponent k = 3.33 for tapered roller bearings (1/k = 0.30)', src: 'Fizz p.113 · Fizz p.103', var: 'k' },
+      { text: 'Re-select with the catalogue Y values and repeat until the same bearings come up twice in a row', src: 'Fizz p.105' },
+    ],
 
     figures: [
       { id: 'fig14-7', ref: 'Figure 14-7', title: 'Tapered roller bearing (cone, cup, tapered rollers, cage)', src: 'figures/mott/fig14-7.png', page: 584 },
@@ -66,10 +79,10 @@
       { title: 'Trial 1 (assumed Y)', steps: [
         { id: 'p1', title: 'Steps 2–3 — equivalent loads with assumed YA = YB', eq: '14-7 / 14-8 / 14-9',
           formula: 'P_A = 0.4F_{rA} + 0.5\\frac{Y_A}{Y_B}F_{rB} + Y_A T_A \\qquad P_B = F_{rB} \\qquad \\left(\\text{if } P_A < F_{rA}:\\ P_A = F_{rA},\\ P_B = 0.4F_{rB} + 0.5\\frac{Y_B}{Y_A}F_{rA} - Y_B T_A\\right)',
-          text: 'Fizz uses K = 1.5 for the first pass; Mott assumes Y = 1.75. (Y<sub>A</sub>/Y<sub>B</sub> cancels on the first pass when both are equal.)',
+          text: 'Fizz starts with K = 1.5 for both bearings (pre-filled here as Y); Mott Ex. 14-5 assumes Y = 1.75 (Table 14-7 range 1.07–2.26). Y<sub>A</sub>/Y<sub>B</sub> cancels on the first pass when both are equal.',
           vars: [
-            { id: 'YA1', symbol: 'Y_A', label: 'Assumed thrust factor, A', unit: '', kind: 'lookup', fig: 't14-7', default: 1.75 },
-            { id: 'YB1', symbol: 'Y_B', label: 'Assumed thrust factor, B', unit: '', kind: 'lookup', fig: 't14-7', default: 1.75 },
+            { id: 'YA1', symbol: 'Y_A', label: 'Assumed thrust factor, A', unit: '', kind: 'lookup', fig: 't14-7', default: 1.5, hint: 'Fizz K = 1.5; Mott Ex. 14-5 uses 1.75' },
+            { id: 'YB1', symbol: 'Y_B', label: 'Assumed thrust factor, B', unit: '', kind: 'lookup', fig: 't14-7', default: 1.5 },
             { id: 'case1', label: 'Thrust carried by', kind: 'calc', compute: v => { const r = eq(v, v.YA1, v.YB1); return r ? (r.caseA ? 'A (Eq. 14-7)' : 'B (Eq. 14-9, PA < FrA)') : undefined; } },
             { id: 'PA1', symbol: 'P_A', label: 'Equivalent load on A', kind: 'calc', digits: 4, compute: v => { const r = eq(v, v.YA1, v.YB1); return r && r.PA; },
               work: v => { const r = eq(v, v.YA1, v.YB1); return r && r.caseA ? '\\(P_A = 0.4(' + H.fmt(v.FrA) + ') + 0.5\\dfrac{' + H.fmt(v.YA1) + '}{' + H.fmt(v.YB1) + '}(' + H.fmt(v.FrB) + ') + ' + H.fmt(v.YA1) + '(' + H.fmt(v.TA) + ') = ' + H.fmt(r.PA) + '\\)' : null; } },

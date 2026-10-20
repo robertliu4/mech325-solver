@@ -1,13 +1,17 @@
 /* Shafts & keys — Shigley 11e Ch. 7 (DE-Goodman / DE-Gerber, Secs 7-4, 7-7) with Ch. 6 Marin factors.
  * Procedure: Fizz bible pp. 106-122 (31 steps, written for Mott's equation) mapped onto Shigley's method:
  *   torque → component forces → (FBD / shear-moment diagrams by hand) → M, T at the critical point → Kt, q, Kf → Se → d → key.
- * Mech bible has no shafts unit. */
+ * Mech bible unit 5 (PDF p. 130) is empty.
+ * Verified against: Shigley Ex. 7-2 point I, 2nd pass (1020 CD, Sut 68 / Sy 57 kpsi, Ma = 3651, Tm = 3240 lbf·in, d = 1.625 in,
+ *   Kt 1.6 / Kts 1.35, q 0.82 / qs 0.85, ke = 1, n = 1.5): ka = 0.801, kb = 0.835, Se = 22.7 kpsi, Kf = 1.49, Kfs = 1.30,
+ *   sigma'a = 12 910 psi, sigma'm = 8659 psi, nf = 1.44, ny = 2.64; Shigley Ex. 7-6 key (T = 4200 lbf·in, d = 1 7/16, 3/8 sq, 1018 CD 54 kpsi, n = 1.5):
+ *   F = 5843 lbf, l = 0.75 in shear, 0.87 in crushing. */
 (function () {
   const KA = { 'Ground': [1.21, -0.067], 'Machined or cold-drawn': [2.00, -0.217], 'Hot-rolled': [11.0, -0.650], 'As-forged': [12.7, -0.758] };
   const KE = { 50: 1.000, 90: 0.897, 95: 0.868, 99: 0.814, 99.9: 0.753, 99.99: 0.702 };
   const KT1 = { // Table 7-1 first-iteration estimates [Kt bending, Kts torsion]
     'Shoulder fillet — sharp (r/d = 0.02)': [2.7, 2.2], 'Shoulder fillet — well rounded (r/d = 0.1)': [1.7, 1.5],
-    'End-mill keyseat (r/d = 0.02)': [2.14, 3.0], 'Sled-runner keyseat': [1.7, 3.0], 'Retaining-ring groove': [5.0, 3.0], 'Plain (no discontinuity)': [1, 1], 'Chart value (enter below)': [undefined, undefined] };
+    'Profile (end-mill) keyseat (r/d = 0.02)': [2.14, 3.0], 'Sled-runner keyseat (Kts not tabulated → 3.0 used)': [1.7, 3.0], 'Retaining-ring groove': [5.0, 3.0], 'Bearing seat, press fit / plain (Kt = 1)': [1, 1], 'Chart value (enter below)': [undefined, undefined] };
   const kb = d => d === undefined ? undefined : d <= 0.3 ? 1 : d <= 2 ? Math.pow(d / 0.3, -0.107) : 0.91 * Math.pow(d, -0.157);
   const neuberB = S => 0.246 - 3.08e-3 * S + 1.51e-5 * S * S - 2.67e-8 * S * S * S;   // √a bending, Sut kpsi
   const neuberT = S => 0.190 - 2.51e-3 * S + 1.35e-5 * S * S - 2.67e-8 * S * S * S;   // √a torsion
@@ -17,7 +21,7 @@
   };
   const dGood = v => { const r = AB(v); return r && H.has(v, 'n', 'Se', 'Sut') ? Math.cbrt(16 * v.n / Math.PI * (r.A / (v.Se * 1000) + r.B / (v.Sut * 1000))) : undefined; };
   const dGerb = v => { const r = AB(v); if (!r || !H.has(v, 'n', 'Se', 'Sut') || r.A === 0) return undefined; const Se = v.Se * 1000, Sut = v.Sut * 1000; return Math.cbrt(8 * v.n * r.A / (Math.PI * Se) * (1 + Math.sqrt(1 + Math.pow(2 * r.B * Se / (r.A * Sut), 2)))); };
-  const dShear = v => H.has(v, 'Kfs', 'V', 'n', 'Se') && v.V > 0 ? Math.sqrt(2.94 * v.Kfs * v.V * v.n / (0.577 * v.Se * 1000)) : undefined;   // Mott 12-16 with Shigley Se (Fizz Step 17b)
+  const dShear = v => H.has(v, 'Kfs', 'V', 'n', 'Se') && v.V > 0 ? Math.sqrt(2.94 * v.Kfs * v.V * v.n / (v.Se * 1000)) : undefined;   // Mott 12-16 with Shigley Se (Fizz Step 17b); 2.94 = 16/(3π·0.577) already holds the shear factor
   const comp = v => v.ctype || '';
 
   window.TOPIC = {
@@ -29,7 +33,27 @@
       'estimate <i>K<sub>t</sub></i>, <i>K<sub>ts</sub></i> from Table 7-1 (or the A-15 charts once dimensions exist), convert to <i>K<sub>f</sub></i> with notch sensitivity, build <i>S<sub>e</sub></i> from the Marin factors, then solve DE-Goodman Eq. (7-8) (or DE-Gerber 7-12) for <i>d</i> — Shigley\'s equivalent of Fizz Step 17 / Mott Eq. 12-24. ' +
       'Re-run the point with the rounded diameter to check <i>k<sub>b</sub></i>, <i>n<sub>f</sub></i> and the yield factor <i>n<sub>y</sub></i>. Repeat for each location (left / centre / right of every component, Fizz Step 17). ' +
       '<b>Section B</b> sizes a parallel key (Table 7-6, Ex. 7-6). Units: lbf, in, kpsi, hp, rev/min. Loaded example: Shigley Ex. 7-2 point I and Ex. 7-6.',
-    example: { H: 30.84, nrpm: 600, ctype: 'spur gear', Dp: 12, phi: 20, Ma: 3651, Mm: 0, Ta: 0, Tm: 3240, V: 0, mat: '1020 CD', Sut: 68, Sy: 57, surf: 'Machined or cold-drawn', dguess: 1.625, rel: 50, feat: 'Chart value (enter below)', Kt: 1.6, Kts: 1.35, r: 0.16, q: 0.82, qs: 0.85, n: 1.5, crit: 'DE-Goodman (Eq. 7-8)', dsel: 1.625, dkey: 1.4375, Tkey: 4200, w: 0.375, hk: 0.375, Syk: 54, nk: 1.5, Lhub: 1.75 },
+    example: { H: 30.84, nrpm: 600, ctype: 'spur gear', Dp: 12, phi: 20, Ma: 3651, Mm: 0, Ta: 0, Tm: 3240, V: 0, mat: '1020 CD', Sut: 68, Sy: 57, surf: 'Machined or cold-drawn', dguess: 1.625, kc: 1, kd: 1, rel: 50, kf: 1, feat: 'Chart value (enter below)', Kt: 1.6, Kts: 1.35, r: 0.16, q: 0.82, qs: 0.85, n: 1.5, crit: 'DE-Goodman (Eq. 7-8)', ring: 'no', dsel: 1.625, dkey: 1.4375, Tkey: 4200, w: 0.375, hk: 0.375, Syk: 54, nk: 1.5, Lhub: 1.75, Ck: 0.005 },
+
+    assumptions: [
+      { text: 'Torque T = 63 025 H/n (Shigley Eq. 3-42; Fizz writes 63 000, Mott\'s constant); torques along the shaft must sum to zero', src: 'Fizz p.106' },
+      { text: 'Pressure angle φ = 20° unless the problem states otherwise', src: 'Fizz p.42', var: 'phi' },
+      { text: 'Belt tension ratio F_1/F_2 = 5 for V-belts and 3 for flat belts if not given → F_{shaft} = (2T/D)(k + 1)/(k − 1)', src: 'Fizz p.107', var: 'kb_' },
+      { text: 'Keyseats are profile (end-milled) unless told otherwise — Shigley Table 7-1: K_t = 2.14, K_{ts} = 3.0 (Fizz/Mott value K_t = 2.0)', src: 'Fizz p.108 · Fizz p.109' },
+      { text: 'Gears and sheaves sit against well-rounded fillets (K_t = 1.7, K_{ts} = 1.5; Fizz/Mott 1.5)', src: 'Fizz p.109' },
+      { text: 'Bearing seats: well-rounded fillet on the small side, press fit at the seat (K_t = 1), sharp fillet on the large side (K_t = 2.7, K_{ts} = 2.2; Fizz/Mott 2.5); retaining-ring grooves K_t = 5.0 (Fizz/Mott 3.0) and ×1.06 on the diameter', src: 'Fizz p.109 · Fizz p.112' },
+      { text: 'Wrought steel when the material is not specified (Fizz C_m = 1 — Shigley\'s Marin factors are for wrought steel, k_f = 1)', src: 'Fizz p.109', var: 'kf' },
+      { text: 'Bending is the governing stress type (Fizz C_{st} = 1 ↔ Shigley load factor k_c = 1 for combined bending + torsion)', src: 'Fizz p.109', var: 'kc' },
+      { text: 'Surface machined or cold drawn when not specified', src: 'Fizz p.110', var: 'surf' },
+      { text: 'Reliability 99 % as the safe guess (Fizz C_R = 0.81 ↔ Shigley k_e = 0.814); Shigley Ex. 7-2 uses k_e = 1 (50 %)', src: 'Fizz p.111', var: 'rel', value: 99 },
+      { text: 'First-pass size factor 0.8 (≈ 2 in shaft) until a diameter is known, then iterate (Shigley Ex. 7-2 guesses k_b = 0.9)', src: 'Fizz p.111 · Fizz p.112', var: 'kb', value: 0.8 },
+      { text: 'Temperature factor k_d = 1 (room temperature) — not in the guides', src: 'Shigley Ex. 7-2', var: 'kd' },
+      { text: 'Shaft design factor n = 1.5 (Shigley Ex. 7-2); the guides give no shaft value (Mott uses 2.5–3)', src: 'Shigley Ex. 7-2', var: 'n' },
+      { text: 'Key material SAE 1018 (S_y = 54 kpsi), weaker than the shaft', src: 'Fizz p.119', var: 'Syk' },
+      { text: 'Key design factor n = 3 if not given (Shigley Ex. 7-6 uses 1.5)', src: 'Fizz p.121', var: 'nk' },
+      { text: 'Key length: over ~2 in is too long (increase the shaft diameter); 1–1.5 in is good, under 1 in best; round up to a standard size', src: 'Fizz p.122' },
+      { text: 'Keyseat allowance C = +0.005 in clearance for parallel keys (−0.020 in for taper keys)', src: 'Fizz p.122', var: 'Ck' },
+    ],
 
     figures: [
       { id: 'fig12-4', ref: 'Figure 12-4', book: 'mott', title: 'Directions of forces on mating spur gears (action on driven gear B, reaction on driver A) — Fizz Step 2a diagram', src: 'figures/mott/fig12-4.png', page: 530 },
@@ -39,6 +63,7 @@
       { id: 'ta-20', ref: 'Table A-20', title: 'ASTM minimum tensile & yield strengths for hot-rolled (HR) and cold-drawn (CD) steels', src: 'figures/shigley/tablea-20.png', page: 1077, note: 'Ex. 7-2 uses 1020 CD: Sut = 68, Sy = 57 kpsi.' },
       { id: 't6-2', ref: 'Table 6-2', title: 'Surface factor ka = a·Sut^b curve-fit parameters (Eq. 6-18)', src: 'figures/shigley/table6-2.png', page: 332 },
       { id: 'fig6-24', ref: 'Figure 6-24', title: 'Trends for surface factor ka vs Sut (polished, ground, machined/cold-drawn, hot-rolled, as-forged)', src: 'figures/shigley/fig6-24.png', page: 331 },
+      { id: 'eq6-19', ref: 'Eq. (6-19)', title: 'Size factor kb for rotating round bars in bending / torsion (kb = 1 for d < 0.3 in and for axial loading)', src: 'figures/shigley/eq6-19.png', page: 333 },
       { id: 't6-4', ref: 'Table 6-4', title: 'Reliability factor ke (50 % → 1.000 … 99 % → 0.814)', src: 'figures/shigley/table6-4.png', page: 338 },
       { id: 't7-1', ref: 'Table 7-1', title: 'First-iteration estimates for Kt and Kts: sharp / well-rounded shoulder, end-mill keyseat, sled-runner keyseat, retaining-ring groove', src: 'figures/shigley/table7-1.png', page: 407,
         note: 'Use only until actual dimensions are known; then read Figs A-15-8/9 (shoulder), A-15-14/15 (groove) or A-15-16/17 (flat-bottom ring groove).' },
@@ -119,19 +144,19 @@
             { id: 'Sy', symbol: 'S_y', label: 'Yield strength', unit: 'kpsi', kind: 'lookup', fig: 'ta-20' },
             { id: 'Sep', symbol: "S'_e", label: 'Rotating-beam endurance limit', unit: 'kpsi', kind: 'calc', digits: 4, compute: v => v.Sut !== undefined ? (v.Sut <= 200 ? 0.5 * v.Sut : 100) : undefined },
           ] },
-        { id: 'marin', title: 'Steps 11–16 — Marin factors and Se', eq: '6-17', fig: ['t6-2', 'fig6-24', 't6-4'],
+        { id: 'marin', title: 'Steps 11–16 — Marin factors and Se', eq: '6-17', fig: ['t6-2', 'fig6-24', 'eq6-19', 't6-4'],
           formula: 'S_e = k_a k_b k_c k_d k_e k_f\\, S\'_e \\qquad k_a = a S_{ut}^{\\,b} \\qquad k_b = (d/0.3)^{-0.107}\\ (0.3 \\le d \\le 2\\ \\text{in}),\\ 0.91 d^{-0.157}\\ (2 < d \\le 10)',
-          text: 'Fizz\'s <i>s<sub>n</sub></i> graph + C<sub>m</sub>, C<sub>st</sub>, C<sub>R</sub>, C<sub>s</sub> are Shigley\'s k<sub>a</sub> … k<sub>e</sub>. Size factor needs a diameter you do not have yet: guess (Ex. 7-2 guesses k<sub>b</sub> = 0.9) and come back once <i>d</i> is known. k<sub>c</sub> = 1 for combined bending + torsion, k<sub>d</sub> = 1 at room temperature, k<sub>f</sub> = 1.',
+          text: 'Fizz\'s <i>s<sub>n</sub></i> graph + C<sub>m</sub>, C<sub>st</sub>, C<sub>R</sub>, C<sub>s</sub> are Shigley\'s k<sub>a</sub> … k<sub>e</sub>. Size factor needs a diameter you do not have yet: Fizz guesses 0.8 (≈ 2 in, pre-filled; Ex. 7-2 guesses k<sub>b</sub> = 0.9) — come back once <i>d</i> is known. Fizz\'s safe reliability guess is 99 % (k<sub>e</sub> = 0.814; Ex. 7-2 uses 1). k<sub>c</sub> = 1 for combined bending + torsion, k<sub>d</sub> = 1 at room temperature, k<sub>f</sub> = 1.',
           vars: [
             { id: 'surf', label: 'Surface finish', kind: 'choice', type: 'text', default: 'Machined or cold-drawn', options: Object.keys(KA) },
             { id: 'ka', symbol: 'k_a', label: 'Surface factor', unit: '', kind: 'lookup', fig: 't6-2', auto: v => H.has(v, 'Sut') && KA[v.surf] ? KA[v.surf][0] * Math.pow(v.Sut, KA[v.surf][1]) : undefined,
               work: v => H.has(v, 'Sut') && KA[v.surf] ? '\\(k_a = ' + KA[v.surf][0] + '(' + H.fmt(v.Sut) + ')^{' + KA[v.surf][1] + '} = ' + H.fmt(KA[v.surf][0] * Math.pow(v.Sut, KA[v.surf][1])) + '\\)' : null },
-            { id: 'dguess', symbol: 'd_{guess}', label: 'Trial diameter for kb', unit: 'in', kind: 'input', hint: 'leave blank to use kb = 0.9 (Ex. 7-2 first pass)' },
-            { id: 'kb', symbol: 'k_b', label: 'Size factor', unit: '', kind: 'lookup', fig: 't6-2', auto: v => v.dguess !== undefined ? kb(v.dguess) : 0.9,
-              work: v => v.dguess !== undefined ? '\\(k_b = (' + H.fmt(v.dguess) + '/0.3)^{-0.107} = ' + H.fmt(kb(v.dguess)) + '\\)' : null },
+            { id: 'dguess', symbol: 'd_{guess}', label: 'Trial diameter for kb', unit: 'in', kind: 'input', hint: 'leave blank to use kb = 0.8 (Fizz first guess, ≈ 2 in)' },
+            { id: 'kb', symbol: 'k_b', label: 'Size factor', unit: '', kind: 'lookup', fig: 'eq6-19', auto: v => v.dguess !== undefined ? kb(v.dguess) : 0.8,
+              work: v => v.dguess !== undefined ? (v.dguess <= 2 ? '\\(k_b = (' + H.fmt(v.dguess) + '/0.3)^{-0.107} = ' : '\\(k_b = 0.91(' + H.fmt(v.dguess) + ')^{-0.157} = ') + H.fmt(kb(v.dguess)) + '\\)' : null },
             { id: 'kc', symbol: 'k_c', label: 'Load factor (1 for combined loading)', unit: '', kind: 'input', default: 1 },
             { id: 'kd', symbol: 'k_d', label: 'Temperature factor', unit: '', kind: 'input', default: 1 },
-            { id: 'rel', label: 'Reliability for ke', kind: 'choice', default: 50, options: [{ label: '50 % (ke = 1.000)', value: 50 }, { label: '90 % (0.897)', value: 90 }, { label: '95 % (0.868)', value: 95 }, { label: '99 % (0.814)', value: 99 }, { label: '99.9 % (0.753)', value: 99.9 }, { label: '99.99 % (0.702)', value: 99.99 }] },
+            { id: 'rel', label: 'Reliability for ke', kind: 'choice', default: 99, options: [{ label: '50 % (ke = 1.000)', value: 50 }, { label: '90 % (0.897)', value: 90 }, { label: '95 % (0.868)', value: 95 }, { label: '99 % (0.814)', value: 99 }, { label: '99.9 % (0.753)', value: 99.9 }, { label: '99.99 % (0.702)', value: 99.99 }] },
             { id: 'ke', symbol: 'k_e', label: 'Reliability factor', unit: '', kind: 'lookup', fig: 't6-4', auto: v => KE[v.rel] },
             { id: 'kf', symbol: 'k_f', label: 'Miscellaneous-effects factor', unit: '', kind: 'input', default: 1 },
             { id: 'Se', symbol: 'S_e', label: 'Endurance limit at the critical point', unit: 'kpsi', kind: 'calc', digits: 4, compute: v => H.has(v, 'ka', 'kb', 'kc', 'kd', 'ke', 'kf', 'Sep') ? v.ka * v.kb * v.kc * v.kd * v.ke * v.kf * v.Sep : undefined,
@@ -139,10 +164,10 @@
           ] },
         { id: 'kt', title: 'Step 9 — stress concentration and fatigue factors', eq: '6-32', fig: ['t7-1', 'fig12-2', 'a15-9', 'a15-8', 'a15-14', 'a15-15', 'a15-16', 'a15-17', 'fig6-26', 'fig6-27'],
           formula: 'K_f = 1 + q(K_t - 1) \\qquad K_{fs} = 1 + q_s(K_{ts} - 1) \\qquad q = \\frac{1}{1 + \\sqrt{a}/\\sqrt{r}}',
-          text: 'Fizz Step 9 values (keyseat 2.0 / 1.6, sharp fillet 2.5, rounded 1.5, bearing seat 1.0, retaining ring 3.0) are Mott\'s; Shigley\'s first-iteration set is Table 7-1. With the first pass take <i>K<sub>f</sub> = K<sub>t</sub></i> (conservative, Ex. 7-2). ' +
+          text: 'Fizz Step 9 values (keyseat 2.0 / 1.6, sharp fillet 2.5, rounded 1.5, bearing seat 1.0, retaining ring 3.0) are Mott\'s; Shigley\'s first-iteration set is Table 7-1. Fizz rules for <i>where</i>: keyseats are profile unless told otherwise; gears / sheaves sit on well-rounded fillets; a bearing has a well-rounded fillet on its small side, a press fit (K<sub>t</sub> = 1) at the seat and a sharp fillet on its large side; retaining rings sit on the small side of gears. With the first pass take <i>K<sub>f</sub> = K<sub>t</sub></i> (conservative, Ex. 7-2). ' +
             'Once <i>d</i>, <i>D</i> and <i>r</i> are known read <i>K<sub>t</sub></i> from the A-15 charts and <i>q</i> from Fig 6-26/6-27 (auto: Neuber Eqs 6-35/6-36 from <i>r</i> and <i>S<sub>ut</sub></i>).',
           vars: [
-            { id: 'feat', label: 'Feature at this point', kind: 'choice', type: 'text', default: 'Shoulder fillet — well rounded (r/d = 0.1)', options: Object.keys(KT1) },
+            { id: 'feat', label: 'Feature at this point', kind: 'choice', type: 'text', default: 'Profile (end-mill) keyseat (r/d = 0.02)', options: Object.keys(KT1) },
             { id: 'Kt', symbol: 'K_t', label: 'Bending stress-concentration factor', unit: '', kind: 'lookup', fig: 't7-1', auto: v => KT1[v.feat] ? KT1[v.feat][0] : undefined },
             { id: 'Kts', symbol: 'K_{ts}', label: 'Torsional stress-concentration factor', unit: '', kind: 'lookup', fig: 't7-1', auto: v => KT1[v.feat] ? KT1[v.feat][1] : undefined },
             { id: 'r', symbol: 'r', label: 'Notch (fillet) radius, if known', unit: 'in', kind: 'input', hint: 'blank → q = qs = 1 (Kf = Kt)' },
@@ -158,10 +183,10 @@
       { title: 'Section A · Diameter', steps: [
         { id: 'dia', title: 'Step 17 — minimum diameter at the point', eq: '7-6 / 7-8 / 7-12', fig: ['ta-17'],
           formula: 'A = \\sqrt{4(K_f M_a)^2 + 3(K_{fs}T_a)^2},\\quad B = \\sqrt{4(K_f M_m)^2 + 3(K_{fs}T_m)^2} \\qquad d_{Goodman} = \\left[\\frac{16n}{\\pi}\\left(\\frac{A}{S_e} + \\frac{B}{S_{ut}}\\right)\\right]^{1/3} \\qquad d_{Gerber} = \\left(\\frac{8nA}{\\pi S_e}\\left\\{1 + \\left[1 + \\left(\\frac{2BS_e}{AS_{ut}}\\right)^2\\right]^{1/2}\\right\\}\\right)^{1/3}',
-          text: 'DE-Goodman is conservative and the usual first choice; DE-Gerber fits the data better. Where only shear exists (bearing seats with no torque, Fizz Step 17b) the shear-only estimate <i>d = √(2.94 K<sub>fs</sub> V n / S<sub>se</sub>)</i> with <i>S<sub>se</sub></i> = 0.577 S<sub>e</sub> is shown too. ' +
+          text: 'DE-Goodman is conservative and the usual first choice; DE-Gerber fits the data better. Where only shear exists (bearing seats with no torque, Fizz Step 17b) the shear-only estimate <i>d = √(2.94 K<sub>fs</sub> V n / S<sub>e</sub>)</i> (Mott Eq. 12-16 form — the 2.94 = 16/(3π·0.577) already contains the distortion-energy shear factor) is shown too. ' +
             'Retaining-ring grooves: Fizz Step 18 multiplies the result by 1.06 (groove depth). Round to a preferred size (Table A-17); Ex. 7-2 rounded 1.69 <i>down</i> to 1.625 because the estimates were conservative, then re-checked.',
           vars: [
-            { id: 'n', symbol: 'n', label: 'Design factor', unit: '', kind: 'input', default: 1.5, hint: 'Fizz default 3 (Mott); Shigley Ex. 7-2 uses 1.5' },
+            { id: 'n', symbol: 'n', label: 'Design factor', unit: '', kind: 'input', default: 1.5, hint: 'Shigley Ex. 7-2 uses 1.5; Mott uses 2.5–3 (no guide value)' },
             { id: 'crit', label: 'Criterion', kind: 'choice', type: 'text', default: 'DE-Goodman (Eq. 7-8)', options: ['DE-Goodman (Eq. 7-8)', 'DE-Gerber (Eq. 7-12)'] },
             { id: 'A', symbol: 'A', label: 'Alternating term', unit: 'lbf·in', kind: 'calc', digits: 5, compute: v => { const r = AB(v); return r && r.A; } },
             { id: 'B', symbol: 'B', label: 'Mean term', unit: 'lbf·in', kind: 'calc', digits: 5, compute: v => { const r = AB(v); return r && r.B; } },
@@ -176,11 +201,11 @@
             { id: 'dsel', symbol: 'd', label: 'Selected (preferred-size) diameter', unit: 'in', kind: 'lookup', fig: 'ta-17', hint: 'round to Table A-17; keep ≥ bearing bore at bearing seats' },
           ],
           after: v => v.dmin === undefined ? '' : '<span class="result-ok">d<sub>min</sub> = ' + H.fmt(v.dmin) + ' in at this point' + (v.dsel !== undefined ? (v.dsel >= v.dmin ? ' → selected ' + H.fmt(v.dsel) + ' in ✔' : ' → selected ' + H.fmt(v.dsel) + ' in is smaller; verify n<sub>f</sub> below (Ex. 7-2 accepts this if n<sub>f</sub> ≥ required)') : '') + '</span>' },
-        { id: 'chk', title: 'Steps 19–20 — check the selected diameter (2nd iteration)', eq: '7-4 / 7-5 / 7-7 / 7-16', fig: ['a15-9', 'a15-8', 'fig6-26'],
+        { id: 'chk', title: 'Steps 19–20 — check the selected diameter (2nd iteration)', eq: '7-4 / 7-5 / 7-7 / 7-16', fig: ['eq6-19', 'a15-9', 'a15-8', 'fig6-26'],
           formula: "\\sigma'_a = \\frac{32K_f M_a}{\\pi d^3} \\qquad \\sigma'_m = \\sqrt{3}\\,\\frac{16K_{fs}T_m}{\\pi d^3} \\qquad \\frac{1}{n_f} = \\frac{\\sigma'_a}{S_e} + \\frac{\\sigma'_m}{S_{ut}} \\qquad n_y = \\frac{S_y}{\\sigma'_a + \\sigma'_m}",
           text: 'With <i>d</i> chosen: update <i>k<sub>b</sub></i> (auto from the selected <i>d</i>), re-read <i>K<sub>t</sub></i> with the real <i>r/d</i> and <i>D/d</i>, then compute the fatigue and (conservative) yield factors of safety. If <i>n<sub>f</sub></i> &lt; required, go up one preferred size.',
           vars: [
-            { id: 'kb2', symbol: 'k_b', label: 'Size factor at selected d', unit: '', kind: 'lookup', fig: 't6-2', auto: v => kb(v.dsel) },
+            { id: 'kb2', symbol: 'k_b', label: 'Size factor at selected d', unit: '', kind: 'lookup', fig: 'eq6-19', auto: v => kb(v.dsel) },
             { id: 'Se2', symbol: 'S_e', label: 'Endurance limit with updated kb', unit: 'kpsi', kind: 'calc', digits: 4, compute: v => H.has(v, 'ka', 'kb2', 'kc', 'kd', 'ke', 'kf', 'Sep') ? v.ka * v.kb2 * v.kc * v.kd * v.ke * v.kf * v.Sep : undefined },
             { id: 'sa', symbol: "\\sigma'_a", label: 'Alternating von Mises stress', unit: 'psi', kind: 'calc', digits: 5, compute: v => H.has(v, 'Kf', 'Kfs', 'Ma', 'Ta', 'dsel') && v.dsel > 0 ? Math.sqrt(Math.pow(32 * v.Kf * v.Ma / (Math.PI * Math.pow(v.dsel, 3)), 2) + 3 * Math.pow(16 * v.Kfs * v.Ta / (Math.PI * Math.pow(v.dsel, 3)), 2)) : undefined,
               work: v => v.sa !== undefined && v.Ta === 0 ? "\\(\\sigma'_a = \\dfrac{32(" + H.fmt(v.Kf) + ')(' + H.fmt(v.Ma) + ')}{\\pi(' + H.fmt(v.dsel) + ')^3} = ' + H.fmt(v.sa, 5) + '\\text{ psi}\\)' : null },
