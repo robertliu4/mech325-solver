@@ -376,26 +376,31 @@
     typeset([p]);
   }
 
+  let figJump = 0, figTimer = null;
   function showFig(fid) {
     const f = figById[fid]; if (!f || !f._el) return;
+    const token = ++figJump; if (figTimer) clearTimeout(figTimer);
     const panel = document.getElementById('figpanel');
     const filt = panel.querySelector('.figfilter'); if (filt && filt.value) { filt.value = ''; filt.oninput(); }
     const stacked = window.innerWidth <= 1100;
     const align = (behavior) => {
       const r = f._el.getBoundingClientRect();
-      if (stacked) window.scrollTo({ top: window.scrollY + r.top - 70, behavior });
-      else panel.scrollTo({ top: panel.scrollTop + (r.top - panel.getBoundingClientRect().top) - 8, behavior });
+      const dist = stacked ? r.top - 70 : r.top - panel.getBoundingClientRect().top - 8;
+      if (behavior === 'smooth' && Math.abs(dist) > 1800) behavior = 'auto';   // long jumps: instant, so one click visibly lands
+      if (stacked) window.scrollTo({ top: window.scrollY + dist, behavior });
+      else panel.scrollTo({ top: panel.scrollTop + dist, behavior });
     };
     align('smooth');
     // images above the target may still be loading and push it down: re-align once they finish
     const pending = Array.from(panel.querySelectorAll('img')).filter(im => !im.complete && (im.compareDocumentPosition(f._el) & Node.DOCUMENT_POSITION_FOLLOWING || f._el.contains(im)));
     if (pending.length) {
       let left = pending.length; const t0 = Date.now();
-      const done = () => { if (--left === 0 && Date.now() - t0 < 4000) align('auto'); };
+      const done = () => { if (--left === 0 && token === figJump && Date.now() - t0 < 4000) align('auto'); };
       pending.forEach(im => { im.addEventListener('load', done, { once: true }); im.addEventListener('error', done, { once: true }); });
     }
-    setTimeout(() => align('auto'), 700);
-    f._el.classList.add('flash'); setTimeout(() => f._el.classList.remove('flash'), 1600);
+    figTimer = setTimeout(() => { if (token === figJump) align('auto'); }, 700);
+    document.querySelectorAll('.figcard.flash').forEach(x => x.classList.remove('flash'));
+    f._el.classList.add('flash'); setTimeout(() => { if (token === figJump) f._el.classList.remove('flash'); }, 1600);
   }
 
   function openLightbox(f) {

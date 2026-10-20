@@ -150,6 +150,13 @@
       { id: 'cyn', ref: 'Gear Stress s37', book: 'course', title: 'Y_N — "use this line for normal commercial gears"', src: 'figures/course/gear_yn_course_line.png' },
       { id: 'czn', ref: 'Gear Stress s44', book: 'course', title: 'Z_N — normal commercial gears line', src: 'figures/course/gear_zn_course_line.png' },
       { id: 'cteeth', ref: 'Helical/Bevel s33', book: 'course', title: 'Standard gear teeth proportions and Lewis Y table', src: 'figures/course/standard_gear_teeth_table.png' },
+      { id: 'gk-qv', ref: 'Gear Kinematics s42', book: 'course', title: 'AGMA quality number Q_v by accuracy level (minimal 4–5 … highest 14–15) and how it is produced', src: 'figures/course/gear_agma_quality_accuracy_levels.png', note: 'Gear_Kinematics_and_Forces_-2024.pdf slide 42. Use with the application table to pick Q_v / A_v.' },
+      { id: 'm-t2-2', ref: 'Table 2-2', book: 'mott', title: 'Hardness scales vs tensile strength (HB, HRB, HRC, ksi, MPa) with Figure 2-6 conversion chart', src: 'figures/mott/table2-2_fig2-6.png', page: 49, note: 'Helical/Bevel s38 (material review). s_u ≈ 0.50 HB ksi (Mott Eq. 2-8).' },
+      { id: 'm-f2-12', ref: 'Figure 2-12', book: 'mott', title: 'SAE/AISI steel designation system (alloy group, carbon content)', src: 'figures/mott/fig2-12.png', page: 61, note: 'Helical/Bevel s41.' },
+      { id: 'm-t2-8', ref: 'Table 2-8', book: 'mott', title: 'Alloy groups in the SAE numbering system', src: 'figures/mott/table2-8.png', page: 61, note: 'Helical/Bevel s44.' },
+      { id: 'm-t2-9', ref: 'Table 2-9', book: 'mott', title: 'Uses of some steels (1040 shafts/gears, 4140/4340/4640/8650 gears …)', src: 'figures/mott/table2-9.png', page: 63, note: 'Helical/Bevel s43.' },
+      { id: 'm-f9-20', ref: 'Figure 9-20', book: 'mott', title: 'Effective case depth h_e for carburized gears vs normal diametral pitch (normal / heavy case)', src: 'figures/mott/fig9-20.png', page: 409, note: 'Helical/Bevel s57 (case hardening): case depth typically 0.010–0.040 in.' },
+      { id: 'gk-hand', ref: 'Gear Kinematics s12', book: 'course', title: 'Helical hand and thrust direction for parallel/crossed (right-angle) helical drives: which side the thrust bearing goes for RH/LH, driver and rotation', src: 'figures/course/gear_helical_hand_thrust_directions.png', note: 'Gear_Kinematics_and_Forces_-2024.pdf slide 12.' },
     ],
 
     sections: [
@@ -220,7 +227,7 @@
       ] },
 
       { title: 'Forces', steps: [
-        { id: 'force', title: 'Pitch-line velocity, tangential, radial, axial and normal forces, torque (F9 · M11)', eq: '13-35, 13-40', fig: ['f13-33'],
+        { id: 'force', title: 'Pitch-line velocity, tangential, radial, axial and normal forces, torque (F9 · M11)', eq: '13-35, 13-40', fig: ['f13-33', 'gk-hand'],
           formula: 'V = \\frac{\\pi d_P n_P}{12},\\quad W_t = \\frac{33\\,000H}{V},\\quad W_r = W_t\\tan\\phi_t,\\quad W_a = W_t\\tan\\psi,\\quad W = \\frac{W_t}{\\cos\\phi_n\\cos\\psi},\\quad T = \\frac{W_t d}{2}',
           text: 'W_a is the thrust the bearings must carry (take it out at one bearing). Direction: see Fig. 13-33 and the hand of the helix.',
           vars: [
@@ -235,7 +242,7 @@
       ] },
 
       { title: 'AGMA factors — as for spur gears except J and I (Fizz helical steps 10–12 · Mech helical steps 12–14)', steps: [
-        { id: 'kv', title: 'Quality number and dynamic factor K_v (F10 · M12)', eq: '14-27 … 14-29', fig: ['ckv', 'f14-9', 'eq14-27', 'av'],
+        { id: 'kv', title: 'Quality number and dynamic factor K_v (F10 · M12)', eq: '14-27 … 14-29', fig: ['ckv', 'f14-9', 'eq14-27', 'av', 'gk-qv'],
           formula: 'K_v = \\left(\\frac{A+\\sqrt V}{A}\\right)^B,\\quad B = 0.25(12-Q_v)^{2/3},\\quad A = 50+56(1-B)',
           text: 'Quality number from the problem, else (guides, spur step 16) Mott Table 9-5 by application or speed — default Q_v = 7 (A_v = 10). Shigley Q_v ↔ Mott A_v = 17 − Q_v (Table 9-4). Course: use the equation ("difficult to read the graph accurately"). Tutorial: Q_v = 6, K_v = 1.21.',
           after: v => has(v, 'V') ? 'Mott Table 9-5 by pitch-line speed: V = ' + f(v.V) + ' ft/min → A_v ' + AvT95(v.V) + ' = Q_v ' + (17 - AvT95(v.V)) + '.' : '',
@@ -357,7 +364,7 @@
       ] },
 
       { title: 'Required strength and hardness — design (spur Fizz steps 33, 35, 37–38, 40)', steps: [
-        { id: 'req', title: 'Required S_t, S_c and Brinell hardness → pick a steel (spur F33–38)', eq: '14-17, 14-18', fig: ['f14-2', 'f14-5', 'mt9-8', 'mapp3a', 'mapp3b', 'mapp5', 't14-3', 't14-6'],
+        { id: 'req', title: 'Required S_t, S_c and Brinell hardness → pick a steel (spur F33–38)', eq: '14-17, 14-18', fig: ['f14-2', 'f14-5', 'mt9-8', 'mapp3a', 'mapp3b', 'mapp5', 't14-3', 't14-6', 'm-t2-2', 'm-t2-9', 'm-t2-8', 'm-f2-12'],
           formula: 'S_{t,req} = \\frac{\\sigma(S_F)_d K_T K_R}{Y_N},\\quad S_{c,req} = \\frac{\\sigma_c(S_H)_d K_T K_R}{Z_N};\\qquad H_B = \\frac{S_t-12\\,800}{77.3},\\ H_B = \\frac{S_c-29\\,100}{322}\\ (\\text{grade 1})',
           text: 'Course flow (Module 2 p22–27): minimum S_t / S_c at S_F = 1 (tutorial: 5.9 ksi and 66.2 ksi), then a Grade 1 through-hardened steel from Mott Table 9-8 / Appendix 3 with HB above the requirement, quoting HB and % elongation — tutorial: 4140 OQT1300 HB 235 → S_H = 1.58 (S_H² = 2.50), or 4140 annealed HB 197 → 1.40 (S_H² = 1.96); Shigley App. A-21 4140 Q&T 650 °C HB 230 → 1.56. Enter the chosen HB below and confirm 1.0 ≤ S_F ≤ 1.5.',
           vars: [
@@ -376,7 +383,7 @@
       ] },
 
       { title: 'Check a chosen material — factors of safety (spur Fizz step 36)', steps: [
-        { id: 'mat', title: 'Material strengths and hardness-ratio factor C_H', eq: '14-36', fig: ['f14-2', 'f14-5', 'f14-12', 't14-3', 't14-6', 'mapp3a', 'mapp3b'],
+        { id: 'mat', title: 'Material strengths and hardness-ratio factor C_H', eq: '14-36', fig: ['f14-2', 'f14-5', 'f14-12', 't14-3', 't14-6', 'mapp3a', 'mapp3b', 'm-f9-20'],
           vars: [
             { id: 'HBP', symbol: 'H_{BP}', label: 'Pinion Brinell hardness', unit: 'HB', kind: 'input' },
             { id: 'HBG', symbol: 'H_{BG}', label: 'Gear Brinell hardness', unit: 'HB', kind: 'input', hint: 'auto = pinion H_B (guides: same material for both)', auto: v => v.HBP },

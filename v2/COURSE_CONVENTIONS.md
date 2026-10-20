@@ -377,6 +377,42 @@ All scanned; the course follows the **Parker Design Engineers Handbook** (cylind
 | `helical_j_modifier_example.png` | J = KJ'·J' explanation and worked numbers | Helical/Bevel s7 |
 | `standard_gear_teeth_table.png` | Mott Table 9-15 Lewis Y + standard tooth proportions (20° FD / stub / 25°) | Helical/Bevel s33 |
 
+### Added by the course-table audit (see `v2/notes/course_table_audit.md`; catalogue crops come from `/home/claude/catalogues/`)
+
+| File(s) | What | Source | Topic |
+|---|---|---|---|
+| `gates_table_b1_service_factors.png` | Gates service factors | Gates V-belt manual p.14 (B2) | v_belts |
+| `gates_fig_b1_b2_section_charts.png` | Gates section charts B1 (narrow) + B2 (classical) | p.15 (B3) | v_belts |
+| `gates_table_b2_b3_nema_min_sheave.png` | NEMA min sheave B2/B3 full table | p.16 (B4) | v_belts |
+| `gates_table_b4_super_hc_belt_lengths.png`, `gates_table_b17_a_b_…`, `b18_c_d_e_…`, `b19_ax_bx_cx_…`, `b20_ap_bp_cp_belt_lengths.png` | belt sizes / lengths | pp.19, 76–79 | v_belts |
+| `gates_table_b6_3v_drives_p_b16.png`, `…_p_b17.png` | 3V/3VX drive tables (CD + hp-correction colour) | pp.28–29 (slide 37 page) | v_belts |
+| `gates_table_b23_c_cp_drives_p_b191.png` | C/CX/CP drive table VR 1.00–1.30 | p.203 (Module 1 p19) | v_belts |
+| `gates_table_bNN_<sec>_hp_rating.png` (B9 3V … B16 8VP, B25 A … B34 D, 18 files) | rated hp per belt + additional hp for speed ratio | pp.68–75, 234–243 | v_belts |
+| `gates_d24_tensioning_d19_d26_d27.png` | page D24: D19, D26 Kφ, D27 M/Y (all sections), D20–D23 | p.292 | v_belts |
+| `gates_formula_d35_span_length.png` | Formula D35 span | p.313 | v_belts |
+| `gates_timing_table4_min_sprocket_pd.png`, `gates_timing_table5_service_factors.png` | Gates synchronous Table 4 / Table 5 | Gates timing guide pp.16–17 | timing_belts |
+| `habasit_habadrive_product_key_data.png`, `habasit_recommended_crown_height.png`, `habasit_pulley_crown_guideline.png`, `habasit_k1_tensile_force_relaxation.png`, `habasit_shaft_load_peripheral_force.png` | Habasit key data, crown, k1 %, shaft load | Habasit guide pp.9, 16–17, 19–20 (slides 18–21) | flat_belts |
+| `renold_ansi_chain_noNN_dims_hp_rating.png` (No. 25 … 240, 14 files) | ANSI chain dims, tensile/working load 1–6 strands, hp table, strand factors | ansi-standard-1.pdf pp.1–14 | chains |
+| `tsubaki_chain_service_factors.png`, `tsubaki_rs_provisional_selection_graph.png`, `tsubaki_roller_chain_construction.png` | Tsubaki selection factors, selection graph, chain parts | Tsubaki pp.175, 176, 14 | chains |
+| `wire_rope_wesco_6x19_iwrc.png`, `…_7x7_7x19_aircraft.png`, `…_pro34k.png`, `…_end_fitting_efficiency.png`, `wire_rope_full_bending_knuckle_sheaves.png` | Wesco catalogue slides, termination efficiencies, knuckle sheaves | Wire Rope s8, s9, s11, s23, s13 | wire_rope |
+| `westcoast_sheave_dd_bending_efficiency.png`, `westcoast_6x19_bright_fc_iwrc.png` | D/d efficiency & life, min D/d; 6×19 breaking strength | West Coast pp.18, 23 | wire_rope |
+| `thomson_ballscrew_pNNN_*.png` (14 files: 139–142, 146–153, 157–158) | Thomson ball-screw engineering pages (Module 5 reading list) | Thomson ball screw catalogue | ball_screws |
+| `thomson_roundrail_p26_…`, `p27_…`, `p263_…`, `p264_…`, `p265_…` | Ball Bushing life/load factors, product example | Thomson RoundRail | ball_screws |
+| `oiles_500sp1_service_range_properties.png`, `oiles_500sp1_spb_bushing_sizes.png`, `oiles_operating_motion_pv.png` | OILES 500SP1 data, SPB sizes, PV vs motion | OILES pp.94, 95, 172 | bushings |
+| `skf_deep_groove_ball_d25_30_p272.png`, `skf_cylindrical_roller_d15_25_p516.png`, `skf_tapered_roller_d15_32_p694.png` | example SKF product-table pages | SKF pp.274, 518, 696 | ball_cyl / tapered bearings |
+| `khk_plastic_spur_bending_strength_t106.png`, `…_factors_surface_strength_t107.png`, `khk_plastic_bevel_worm_strength_t108.png` | KHK plastic gear strength | KHK tech info pp.106–108 (Helical/Bevel s34) | spur, rack, bevel |
+| `gear_agma_quality_accuracy_levels.png`, `gear_cost_vs_accuracy_qv.png`, `gear_helical_hand_thrust_directions.png` | Qv by accuracy level; cost vs Qv; helical hand/thrust | Gear Kinematics s42, s41, s12 | spur, helical, bevel |
+| `fluid_parker_b3_mounting_styles.png`, `fluid_parker_b4_mounting_classes_stroke_table.png`, `fluid_parker_b23_first_class_lever.png`, `fluid_parker_b24_toggle_variation.png`, `fluid_parker_b25_lifts_hinged_lever.png`, `fluid_parker_i10_pump_calc_continued.png` | Parker handbook pages | Calc Handouts p3–4, mechanical motions p6–8, motor & pump p8 | fluids |
+
+Earlier course crops that were not yet listed above: `bevel_cr_course`, `bevel_cs_cxc_course`, `bevel_kl_course`, `bevel_ko_wt_large_end`,
+`bevel_ks_km_kx_course` (Helical/Bevel s18–s29), `gear_cma_curve2`, `gear_km_shigley_annotated`, `gear_ks_course`, `gear_kv_q_av_table`,
+`gear_stress_procedure`, `gear_yn_course_line`, `gear_zn_course_line` (Gear Stress), `worm_bending_course`, `worm_heat_course`,
+`worm_self_locking_course` (Worm s11/s19/s20), `gates_section_chart_b1`, `gates_nema_min_sheave_b2_b3` (Flat&V s32–33),
+`fluid_esposito_*`, `fluid_parker_b18…b21`, `fluid_parker_i8/i9` (fluid handouts).
+
+New textbook crops made by the audit: `figures/mott/table8-7.png`, `table9-14.png`, `table2-2_fig2-6.png`, `fig2-12.png`, `table2-8.png`,
+`table2-9.png`, `fig9-20.png`, `figures/shigley/fig13-5.png`.
+
 Everything else shown in the decks is a direct reproduction of a Shigley/Mott table or figure (Table 17-2, 17-4,
 17-15, 17-24…17-27, Fig 17-21, Table 14-3/14-6/14-8/14-10, Fig 14-6/14-7/14-9/14-11/14-14/14-15/14-17/14-18,
 Table 15-2/15-3/15-8/15-9, Fig 15-8/15-9/15-14/15-15, Mott Table 7-1/7-2/7-4/7-7/7-8/7-9/7-11/7-18/7-25, Fig

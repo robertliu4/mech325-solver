@@ -56,6 +56,7 @@
       { id: 't11-4', ref: 'Table 11-4', title: 'Bearing-life recommendations (kh)', src: 'figures/shigley/table11-4.png', page: 610 },
       { id: 't11-5', ref: 'Table 11-5', title: 'Load-application factors af', src: 'figures/shigley/table11-5.png', page: 610 },
       { id: 't11-6', ref: 'Table 11-6', title: 'Weibull parameters: manufacturer 1 (Timken) 90×10⁶ rev, x0 = 0, θ = 4.48, b = 1.5', src: 'figures/shigley/table11-6.png', page: 634 },
+      { id: 'skf-tap', ref: 'SKF table 8.1 (catalogue p.694)', book: 'course', title: 'SKF metric single-row tapered roller bearings, d = 15–32 mm: dimensions, C, C_0, P_u, e, Y, Y_0 (302xx, 322xx …)', src: 'figures/course/skf_tapered_roller_d15_32_p694.png', note: 'SKF Bearing Catalogue.pdf p.696 (printed 694). Example page only (one bore range); the product tables continue over the neighbouring pages of the catalogue. Course textbook tables remain the primary source.' },
     ],
 
     sections: [
@@ -167,7 +168,7 @@
       ] },
 
       { title: 'Result', steps: [
-        { id: 'res', title: 'Reliability check of the pair (Sec. 11-10, Eq. 11-23)', eq: '11-23', fig: ['fig11-13'],
+        { id: 'res', title: 'Reliability check of the pair (Sec. 11-10, Eq. 11-23)', eq: '11-23', fig: ['fig11-13', 'skf-tap'],
           formula: 'R = \\exp\\left\\{-\\left[\\frac{x_D}{4.48\\,[C_{10}/(a_f F_D)]^{10/3}}\\right]^{3/2}\\right\\} \\qquad R_{pair} = R_A R_B',
           text: 'Also record the effective load centre <i>a</i> of each bearing from the catalogue: shoulder-to-shoulder = <i>a<sub>e</sub></i> − 2<i>a</i> (Ex. 11-8: 150 − 2(5.8) = 138.4 mm).',
           vars: [

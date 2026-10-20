@@ -38,6 +38,9 @@ window.TOPIC = {
     { id: 't12-10', ref: 'Table 12-10', title: 'Coefficients of friction fs by bearing type', src: 'figures/shigley/table12-10.png', page: 693,
       note: 'Oiles 500SP: fs = 0.03.' },
     { id: 't12-11', ref: 'Table 12-11', title: 'Oiles 500 SP service range: Pmax < 3560 psi, Vmax < 100 ft/min, PV < 46 700, T < 300 °F', src: 'figures/shigley/table12-11.png', page: 695 },
+    { id: 'oiles-sp', ref: 'OILES 500SP1 data (catalogue p.94)', book: 'course', title: 'OILES 500SP1 service range (dry: P_max 29 N/mm², V_max 0.50 m/s, PV 1.65 N/mm²·m/s; −40…+300 °C) and mechanical properties', src: 'figures/course/oiles_500sp1_service_range_properties.png', note: 'OILES-Bushings-catalog.pdf p.94. Catalogue source of Shigley Table 12-11 (3560 psi, 100 ft/min, PV 46 700 psi·ft/min) used by the Fizz route.' },
+    { id: 'oiles-spb', ref: 'OILES SPB 500SP1 bushing sizes (p.95)', book: 'course', title: 'Standard SPB (500SP1-SL1) bushing part numbers: I.D. × O.D. × length (mm)', src: 'figures/course/oiles_500sp1_spb_bushing_sizes.png', note: 'OILES-Bushings-catalog.pdf p.95. Pick a stock bushing whose length exceeds the minimum and whose I.D. fits the shaft (Fizz step 3).' },
+    { id: 'oiles-pv', ref: 'OILES PV vs motion and temperature (p.172)', book: 'course', title: 'OILES design notes: allowable PV by motion type (rotation, oscillation, reciprocation), PV vs temperature, intermittent operation, mating-shaft material and hardness', src: 'figures/course/oiles_operating_motion_pv.png', note: 'OILES-Bushings-catalog.pdf p.172.' },
     { id: 't12-12', ref: 'Table 12-12', title: 'Available bushing sizes (ID, OD, L in inches) — bullets mark stocked combinations', src: 'figures/shigley/table12-12.png', page: 697,
       note: 'Pick a row (ID/OD) and a column (L) that has a bullet. L must exceed Lmin and ID must exceed the shaft diameter if one is given.' },
   ],
@@ -57,7 +60,7 @@ window.TOPIC = {
           { id: 'J', symbol: 'J', label: 'Mechanical equivalent of heat', unit: 'ft·lbf/Btu', kind: 'input', default: 778 },
           { id: 'Dj', symbol: 'D_j', label: 'Shaft (journal) diameter, if given', unit: 'in', kind: 'input', hint: 'optional — bushing ID must be ≥ this' },
         ] },
-      { id: 'mat', title: 'Material data (Step 1)', fig: ['t12-9', 't12-10', 't12-8', 't12-11'],
+      { id: 'mat', title: 'Material data (Step 1)', fig: ['t12-9', 't12-10', 't12-8', 't12-11', 'oiles-sp', 'oiles-pv'],
         text: 'Read the wear factor <i>K</i>, the limiting <i>PV</i> and the friction coefficient <i>f<sub>s</sub></i> for the bushing material. ' +
           'The service limits default to Oiles 500 SP (Table 12-11); overwrite them from Table 12-8 for other materials.',
         vars: [
@@ -85,7 +88,7 @@ window.TOPIC = {
             work: v => v.Lmin !== undefined ? '\\(L_{min} = \\dfrac{720(' + H.fmt(v.fs) + ')(' + H.fmt(v.nd) + ')(' + H.fmt(v.F) + ')(' + H.fmt(v.N) + ')}{' + H.fmt(v.J) + '(' + H.fmt(v.hCR) + ')(' + H.fmt(v.Tf) + '-' + H.fmt(v.Tinf) + ')} = ' + H.fmt(v.Lmin) + '\\text{ in}\\)' : null,
             check: v => (H.has(v, 'Tf', 'Tinf') && v.Tf <= v.Tinf) ? 'T_f must exceed T_∞' : null },
         ] },
-      { id: 'sel', title: 'Select a stock bushing (Step 3)', fig: ['t12-12'],
+      { id: 'sel', title: 'Select a stock bushing (Step 3)', fig: ['t12-12', 'oiles-spb'],
         text: 'From Table 12-12 choose ID, OD and L such that <i>L ≥ L<sub>min</sub></i> and ID ≥ shaft diameter (if given). ' +
           'Fizz tip: start with the smallest bushing that satisfies the length, then move up if a later check fails.',
         vars: [

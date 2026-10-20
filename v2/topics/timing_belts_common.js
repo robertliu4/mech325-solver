@@ -250,6 +250,8 @@
         { id: 'table7-8', ref: 'Table 7-8', book: 'mott', title: 'Service factor SF (driven machine × driver × hours) — same as Gates Table No. 5 (slide 5)', src: 'figures/mott/table7-8.png', page: 286 },
         { id: 'fig7-27', ref: 'Figure 7-27', book: 'mott', title: 'Belt pitch selection guide for GT belts (design hp vs rpm of the faster shaft)', src: 'figures/mott/fig7-27.png', page: 287, note: 'Expect 8 mm: the only pitch with tables in Mott (7-4 … 7-11).' },
         { id: 'gates4', ref: 'Gates Table 4 (s7)', book: 'course', title: 'Minimum sprocket pitch diameters for general-purpose electric motors (NEMA) — motor hp × rpm', src: 'figures/course/timing_gates_min_sprocket_dia_table4.png', note: '"Not in Mott." Motor sprocket PD ≥ this. 5 hp @ 1750 → 2.7 in; 10 hp → 3.4; 20 hp → 4.0. (20 hp @ 3450 prints 2.2 — likely a misprint.)' },
+        { id: 'gates4-full', ref: 'Gates Table No. 4 (catalogue p.16)', book: 'course', title: 'Minimum recommended sprocket pitch diameters for general-purpose electric motors (synchronous belt drives), full table with footnotes', src: 'figures/course/gates_timing_table4_min_sprocket_pd.png', note: 'Catalogue - Gates Timing Belts Design Guide (1).pdf p.16 (printed p.14) — original of the slide-7 crop. Motor hp row × motor rpm column (60 Hz; 50 Hz rpm marked *).' },
+        { id: 'gates5', ref: 'Gates Table No. 5 (catalogue p.17)', book: 'course', title: 'Poly Chain GT Carbon service factors: driven machine × driver (normal / high torque) × service hours', src: 'figures/course/gates_timing_table5_service_factors.png', note: 'Catalogue - Gates Timing Belts Design Guide (1).pdf p.17 (printed p.15) — the table on slide 5. Same values as Mott Table 7-8.' },
         { id: 'table7-7a', ref: 'Table 7-7 (a)', book: 'mott', title: '8 mm GT drive selection table — VR 1.000–1.333: centre distance for each belt', src: 'figures/mott/table7-7a.png', page: 284, note: 'Rows = driver:driven teeth, columns = belt (pitch length mm, teeth); entries = CD in inches.' },
         { id: 'table7-7b', ref: 'Table 7-7 (b)', book: 'mott', title: '8 mm GT drive selection table — VR 1.333–3.000 (continued)', src: 'figures/mott/table7-7b.png', page: 285 },
         { id: 'table7-4', ref: 'Table 7-4', book: 'mott', title: '8 mm sprockets: pitch dia, flange dia, part number and bushing for each belt width', src: 'figures/mott/table7-4.png', page: 282 },
@@ -281,7 +283,7 @@
               { id: 'VR', symbol: 'VR', label: 'Velocity ratio n_1/n_2', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'n1', 'n2') ? v.n1 / v.n2 : undefined,
                 check: v => (H.has(v, 'VR') && v.VR < 1 && M(v) === 'design') ? 'Speed increaser — Table 7-7 lists reducers; enter the sprockets by hand' : null },
             ] },
-          { id: 'sf', title: 'Course step 1: service factor and design power', when: on('design', 'check'), fig: ['table7-8'],
+          { id: 'sf', title: 'Course step 1: service factor and design power', when: on('design', 'check'), fig: ['table7-8', 'gates5'],
             formula: 'P_{des} = P_{rated}\\times SF',
             vars: [
               { id: 'cls', label: 'Driven machine (Table 7-8 row)', kind: 'choice', type: 'text', options: CLASSES },
@@ -304,7 +306,7 @@
               { id: 'dsh2', symbol: 'd_{shaft,2}', label: 'Driven shaft diameter', unit: 'in', kind: 'input' },
               { id: 'Dmax', symbol: 'D_{max}', label: 'Largest sprocket OD allowed', unit: 'in', kind: 'input' },
             ] },
-          { id: 'pitch', title: 'Course steps 2–3: belt pitch and smallest motor sprocket', when: on('design', 'check'), fig: ['fig7-27', 'gates4', 'table7-6'],
+          { id: 'pitch', title: 'Course steps 2–3: belt pitch and smallest motor sprocket', when: on('design', 'check'), fig: ['fig7-27', 'gates4', 'gates4-full', 'table7-6'],
             text: 'Fig. 7-27: design power vs rpm of the faster shaft. Gates Table No. 4: the motor sprocket pitch diameter must be at least this (limits the belt pull on the motor bearings).',
             vars: [
               { id: 'pitch', label: 'Belt pitch (Fig. 7-27)', kind: 'choice', allowBlank: false, options: [{ label: '5 mm', value: 5 }, { label: '8 mm (8MGT) — tabulated in Mott', value: 8 }, { label: '14 mm', value: 14 }, { label: '20 mm', value: 20 }], default: 8,

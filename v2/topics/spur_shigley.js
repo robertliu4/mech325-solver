@@ -147,6 +147,18 @@
       { id: 'czn', ref: 'Gear Stress s44', book: 'course', title: 'Z_N — normal commercial gears line (1.4488 N^-0.023)', src: 'figures/course/gear_zn_course_line.png' },
       { id: 'cproc', ref: 'Gear Stress s47', book: 'course', title: 'Gear stress analysis procedure flow chart', src: 'figures/course/gear_stress_procedure.png', note: 'Design parameters → loads → factors → working stresses → allowable stresses → S_F, S_H > 1 (pinion and gear).' },
       { id: 'cteeth', ref: 'Helical/Bevel s33', book: 'course', title: 'Standard gear teeth proportions (20° FD / 20° stub / 25° FD) and Lewis Y table', src: 'figures/course/standard_gear_teeth_table.png', note: 'a = 1/P, b = 1.25/P, c = 0.25/P, whole depth 2.25/P, t = 1.571/P, face width 9/P < F < 13/P.' },
+      { id: 'm-t8-7', ref: 'Table 8-7', book: 'mott', title: 'Number of pinion teeth to ensure no interference (rack: 32/18/12; 20° FD pinion/gear max teeth and ratio)', src: 'figures/mott/table8-7.png', page: 338, note: 'Gear Kinematics s27. 20° full depth: at least 18 teeth with a rack, 16 → max 101-tooth gear.' },
+      { id: 'gk-qv', ref: 'Gear Kinematics s42', book: 'course', title: 'AGMA quality number Q_v by accuracy level (minimal 4–5 … highest 14–15) and how it is produced', src: 'figures/course/gear_agma_quality_accuracy_levels.png', note: 'Gear_Kinematics_and_Forces_-2024.pdf slide 42. Use with the application table to pick Q_v / A_v.' },
+      { id: 'gk-cost', ref: 'Gear Kinematics s41', book: 'course', title: 'Manufacturing cost vs AGMA quality number for cutting, shaving and grinding', src: 'figures/course/gear_cost_vs_accuracy_qv.png', note: 'Gear_Kinematics_and_Forces_-2024.pdf slide 41.' },
+      { id: 'm-t2-2', ref: 'Table 2-2', book: 'mott', title: 'Hardness scales vs tensile strength (HB, HRB, HRC, ksi, MPa) with Figure 2-6 conversion chart', src: 'figures/mott/table2-2_fig2-6.png', page: 49, note: 'Helical/Bevel s38 (material review). s_u ≈ 0.50 HB ksi (Mott Eq. 2-8).' },
+      { id: 'm-f2-12', ref: 'Figure 2-12', book: 'mott', title: 'SAE/AISI steel designation system (alloy group, carbon content)', src: 'figures/mott/fig2-12.png', page: 61, note: 'Helical/Bevel s41.' },
+      { id: 'm-t2-8', ref: 'Table 2-8', book: 'mott', title: 'Alloy groups in the SAE numbering system', src: 'figures/mott/table2-8.png', page: 61, note: 'Helical/Bevel s44.' },
+      { id: 'm-t2-9', ref: 'Table 2-9', book: 'mott', title: 'Uses of some steels (1040 shafts/gears, 4140/4340/4640/8650 gears …)', src: 'figures/mott/table2-9.png', page: 63, note: 'Helical/Bevel s43.' },
+      { id: 'm-f9-20', ref: 'Figure 9-20', book: 'mott', title: 'Effective case depth h_e for carburized gears vs normal diametral pitch (normal / heavy case)', src: 'figures/mott/fig9-20.png', page: 409, note: 'Helical/Bevel s57 (case hardening): case depth typically 0.010–0.040 in.' },
+      { id: 'm-t9-14', ref: 'Table 9-14', book: 'mott', title: 'Approximate allowable bending stress s_at for plastic gears (ABS, acetal, nylon, polycarbonate, polyester, polyurethane; unfilled / glass-filled)', src: 'figures/mott/table9-14.png', page: 431, note: 'Helical/Bevel s32 (plastic gears, Mott).' },
+      { id: 'khk106', ref: 'KHK p.T106', book: 'course', title: 'KHK plastic spur gears: Lewis bending strength F = m y b σ_b K_v (Nylon MC901), Duracon factors, form factor y (Table 18-15), speed, working, lubrication and material factors', src: 'figures/course/khk_plastic_spur_bending_strength_t106.png', note: 'KHK Gears Technical Information.pdf p.106 (T106). Helical/Bevel s34: “See KHK Gear Information Catalogue”.' },
+      { id: 'khk107', ref: 'KHK p.T107', book: 'course', title: 'KHK plastic gears: speed factor and temperature factor charts, surface (Hertz) strength of Duracon spur gears and allowable surface stress', src: 'figures/course/khk_plastic_spur_factors_surface_strength_t107.png', note: 'KHK Gears Technical Information.pdf p.107 (T107).' },
+      { id: 's-f13-5', ref: 'Figure 13-5', title: 'Nomenclature of spur-gear teeth (addendum, dedendum, clearance, circular pitch, tooth thickness, face width, flank, lands)', src: 'figures/shigley/fig13-5.png', page: 704, note: 'Gear Kinematics s6 activity and Midterm 2025 Q14 ask students to label this figure.' },
     ],
 
     sections: [
@@ -168,7 +180,7 @@
               work: v => has(v, 'P', 'Ko') ? '\\(P_{des} = ' + f(v.Ko) + ' \\times ' + f(v.P) + ' = ' + f(v.P * v.Ko) + '\\ \\mathrm{hp}\\)' : null },
             { id: 'VRd', symbol: 'VR_{des}', label: 'Desired velocity ratio', kind: 'calc', compute: v => has(v, 'nP', 'nGd') && v.nGd > 0 ? v.nP / v.nGd : undefined },
           ] },
-        { id: 'tooth', title: 'Tooth system, pitch and tooth numbers (F4–10 · M4–10)', fig: ['t13-1', 'cteeth', 't13-2', 'm9-11'],
+        { id: 'tooth', title: 'Tooth system, pitch and tooth numbers (F4–10 · M4–10)', fig: ['t13-1', 'cteeth', 't13-2', 'm9-11', 'm-t8-7'],
           text: 'Pressure angle 20° full depth unless stated (guides; course standard-teeth table: a = 1/P, b = 1.25/P, c = 0.25/P). Read a trial diametral pitch from Mott Fig. 9-11 with P_des and n_P ("round to the smallest number" — the smaller standard P_d from Table 13-2, bigger teeth). Choose N_P between 17 and 20 (guides; 17 is used until you type one — no interference at 20°, Eq. 13-11). Take n_G at the middle of the allowed range; N_G = N_P·VR rounded to an integer (midterm: 17 × 2.69 = 45.8 → 46); the actual ratio and output speed follow — if n_G is out of range try another N_P.',
           formula: 'N_G = N_P \\cdot VR \\quad\\Rightarrow\\quad m_G = \\frac{N_G}{N_P}, \\qquad n_G = n_P\\frac{N_P}{N_G}',
           vars: [
@@ -205,7 +217,7 @@
             { id: 'p', symbol: 'p', label: 'Circular pitch', unit: 'in', kind: 'calc', compute: v => has(v, 'Pd') ? Math.PI / v.Pd : undefined },
             { id: 'm', symbol: 'm', label: 'Module (metric equivalent)', unit: 'mm', kind: 'calc', compute: v => has(v, 'Pd') ? 25.4 / v.Pd : undefined },
           ] },
-        { id: 'geo2', title: 'Tooth proportions (full-depth system)', fig: ['t13-1'],
+        { id: 'geo2', title: 'Tooth proportions (full-depth system)', fig: ['t13-1', 's-f13-5'],
           formula: 'a = \\frac{1}{P_d},\\quad b = \\frac{1.25}{P_d}\\ (P_d<20),\\quad c = b - a,\\quad h_t = a+b,\\quad h_k = 2a,\\quad t = \\frac{p}{2}',
           vars: [
             { id: 'a', symbol: 'a', label: 'Addendum', unit: 'in', kind: 'calc', compute: v => has(v, 'Pd') ? 1 / v.Pd : undefined },
@@ -249,7 +261,7 @@
 
       // ================= AGMA FACTORS =================
       { title: 'AGMA factors for the stress equations (Fizz steps 14–24 · Mech steps 14–19, 26–27)', text: 'Road maps: Fig. 14-17 (bending) and Fig. 14-18 (wear). Each factor below has an <i>auto</i> value (textbook equation or digitized chart); type the chart reading to override.', steps: [
-        { id: 'kv', title: 'Quality number and dynamic factor K_v (F16–17 · M14–15)', eq: '14-27 … 14-29', fig: ['ckv', 'f14-9', 'eq14-27', 'av'],
+        { id: 'kv', title: 'Quality number and dynamic factor K_v (F16–17 · M14–15)', eq: '14-27 … 14-29', fig: ['ckv', 'f14-9', 'eq14-27', 'av', 'gk-qv', 'gk-cost'],
           formula: 'K_v = \\left(\\frac{A+\\sqrt{V}}{A}\\right)^B,\\quad B = 0.25(12-Q_v)^{2/3},\\quad A = 50+56(1-B),\\quad (V_t)_{max} = [A+(Q_v-3)]^2',
           text: 'Quality number from the problem, else (guides) from Mott Table 9-5 by application or pitch-line speed — default Q_v = 7 (A_v = 10). Shigley\'s AGMA Q_v numbers are "no longer in use" — Mott Table 9-4 maps them to A_v (Q5 = A12 … Q11 = A6, i.e. A_v + Q_v = 17); a problem stating A_v = 8 means Q_v = 9 (midterm). Course: use the equation (Eq. 14-27; "difficult to read the graph accurately").',
           after: v => has(v, 'V') ? 'Mott Table 9-5 by pitch-line speed (machine-tool / high-quality drives): V = ' + f(v.V) + ' ft/min → A_v ' + AvT95(v.V) + ' = Q_v ' + (17 - AvT95(v.V)) + '. By application: cranes, punch press, mining conveyor A10 (Q_v 7); cement mixer/kiln, steel mill A11 (Q_v 6); automotive transmission A6 (Q_v 11).' : '',
@@ -317,7 +329,7 @@
 
       // ================= STRESS =================
       { title: 'AGMA stress numbers (Fizz steps 32, 34 · Mech steps 20, 25, 28)', steps: [
-        { id: 'sb', title: 'Bending stress σ, pinion and gear (F32 · M20)', eq: '14-15', fig: ['f14-17'],
+        { id: 'sb', title: 'Bending stress σ, pinion and gear (F32 · M20)', eq: '14-15', fig: ['f14-17', 'm-t9-14', 'khk106'],
           formula: '\\sigma = W_t K_o K_v K_s \\frac{P_d}{F}\\frac{K_m K_B}{J}',
           vars: [
             { id: 'sP', symbol: '\\sigma_P', label: 'Pinion bending stress', unit: 'psi', kind: 'calc', compute: v => has(v, 'Wt', 'Ko', 'Kv', 'KsP', 'Pd', 'F', 'Km', 'KB', 'JP') ? v.Wt * v.Ko * v.Kv * v.KsP * v.Pd / v.F * v.Km * v.KB / v.JP : undefined,
@@ -374,7 +386,7 @@
             { id: 'ScreqP', symbol: 'S_{c,req,P}', label: 'Required contact strength, pinion', unit: 'psi', kind: 'calc', compute: v => has(v, 'scP', 'SFd', 'KT', 'KR', 'ZNP') ? v.scP * v.SFd * v.KT * v.KR / v.ZNP : undefined, work: v => v.ScreqP !== undefined ? '\\(S_{c,req,P} = ' + f(v.scP) + '(' + f(v.SFd) + ')(' + f(v.KT) + ')(' + f(v.KR, 3) + ')/' + f(v.ZNP, 4) + ' = ' + f(v.ScreqP) + '\\ \\mathrm{psi}\\)' : null },
             { id: 'ScreqG', symbol: 'S_{c,req,G}', label: 'Required contact strength, gear (C_H = 1)', unit: 'psi', kind: 'calc', compute: v => has(v, 'scG', 'SFd', 'KT', 'KR', 'ZNG') ? v.scG * v.SFd * v.KT * v.KR / v.ZNG : undefined },
           ] },
-        { id: 'hb', title: 'Required Brinell hardness (through-hardened steel) → pick a steel (F37–38, 40 · M23, 30)', fig: ['f14-2', 'f14-5', 'mt9-8', 'mapp3a', 'mapp3b', 'mapp5', 't14-3', 't14-6'],
+        { id: 'hb', title: 'Required Brinell hardness (through-hardened steel) → pick a steel (F37–38, 40 · M23, 30)', fig: ['f14-2', 'f14-5', 'mt9-8', 'mapp3a', 'mapp3b', 'mapp5', 't14-3', 't14-6', 'm-t2-2', 'm-t2-9', 'm-t2-8', 'm-f2-12'],
           formula: 'H_{B} = \\frac{S_t - 12\\,800}{77.3}\\ (\\text{grade 1 bending}),\\qquad H_B = \\frac{S_c - 29\\,100}{322}\\ (\\text{grade 1 contact})',
           text: 'Grade 1 (guides: "grade 1 steel is the only one that exists"; Grade 2: S_t = 102 H_B + 16 400, S_c = 349 H_B + 34 300). Take the LARGEST hardness; same material for pinion and gear (guides). <b>Material step (guides; Module 2 p27, Midterm P2 part 3):</b> choose an alloy and heat treatment from Mott Table 9-8 / Appendix 3 ("normally"; Appendix 5 for carburized) whose HB exceeds the requirement and quote its HB and % elongation (ductility) — e.g. 4140 annealed HB 197, 4140 OQT1300 HB 235, 4140 OQT1000 HB 341, 4340 OQT1000 HB 363 (16 % el.), 4340 OQT700 HB 461; "OQT1300" = oil-quenched &amp; tempered at 1300 °F; HB ≈ 2 × S_u (ksi). Then enter that HB below and confirm 1.0 ≤ S_F ≤ 1.5. Through-hardening is only valid up to ≈ 400 H_B — above that specify flame/induction hardening or carburizing (Tables 14-3 / 14-6).',
           vars: [
@@ -390,7 +402,7 @@
 
       // ================= CHECK A MATERIAL =================
       { title: 'Check a chosen material — factors of safety (Fizz step 36 · Mech steps 24, 30)', text: 'Enter the Brinell hardness of the pinion and gear you actually chose (through-hardened) — or type S_t and S_c directly from Tables 14-3/14-6 for case-hardened steels, Tables 14-4/14-7 for iron/bronze.', steps: [
-        { id: 'mat', title: 'Material strengths S_t, S_c and hardness-ratio factor C_H (M24, 30)', eq: '14-36', fig: ['f14-2', 'f14-5', 'f14-12', 't14-3', 't14-6', 'mapp3a', 'mapp3b'],
+        { id: 'mat', title: 'Material strengths S_t, S_c and hardness-ratio factor C_H (M24, 30)', eq: '14-36', fig: ['f14-2', 'f14-5', 'f14-12', 't14-3', 't14-6', 'mapp3a', 'mapp3b', 'm-f9-20'],
           formula: 'C_H = 1 + A\'(m_G - 1),\\quad A\' = 8.98(10^{-3})\\frac{H_{BP}}{H_{BG}} - 8.29(10^{-3})\\ \\ (1.2 \\le H_{BP}/H_{BG} \\le 1.7)',
           vars: [
             { id: 'HBP', symbol: 'H_{BP}', label: 'Pinion Brinell hardness', unit: 'HB', kind: 'input' },

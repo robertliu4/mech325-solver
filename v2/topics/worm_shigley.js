@@ -68,6 +68,7 @@
       { id: 'f10-28', ref: 'Figure 10-28', title: 'Ratio correction factor Cm vs gear ratio', src: 'figures/mott/fig10-28.png', page: 479, book: 'mott', note: 'Equation form: Shigley Eq. 15-36.' },
       { id: 'f10-29', ref: 'Figure 10-29', title: 'Velocity factor Cv vs sliding velocity', src: 'figures/mott/fig10-29.png', page: 480, book: 'mott', note: 'Equation form: Shigley Eq. 15-37.' },
       { id: 'f10-25', ref: 'Figure 10-25', title: 'Coefficient of friction vs sliding velocity, steel worm / bronze gear (AGMA, same as Eq. 15-38)', src: 'figures/mott/fig10-25.png', page: 475, book: 'mott' },
+      { id: 'f10-26', ref: 'Figure 10-26', book: 'mott', title: 'Efficiency vs lead angle for several friction coefficients (φn = 20°)', src: 'figures/mott/fig10-26.png', page: 476, note: 'Worm Gears slide 10 shows this chart: efficiency drops sharply for λ < 20°.' },
       { id: 't15-11', ref: 'Table 15-11', title: 'Buckingham wear factor Kw for worm gearing', src: 'figures/shigley/table15-11.png', page: 847 },
       // ---- course-only slides (Worm_Gears_2024.pdf) ----
       { id: 'csl', ref: 'Worm Gears s11', book: 'course', title: 'Self-locking wormgear sets: λ < 6°, static f ≈ 0.15, criterion f_static > cos φn tan λ (with Mott Fig. 10-26 efficiency vs lead angle)', src: 'figures/course/worm_self_locking_course.png' },
@@ -161,7 +162,7 @@
       ] },
 
       { title: '4 · Efficiency and self-locking — bible steps 8-10', steps: [
-        { id: 'eff', title: 'Mechanical efficiency and self-locking', eq: '13-46, 15-54, 15-55', fig: ['t13-6', 'csl'],
+        { id: 'eff', title: 'Mechanical efficiency and self-locking', eq: '13-46, 15-54, 15-55', fig: ['t13-6', 'csl', 'f10-26'],
           text: 'Course (Worm Gears s11): "in general λ &lt; 6° ensures self-locking"; check it with f<sub>static</sub> &gt; cos φ<sub>n</sub> tan λ (the reverse of Eq. 15-56; Module 2 p31).',
           formula: 'e_W = \\frac{\\cos\\phi_n - f\\tan\\lambda}{\\cos\\phi_n + f\\cot\\lambda}\\ (\\text{worm driving}),\\qquad e_G = \\frac{\\cos\\phi_n - f\\cot\\lambda}{\\cos\\phi_n + f\\tan\\lambda}\\ (\\text{gear driving})',
           vars: [

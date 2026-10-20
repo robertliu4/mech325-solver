@@ -69,6 +69,10 @@
       { id: 'ckv', ref: 'Gear Stress s14', book: 'course', title: 'Kv analytical method and Mott Table 9-4: Qv ↔ Av mapping (Av = 17 − Qv)', src: 'figures/course/gear_kv_q_av_table.png' },
       { id: 'ccma', ref: 'Gear Stress s20', book: 'course', title: 'Cpf and Cma — "default to curve 2 (commercial enclosed gear units)"', src: 'figures/course/gear_cma_curve2.png' },
       { id: 'cteeth', ref: 'Helical/Bevel s33', book: 'course', title: 'Plastic-gear Lewis stress σt = Wt Pd (SF)/(F Y), Mott Table 9-15 Y, and standard tooth proportions', src: 'figures/course/standard_gear_teeth_table.png', note: 'Y for load near the pitch point, 26–50 teeth. Compare σt with the plastic strength (KHK catalogue) for the true safety factor.' },
+      { id: 'm-t8-7', ref: 'Table 8-7', title: 'Number of pinion teeth to ensure no interference (rack: 32/18/12; 20° FD pinion/gear max teeth and ratio)', src: 'figures/mott/table8-7.png', page: 338, note: 'Gear Kinematics s27. 20° full depth: at least 18 teeth with a rack, 16 → max 101-tooth gear.' },
+      { id: 'm-t9-14', ref: 'Table 9-14', title: 'Approximate allowable bending stress s_at for plastic gears (ABS, acetal, nylon, polycarbonate, polyester, polyurethane; unfilled / glass-filled)', src: 'figures/mott/table9-14.png', page: 431, note: 'Helical/Bevel s32 (plastic gears, Mott).' },
+      { id: 'khk106', ref: 'KHK p.T106', book: 'course', title: 'KHK plastic spur gears: Lewis bending strength F = m y b σ_b K_v (Nylon MC901), Duracon factors, form factor y (Table 18-15), speed, working, lubrication and material factors', src: 'figures/course/khk_plastic_spur_bending_strength_t106.png', note: 'KHK Gears Technical Information.pdf p.106 (T106). Helical/Bevel s34: “See KHK Gear Information Catalogue”.' },
+      { id: 'khk107', ref: 'KHK p.T107', book: 'course', title: 'KHK plastic gears: speed factor and temperature factor charts, surface (Hertz) strength of Duracon spur gears and allowable surface stress', src: 'figures/course/khk_plastic_spur_factors_surface_strength_t107.png', note: 'KHK Gears Technical Information.pdf p.107 (T107).' },
     ],
 
     sections: [
@@ -98,7 +102,7 @@
       ] },
 
       { title: 'Interference · smallest pinion that runs with a rack (course Tutorial 1 Q3h)', steps: [
-        { id: 'intf', title: 'Minimum pinion teeth with a rack mate',
+        { id: 'intf', title: 'Minimum pinion teeth with a rack mate', fig: ['m-t8-7'],
           formula: 'N_{P,min} = \\frac{2k}{\\sin^2\\phi}\\quad (k = 1\\ \\text{full depth}, 0.8\\ \\text{stub})',
           text: 'A rack is a gear of infinite radius, so the Shigley interference equation (13-11) reduces to N<sub>P</sub> = 2k/sin²φ — 17.1 → <b>18 teeth</b> at 20° full depth (11.2 → 12 at 25°; 31.9 → 32 at 14.5°). Mott Table 8-7 gives the same limits for a rack; fewer teeth undercut the pinion.',
           vars: [
@@ -178,7 +182,7 @@
       ] },
 
       { title: 'Plastic pinion — Lewis check (course Helical/Bevel s31–34, Table 9-15)', text: 'Optional: for a plastic (nylon, acetal …) pinion the course uses the unmodified Lewis equation with Y in place of J and an overload "design" SF, then compares with the plastic\'s strength from the KHK catalogue to get the true safety factor. High P<sub>d</sub> (small teeth) is typical.', steps: [
-        { id: 'plastic', title: 'Lewis bending stress in a plastic pinion', fig: ['cteeth'],
+        { id: 'plastic', title: 'Lewis bending stress in a plastic pinion', fig: ['cteeth', 'm-t9-14', 'khk106', 'khk107'],
           formula: '\\sigma_t = \\frac{W_t P_d\\,(SF)}{F\\,Y}',
           vars: [
             { id: 'Yform', symbol: '', label: 'Tooth form for Y', kind: 'choice', type: 'text', options: [{ label: '20° full depth', value: '20' }, { label: '14.5° full depth', value: '14.5' }, { label: '20° stub', value: 'stub' }], default: '20' },

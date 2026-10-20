@@ -45,6 +45,7 @@
         note: 'Abbreviated example set; real catalogues list hundreds. Select C ≥ required and bore ≥ shaft, then read Y.' },
       { id: 't14-4', ref: 'Table 14-4', title: 'Recommended design life (h)', src: 'figures/mott/table14-4.png', page: 592 },
       { id: 't14-6', ref: 'Table 14-6', title: 'Life adjustment factors for reliability CR', src: 'figures/mott/table14-6.png', page: 595 },
+      { id: 'skf-tap', ref: 'SKF table 8.1 (catalogue p.694)', book: 'course', title: 'SKF metric single-row tapered roller bearings, d = 15–32 mm: dimensions, C, C_0, P_u, e, Y, Y_0 (302xx, 322xx …)', src: 'figures/course/skf_tapered_roller_d15_32_p694.png', note: 'SKF Bearing Catalogue.pdf p.696 (printed 694). Example page only (one bore range); the product tables continue over the neighbouring pages of the catalogue. Course textbook tables remain the primary source.' },
     ],
 
     sections: [
@@ -130,7 +131,7 @@
       ] },
 
       { title: 'Result', steps: [
-        { id: 'res', title: 'Final selection', fig: ['t14-7', 'fig14-15'],
+        { id: 'res', title: 'Final selection', fig: ['t14-7', 'fig14-15', 'skf-tap'],
           text: 'Report bore d, OD D, width T, effective-centre distance a, Y and C for each bearing.',
           vars: [
             { id: 'final', label: 'Status', kind: 'calc', compute: v => {

@@ -71,6 +71,12 @@ window.TOPIC = {
     { id: 'forcesi', ref: 'Fizz p.83 SI force table (Parker Table b-2)', title: 'Cylinder push force in newtons at various pressures in bar', src: 'figures/bibles/fizz_p83_push_forces_si.png', book: 'Fizz bible' },
     { id: 'pumpf', ref: 'Parker i-8 pump formulas', title: 'Hydraulic pump calculation formulas: GPM = rpm × d/231, volumetric / mechanical / overall efficiency, Hp = GPM × PSI/(1714 × eff), Hp = T·rpm/63 025, power = 231 Q p/12 ft·lb/min', src: 'figures/course/fluid_parker_i8_pump_formulas.png', book: 'course' },
     { id: 'pumpx', ref: 'Parker i-9 pump sizing examples', title: 'Pump sizing: 10–25 % pressure margin; hand-pump strokes; GPM = A·L·60/(231·t): 5-in piston at 2 in/s → 10.1 gpm; 5-in bore × 2-in rod × 18-in stroke, 12-s cycle → 14 gpm', src: 'figures/course/fluid_parker_i9_pump_sizing_examples.png', book: 'course' },
+    { id: 'pk-b3', ref: 'Parker b-3 mounting styles', book: 'course', title: 'Cylinder mounting styles (NFPA MX/MF/MS/MT/MP: tie rod, flange, side lug, trunnion, clevis) with illustration b-1', src: 'figures/course/fluid_parker_b3_mounting_styles.png', note: 'Fluid Power Calculation Handouts 2017.pdf p.3 (also Actuator Selection Handouts p.2). Use to name the mounting before choosing the stroke factor.' },
+    { id: 'pk-b4', ref: 'Parker b-4 mounting classes (Table b-3)', book: 'course', title: 'Cylinder mounting classes and groups (Table b-3: heavy / medium / light duty, thrust or tension) and cylinder stroke considerations', src: 'figures/course/fluid_parker_b4_mounting_classes_stroke_table.png', note: 'Fluid Power Calculation Handouts 2017.pdf p.4 (Actuator Selection Handouts p.3). Group 1/2/3 decides which column of the stroke-factor table applies.' },
+    { id: 'pk-b23', ref: 'Parker b-23 first-class lever', book: 'course', title: 'First-class lever and first-class lever variation: formulas and worked problems (2½-in bore at ≈ 750 psi; F = 2554 lb)', src: 'figures/course/fluid_parker_b23_first_class_lever.png', note: 'mechanical motions hand out.pdf p.6.' },
+    { id: 'pk-b24', ref: 'Parker b-24 toggle variation', book: 'course', title: 'Toggle variation (load = F sin β / 2cos θ, worked 1000 lb → 2000 lb) and cylinders moving horizontal (rolling / sliding) loads', src: 'figures/course/fluid_parker_b24_toggle_variation.png', note: 'mechanical motions hand out.pdf p.7. Sliding loads: thrust ≈ ½–¾ of the load weight to start it.' },
+    { id: 'pk-b25', ref: 'Parker b-25 lifts and hinged lever', book: 'course', title: 'Cylinders for lifting (differential lift, vertical lift: size for 25 % more than the load) and hinged-lever stroke by scale layout', src: 'figures/course/fluid_parker_b25_lifts_hinged_lever.png', note: 'mechanical motions hand out.pdf p.8.' },
+    { id: 'pk-i10', ref: 'Parker i-10 pump calc (continued)', book: 'course', title: 'Pump calculation continued: 14 gpm example (36.1 in² × 18 in × 60 / 231 / 12 s) and relief-valve setting', src: 'figures/course/fluid_parker_i10_pump_calc_continued.png', note: 'motor and pump hand outs.pdf p.8.' },
     { id: 'pipe', ref: 'Fizz p.85 pipe table', title: 'Pipe OD and inside diameter for schedule 40 / 80 / 160 (Method 1)', src: 'figures/bibles/fizz_p85_pipe_schedule_table.png', book: 'Fizz bible', note: 'Schedule 40 low pressure, 80 medium, 160 high. Fizz: assume schedule 80 unless told otherwise.' },
     { id: 'flowa', ref: 'Fizz p.86 flow table (a) (Parker Table b-5)', title: 'Fluid displacement at 10 ft/min piston speed and fluid velocity through extra-heavy pipe (Method 2)', src: 'figures/bibles/fizz_p86_flow_velocity_table_a.png', book: 'Fizz bible', note: 'Mech guide: Q_true = (piston speed / 10) × Q_table; pipe velocity × (speed/10) must be < 15 ft/s. Use rod = 0 for extension.' },
     { id: 'flowb', ref: 'Fizz p.87 flow table (b)', title: 'Flow & velocity table continued', src: 'figures/bibles/fizz_p87_flow_velocity_table_b.png', book: 'Fizz bible' },
@@ -103,7 +109,7 @@ window.TOPIC = {
     ] },
 
     { title: 'Step 2: Load on the cylinder (Parker b-6/b-7, Esposito 6-21 … 6-27)', steps: [
-      { id: 'lever', title: 'If the cylinder drives a lever: cylinder force from the load (Esposito 6-7 … 6-9, Parker b-21)', fig: ['keyeq', 'lever', 'lever2', 'pwrfac'],
+      { id: 'lever', title: 'If the cylinder drives a lever: cylinder force from the load (Esposito 6-7 … 6-9, Parker b-21)', fig: ['keyeq', 'lever', 'lever2', 'pwrfac', 'pk-b23'],
         formula: '\\text{1st: } F_{cyl} = \\frac{L_2}{L_1\\cos\\phi}F_{load} \\qquad \\text{2nd: } F_{cyl} = \\frac{L_2}{(L_1+L_2)\\cos\\phi}F_{load} \\qquad \\text{3rd: } F_{cyl} = \\frac{L_1+L_2}{L_2\\cos\\phi}F_{load}',
         text: 'Optional — skip if the cylinder pushes the load directly. φ is the angle between the cylinder axis and the perpendicular to the lever (Parker: cos φ ≈ 1 while φ is within ±15°). 1st class: fulcrum between cylinder (arm L<sub>1</sub>) and load (arm L<sub>2</sub>). 2nd class: load at L<sub>2</sub> from the fulcrum, cylinder at L<sub>1</sub> + L<sub>2</sub> (Parker b-21: F cos φ (d<sub>1</sub>+d<sub>2</sub>) = Load·d<sub>1</sub>). 3rd class: cylinder at L<sub>2</sub>, load at L<sub>1</sub> + L<sub>2</sub>. Practice problem 6-25: F<sub>load</sub> = 4444 N, L<sub>1</sub> = L<sub>2</sub>, φ = 0 → 4444 / 2222 / 8888 N. Copy F<sub>cyl</sub> into "Weight of load" below (with load case Static) if the lever load is the only force.',
         vars: [
@@ -128,7 +134,7 @@ window.TOPIC = {
           { id: 'Fcr', symbol: 'F_{cyl}', label: 'Crane cylinder thrust', unit: 'lb', kind: 'calc', compute: v => H.has(v, 'Wc', 'd1', 'd2', 'alpha', 'beta') && Math.sin(H.rad(v.beta)) > 0 ? v.Wc * (v.d1 + v.d2) * Math.cos(H.rad(v.alpha)) / (v.d1 * Math.sin(H.rad(v.beta))) : undefined,
             work: v => H.has(v, 'Fcr') ? '\\(F_{cyl} = \\dfrac{' + TX(v.Wc) + '(' + TX(v.d1) + ' + ' + TX(v.d2) + ')\\cos ' + TX(v.alpha) + '^\\circ}{' + TX(v.d1) + '\\sin ' + TX(v.beta) + '^\\circ} = ' + TX(v.Fcr) + '\\ \\text{lb}\\)' : null },
         ] },
-      { id: 'toggle', title: 'Toggle mechanism and cylinder working at an angle (Parker b-18 / b-19)', fig: ['lever', 'pwrfac'],
+      { id: 'toggle', title: 'Toggle mechanism and cylinder working at an angle (Parker b-18 / b-19)', fig: ['lever', 'pwrfac', 'pk-b24'],
         formula: 'T_{toggle} = \\frac{F\\,A}{2B} \\qquad F_{eff} = F\\sin A',
         text: 'Optional. Toggle (Parker b-18): T = F·A/(2B), A = toggle lever length, B = offset from vertical; example 8300 lb, A = 14 in, B = ½ in → 116 200 lb. Angled cylinder (Parker b-19): effective thrust = F × sin(angle A between cylinder and lever) — the "power factor"; 8300 lb at 65° → 7520 lb.',
         vars: [
@@ -140,7 +146,7 @@ window.TOPIC = {
           { id: 'angA', symbol: 'A', label: 'Angle between cylinder and lever', unit: '°', kind: 'input', default: 90 },
           { id: 'Feff', symbol: 'F_{eff}', label: 'Effective thrust F sin A', unit: 'lb', kind: 'calc', compute: v => H.has(v, 'Ftog', 'angA') ? v.Ftog * Math.sin(H.rad(v.angA)) : undefined },
         ] },
-      { id: 'load', title: 'Weight, friction and load case', fig: ['gchart', 'gchart2', 'keyeq'],
+      { id: 'load', title: 'Weight, friction and load case', fig: ['gchart', 'gchart2', 'keyeq', 'pk-b24', 'pk-b25'],
         formula: 'F_f = \\mu F_w\\ (\\text{horizontal}) \\qquad \\text{incline: } F = W(\\sin\\theta + \\mu\\cos\\theta) + W g',
         text: 'Parker Graph b-2 load cases: (1) horizontal accelerate/decelerate F = Wg; (2) accelerate and overcome friction F = Wg + f; (3) decelerate against friction F = Wg − f; (4) vertical accelerate up / decelerate down F = Wg + W; (5) accelerate down / decelerate up F = Wg − W. (6) Incline (Esposito 6-21/6-23): the weight component along the slope W sin θ plus friction μ W cos θ. Practice problems: 6-21 (5000 lb on 30°, 3-in piston, no friction) → 354 psi; 6-23 (6000 lb up 30°, μ = 0.15, 1000 psi) → 2.19-in piston.',
         vars: [
@@ -169,7 +175,7 @@ window.TOPIC = {
     ] },
 
     { title: 'Step 3–4: Basic length and minimum rod diameter (buckling, Parker b-4 … b-6)', steps: [
-      { id: 'Lb', title: 'Stroke factor and basic length', fig: ['kfac'], formula: 'L_b = k\\,L',
+      { id: 'Lb', title: 'Stroke factor and basic length', fig: ['kfac', 'pk-b3', 'pk-b4'], formula: 'L_b = k\\,L',
         vars: [
           { id: 'mount', label: 'Mounting style (case)', kind: 'choice', type: 'text', options: [{ label: 'I — fixed and rigidly guided (k = 0.50)', value: 'I' }, { label: 'II — pivoted and rigidly guided (0.70)', value: 'II' }, { label: 'III — supported but not rigidly guided (2.00)', value: 'III' }, { label: 'IV — trunnion on head, pivoted & guided (1.00)', value: 'IV' }, { label: 'V — intermediate trunnion (1.50)', value: 'V' }, { label: 'VI — trunnion on cap / clevis on cap (2.00)', value: 'VI' }], default: 'I' },
           { id: 'k', symbol: 'k', label: 'Stroke factor', kind: 'lookup', fig: 'kfac', auto: v => KFAC[v.mount], hint: 'Parker Table b-4 (auto from the mounting case)' },
@@ -253,7 +259,7 @@ window.TOPIC = {
           { id: 'tstroke', symbol: 't', label: 'Time for one stroke at vp', unit: 's', kind: 'calc', digits: 4, compute: v => H.has(v, 'L', 'vpu') && v.vpu > 0 ? v.L / (12 * v.vpu) * 60 : undefined },
           { id: 'vother', symbol: 'v_{other}', label: 'Speed of the other stroke with this pump', unit: 'ft/min', kind: 'calc', digits: 4, compute: v => { if (!H.has(v, 'Q', 'A1', 'A2')) return undefined; const Ao = v.mode === 'pull' ? (v.circuit === 'regen' ? v.A2 : v.A1 + v.A2) : v.A1; return Ao > 0 ? v.Q * 231 / (12 * Ao) : undefined; } },
         ] },
-      { id: 'pump', title: 'Pump from a cycle time, displacement and efficiencies (Parker i-8 / i-9)', fig: ['pumpf', 'pumpx'],
+      { id: 'pump', title: 'Pump from a cycle time, displacement and efficiencies (Parker i-8 / i-9)', fig: ['pumpf', 'pumpx', 'pk-i10'],
         formula: 'Q_{cycle} = \\frac{(A_{bore} + A_{annulus})\\,L \\cdot 60}{231\\,t_{cycle}} \\qquad Q_{theor} = \\frac{d\\ (\\text{in}^3/\\text{rev})\\,n}{231} \\qquad \\eta_v = \\frac{Q_{actual}}{Q_{theor}}',
         text: 'Optional. If the problem gives a <b>total cycle time</b> (out and back) instead of a speed, Parker sizes the pump from the oil volume per cycle: 5-in bore, 2-in rod, 18-in stroke, 12-s cycle → 36.1 × 18 × 60/(231 × 12) = 14 gpm. The required displacement of a pump turning at n rpm follows from GPM = n·d/231 with the volumetric efficiency.',
         vars: [

@@ -42,11 +42,30 @@ window.TOPIC = {
     { id: 'fig17-8', ref: 'Figure 17-8', title: 'Ball screw performance: rated load vs. travel life (in) for 7 screw sizes, with lead table', src: 'figures/mott/fig17-8.png', page: 667,
       note: 'Enter at the travel life on the x-axis, go up to the load: pick the first line at or above the load. Example: ½-in 5-tpi screw carries 1000 lb for 1.0×10⁶ in. Lines follow L2/L1 = (P1/P2)³ (Eq. 17-12).' },
     { id: 'fig17-5', ref: 'Figure 17-5', title: 'Screw-thread force analysis (lead, lead angle)', src: 'figures/mott/fig17-5.png', page: 663 },
+    { id: 'thom139', ref: 'Thomson p.139', book: 'course', title: 'Selecting a ball screw assembly (inch series): 10-step procedure', src: 'figures/course/thomson_ballscrew_p139_inch_selection_procedure.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.139. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom140', ref: 'Thomson p.140', book: 'course', title: 'Worked selection example (30 000 lb, 200 in/min, 85 in travel, 2×10^6 in life)', src: 'figures/course/thomson_ballscrew_p140_inch_selection_example.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.140. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom141', ref: 'Thomson p.141', book: 'course', title: 'Design formulas: life L10 = (Cam/Feq)^3 × 10^6 in, equivalent load and speed for duty cycles, machine service life', src: 'figures/course/thomson_ballscrew_p141_inch_life_formulas.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.141. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom142', ref: 'Thomson p.142', book: 'course', title: 'Torque (0.177 F·P, back-drive 0.143 F·P), power, critical speed n_c = Cs·4.76×10^6 d_r/l^2 and permissible compression load F_c = Cs·1.405×10^7 d_r^4/l^2 with end-fixity factors', src: 'figures/course/thomson_ballscrew_p142_inch_torque_speed_buckling.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.142. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom146', ref: 'Thomson p.146', book: 'course', title: 'Bearing-support (end-fixity) configurations A–D for speed and for compression load; tension vs compression loading', src: 'figures/course/thomson_ballscrew_p146_support_configurations.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.146. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom147', ref: 'Thomson p.147', book: 'course', title: 'Acceptable speed vs unsupported length chart (inch screws, end supports A–D)', src: 'figures/course/thomson_ballscrew_p147_inch_speed_vs_length.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.147. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom148', ref: 'Thomson p.148', book: 'course', title: 'Life expectancy chart: equivalent load vs life (10^6 in of travel) for each screw size', src: 'figures/course/thomson_ballscrew_p148_inch_life_chart.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.148. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom149', ref: 'Thomson p.149', book: 'course', title: 'Compression load vs unsupported length chart (buckling, end supports A–D)', src: 'figures/course/thomson_ballscrew_p149_inch_compression_load_vs_length.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.149. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom150', ref: 'Thomson p.150', book: 'course', title: 'Selecting a ball screw assembly (metric series)', src: 'figures/course/thomson_ballscrew_p150_metric_selection_procedure.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.150. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom151', ref: 'Thomson p.151', book: 'course', title: 'Metric worked selection example', src: 'figures/course/thomson_ballscrew_p151_metric_selection_example.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.151. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom152', ref: 'Thomson p.152', book: 'course', title: 'Metric design formulas: life, equivalent load and speed', src: 'figures/course/thomson_ballscrew_p152_metric_life_formulas.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.152. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom153', ref: 'Thomson p.153', book: 'course', title: 'Metric torque, power, critical speed and permissible compression load with end-fixity factors', src: 'figures/course/thomson_ballscrew_p153_metric_torque_speed_buckling.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.153. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom157', ref: 'Thomson p.157', book: 'course', title: 'Acceptable speed vs length (metric screws)', src: 'figures/course/thomson_ballscrew_p157_metric_speed_vs_length.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.157. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'thom158', ref: 'Thomson p.158', book: 'course', title: 'Compression load vs length (metric screws)', src: 'figures/course/thomson_ballscrew_p158_metric_compression_load_vs_length.png', note: 'Ball_Screw Catalogue Thomson Linear Motion.pdf p.158. Module 5 reading guide: imperial pp. 139–142, 146–149, metric pp. 150–153, 155–158.' },
+    { id: 'rr263', ref: 'Thomson RoundRail p.257', book: 'course', title: 'Ball Bushing bearing life and load capacity: W_e = P/(K_L K_S K_0), travel-life factor K_L chart, shaft-hardness factor K_S chart', src: 'figures/course/thomson_roundrail_p263_ball_bushing_life.png', note: 'Thomson RoundRail_LinearGuides_Catalogue.pdf p.263 (printed 257). Module 5 reading guide §2.3: linear bearings are not in either textbook; this catalogue is the course resource.' },
+    { id: 'rr264', ref: 'Thomson RoundRail p.258', book: 'course', title: 'Load direction (orientation factor K_0 polar graph), dynamic load rating, travel life L = (W/P · K_0 K_S)^3 × 10^6 m (metric) and worked MultiTrac example', src: 'figures/course/thomson_roundrail_p264_load_direction_shaft_hardness.png', note: 'Thomson RoundRail_LinearGuides_Catalogue.pdf p.264 (printed 258). Module 5 reading guide §2.3: linear bearings are not in either textbook; this catalogue is the course resource.' },
+    { id: 'rr265', ref: 'Thomson RoundRail p.259', book: 'course', title: '60 Case LinearRace shaft specifications; high-load correction factor and short-stroke factor charts', src: 'figures/course/thomson_roundrail_p265_shaft_specs_load_factor.png', note: 'Thomson RoundRail_LinearGuides_Catalogue.pdf p.265 (printed 259).' },
+    { id: 'rr26', ref: 'Thomson RoundRail p.26', book: 'course', title: 'Example product page: Super Smart Ball Bushing bearings (closed type), dimensions and dynamic load capacity', src: 'figures/course/thomson_roundrail_p26_super_smart_closed_specs.png', note: 'Thomson RoundRail_LinearGuides_Catalogue.pdf p.26.' },
+    { id: 'rr27', ref: 'Thomson RoundRail p.27', book: 'course', title: 'Super Smart Ball Bushing load/life graph and polar (orientation) graphs; how to size a bearing from load and required travel life', src: 'figures/course/thomson_roundrail_p27_super_smart_load_life_graph.png', note: 'Thomson RoundRail_LinearGuides_Catalogue.pdf p.27.' },
   ],
 
   sections: [
     { title: 'Step 1: Travel life', steps: [
-      { id: 'duty', title: 'Duty cycle → total travel over the design life', formula: '\\text{Travel life} = \\frac{\\text{distance}}{\\text{cycle}}\\cdot\\frac{\\text{cycles}}{\\text{hour}}\\cdot\\frac{24\\ \\text{h}}{\\text{day}}\\cdot\\frac{365\\ \\text{days}}{\\text{yr}}\\cdot(\\text{years})',
+      { id: 'duty', title: 'Duty cycle → total travel over the design life', fig: ['thom141'], formula: '\\text{Travel life} = \\frac{\\text{distance}}{\\text{cycle}}\\cdot\\frac{\\text{cycles}}{\\text{hour}}\\cdot\\frac{24\\ \\text{h}}{\\text{day}}\\cdot\\frac{365\\ \\text{days}}{\\text{yr}}\\cdot(\\text{years})',
         text: 'Distance per cycle counts <b>both</b> strokes if the nut goes out and back (Mott Example 17-3: 15 in × 2 strokes = 30 in per cycle). Enter the cycle rate per hour (Fizz) or per day (Mott).',
         vars: [
           { id: 'dist', symbol: 's_{cyc}', label: 'Travel distance per cycle', unit: 'in', kind: 'input' },
@@ -64,7 +83,7 @@ window.TOPIC = {
     ] },
 
     { title: 'Step 2: Select the screw from Figure 17-8', steps: [
-      { id: 'sel', title: 'Load and screw size', fig: ['fig17-8', 'fig17-3'], eq: '17-12',
+      { id: 'sel', title: 'Load and screw size', fig: ['fig17-8', 'fig17-3', 'thom139', 'thom140', 'thom148'], eq: '17-12',
         formula: '\\frac{L_2}{L_1} = \\left(\\frac{P_1}{P_2}\\right)^3 \\quad\\Rightarrow\\quad P_{rated@L_{req}} = P_{1\\,\\text{M}}\\left(\\frac{10^6}{L_{req}}\\right)^{1/3}',
         text: 'Read the chart at \\(L_{req}\\): the screw is adequate if its line lies at or above the load F. The yellow rated load is the value of the chosen line at 10⁶ in (pre-filled from a trace of the chart — overwrite with your own reading).',
         vars: [
@@ -82,7 +101,7 @@ window.TOPIC = {
     ] },
 
     { title: 'Step 3–4: Torque, speed, power', steps: [
-      { id: 'tq', title: 'Driving torque and back-driving torque', eq: '17-13, 17-14', formula: 'T_u = \\frac{F L}{2\\pi e} = 0.177\\,F L \\;(e = 0.90) \\qquad T_b = \\frac{F L e}{2\\pi} = 0.143\\,F L',
+      { id: 'tq', title: 'Driving torque and back-driving torque', fig: ['thom142'], eq: '17-13, 17-14', formula: 'T_u = \\frac{F L}{2\\pi e} = 0.177\\,F L \\;(e = 0.90) \\qquad T_b = \\frac{F L e}{2\\pi} = 0.143\\,F L',
         text: 'Ball screws are essentially never self-locking: a brake is needed to hold the load, and the load can be used deliberately to back-drive the screw.',
         vars: [
           { id: 'eff', symbol: 'e', label: 'Efficiency', kind: 'input', default: 0.9, hint: 'Mott: typically 0.90' },
@@ -101,7 +120,7 @@ window.TOPIC = {
     ] },
 
     { title: 'Application checks (Mott 17-4)', steps: [
-      { id: 'nc', title: 'Critical speed', eq: '17-15', formula: 'n_c = 4.76\\times10^{6}\\,\\frac{d\\,K_s}{(SF)\\,L_s^2} \\qquad n < 0.80\\,n_c',
+      { id: 'nc', title: 'Critical speed', fig: ['thom142', 'thom146', 'thom147'], eq: '17-15', formula: 'n_c = 4.76\\times10^{6}\\,\\frac{d\\,K_s}{(SF)\\,L_s^2} \\qquad n < 0.80\\,n_c',
         text: 'd = minor diameter of the screw (in), \\(L_s\\) = length between supports (in). End-fixity factor \\(K_s\\): simple–simple 1.00, fixed–fixed 2.24, fixed–simple 1.55, fixed–free 0.32. SF usually 1.25–3.0. Column buckling must also be checked for compressive loads (Euler / J.B. Johnson, Ch. 6; Ks for columns: 1.00 / 4.00 / 2.00 / 0.25).',
         vars: [
           { id: 'dmin', symbol: 'd', label: 'Minor (root) diameter of screw', unit: 'in', kind: 'input', hint: 'from supplier data; ≈ nominal − ball groove depth' },
@@ -113,7 +132,7 @@ window.TOPIC = {
           { id: 'nratio', symbol: 'n/n_c', label: 'Operating / critical speed', kind: 'calc', digits: 3, compute: v => H.has(v, 'n', 'ncrit') && v.ncrit > 0 ? v.n / v.ncrit : undefined },
         ],
         after: v => H.has(v, 'nratio') ? (v.nratio < 0.8 ? '<span class="result-ok">n = ' + H.fmt(v.n) + ' rpm &lt; 0.8 n<sub>c</sub> = ' + H.fmt(0.8 * v.ncrit) + ' rpm — critical speed OK.</span>' : '<span class="result-bad">n = ' + H.fmt(v.n) + ' rpm ≥ 0.8 n<sub>c</sub> = ' + H.fmt(0.8 * v.ncrit) + ' rpm — shorten the span, stiffen the supports or use a larger screw.</span>') : '' },
-      { id: 'buck', title: 'Column buckling (compressive load)', eq: 'Mott 17-4 with Ch. 6 Eqs. 6-4 / 6-9', formula: 'r = \\frac{d}{4} \\qquad \\frac{KL}{r},\\; K = \\frac{1}{\\sqrt{K_s}} \\qquad C_c = \\sqrt{\\frac{2\\pi^2 E}{S_y}} \\qquad P_{cr} = \\frac{\\pi^2 E A}{(KL/r)^2}\\ (\\text{Euler}, KL/r > C_c) \\quad P_{cr} = A S_y\\left[1 - \\frac{S_y (KL/r)^2}{4\\pi^2 E}\\right]\\ (\\text{Johnson})',
+      { id: 'buck', title: 'Column buckling (compressive load)', fig: ['thom142', 'thom146', 'thom149'], eq: 'Mott 17-4 with Ch. 6 Eqs. 6-4 / 6-9', formula: 'r = \\frac{d}{4} \\qquad \\frac{KL}{r},\\; K = \\frac{1}{\\sqrt{K_s}} \\qquad C_c = \\sqrt{\\frac{2\\pi^2 E}{S_y}} \\qquad P_{cr} = \\frac{\\pi^2 E A}{(KL/r)^2}\\ (\\text{Euler}, KL/r > C_c) \\quad P_{cr} = A S_y\\left[1 - \\frac{S_y (KL/r)^2}{4\\pi^2 E}\\right]\\ (\\text{Johnson})',
         text: 'Mott 17-4: a ball screw in compression is a column — long screws by Euler (Eq. 6-4), short ones by J. B. Johnson (Eq. 6-9). The column end-fixity factors differ from the critical-speed ones: simple–simple 1.00, fixed–fixed 4.00, fixed–simple 2.00, fixed–free 0.25 (so the effective-length constant K = 1/√K<sub>s</sub> = 1.0, 0.5, 0.707, 2.0 as in Ch. 6). Use the minor (root) diameter and the same support span; suppliers tabulate the allowable compressive load directly.',
         vars: [
           { id: 'Ksc', symbol: 'K_s', label: 'End fixity factor (column)', kind: 'choice', options: [{ label: 'Simply supported both ends — 1.00', value: 1 }, { label: 'Fixed both ends — 4.00', value: 4 }, { label: 'Fixed one end, simple other — 2.00', value: 2 }, { label: 'Fixed one end, free other — 0.25', value: 0.25 }], default: 1 },
@@ -132,7 +151,7 @@ window.TOPIC = {
     ] },
 
     { title: 'Result', steps: [
-      { id: 'result', title: 'Selected ball screw', fig: ['fig17-8'],
+      { id: 'result', title: 'Selected ball screw', fig: ['fig17-8', 'rr263', 'rr264', 'rr27'],
         text: 'Life (Figure 17-8), critical speed (n < 0.8 n<sub>c</sub>) and column buckling (P<sub>cr</sub>/F ≥ SF) must all pass. Mott Example 17-3: 12 500 lb, 15-in stroke × 2, 8 cycles/day, 10 yr → 8.76 × 10⁵ in → 2-in screw, T<sub>u</sub> = 1106 lb·in, 150 rpm, 2.63 hp, expected life ≈ 3.2 × 10⁶ in read off the printed chart (3.65× required; the traced rated load 18 800 lb gives 3.4 × 10⁶ in).',
         vars: [
           { id: 'Tures', symbol: 'T_u', label: 'Driving torque', unit: 'lb·in', kind: 'calc', compute: v => v.Tu },

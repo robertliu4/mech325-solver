@@ -78,6 +78,13 @@
       { id: 'wesco', ref: 'Wesco 6×19 FC EIPS catalogue (slide 7)', book: 'course', title: 'Wesco 6×19 fibre-core EIPS breaking strengths (bright / galvanised), tons of 2000 lb', src: 'figures/course/wire_rope_wesco_6x19_eips.png', note: 'Check on Fu: 2 in = 352 000 lb vs Table 17-24 nominal 106 kpsi × π(2)²/4 = 333 kip.' },
       { id: 'wesco-wll', ref: 'Wesco WLL sling tables (slide 21)', book: 'course', title: 'Wesco working-load-limit tables for single-leg and 2-leg bridle slings (design factor 5:1, basket D/d = 25)', src: 'figures/course/wire_rope_wesco_wll_slings.png' },
       { id: 'clips', ref: 'Wire-rope clips table (Canvas note, HW1 p19)', book: 'course', title: 'Wire rope clips: minimum number, rope turn-back and torque by rope diameter; 80 % termination efficiency when torqued correctly', src: 'figures/course/wire_rope_clips_table.png', note: '3/4 in → 4 clips, 18 in, 130 ft·lb; 1 in → 5, 26 in, 225; 2 in → 8, 71 in, 750. Flemish eye splice: 92.5 % (1.625 in) / 95 % (0.75 in).' },
+      { id: 'wesco-iwrc', ref: 'Wesco 6×19 IWRC catalogue (slide 8)', book: 'course', title: 'Wesco PowerStrand 6×19 IWRC class: weight per foot and minimum breaking strength (bright / galvanised EIPS)', src: 'figures/course/wire_rope_wesco_6x19_iwrc.png', note: 'Wire Rope 2025.pdf slide 8 (Wesco Industries catalogue page; that catalogue is not in the course catalogue folder). Use for IWRC ropes; FC ropes use slide 7.' },
+      { id: 'wesco-7x19', ref: 'Wesco 7×7 / 7×19 aircraft cable (slide 9)', book: 'course', title: 'Wesco galvanised 7×7 and 7×19 “aircraft cable”: weight per foot and minimum breaking strength (IPS)', src: 'figures/course/wire_rope_wesco_7x7_7x19_aircraft.png', note: 'Wire Rope 2025.pdf slide 9. Small-diameter control cables; not to be used on aircraft.' },
+      { id: 'wesco-pro34k', ref: 'Wesco PRO34K (slide 11)', book: 'course', title: 'Wesco PRO34K compacted non-rotating rope (35×7): minimum breaking strength, mm sizes', src: 'figures/course/wire_rope_wesco_pro34k.png', note: 'Wire Rope 2025.pdf slide 11. For cranes where a free rope end could spin (slide 10).' },
+      { id: 'wesco-eff', ref: 'Wesco end-fitting efficiency ratings (slide 23)', book: 'course', title: 'Choice of end fittings and termination efficiency ratings: Flemish eye / pressed sleeve 95–92.5–90 %, hand-tucked splice, swaged and spelter sockets 100 %, wedge socket 75–90 %, clips 80 %', src: 'figures/course/wire_rope_wesco_end_fitting_efficiency.png', note: 'Wire Rope 2025.pdf slide 23; the same table is pasted in HW1 Solutions p.17 for P8(c). Multiply the rope strength (or n_f) by the efficiency.' },
+      { id: 'wr-knuckle', ref: 'Full bending vs knuckle sheaves (slide 13)', book: 'course', title: 'When full bending occurs (departure angle > about 12°) and knuckle sheaves (several small sheaves, < 10° each)', src: 'figures/course/wire_rope_full_bending_knuckle_sheaves.png', note: 'Wire Rope 2025.pdf slide 13.' },
+      { id: 'wc-dd', ref: 'West Coast sheave D/d factors (catalogue p.17)', book: 'course', title: 'West Coast Wire Rope: bending efficiency vs D/d, relative service life vs D/d, suggested minimum D/d by construction (6×19 S 34, 6×25 FW 26, 6×36 WS 23 …), groove tolerances', src: 'figures/course/westcoast_sheave_dd_bending_efficiency.png', note: 'west coast wire rope catelogue.pdf p.18 (printed 17). Catalogue counterpart of Shigley Fig 17-20/17-21 and Mott Table 7-22.' },
+      { id: 'wc-6x19', ref: 'West Coast 6×19 bright FC / IWRC (catalogue p.22)', book: 'course', title: 'West Coast Wire Rope general-purpose bright 6×19 class: weight and breaking strength in tons, fibre core and IWRC (EIPS)', src: 'figures/course/westcoast_6x19_bright_fc_iwrc.png', note: 'west coast wire rope catelogue.pdf p.23 (printed 22). Breaking strength in tons of 2000 lb.' },
     ],
 
     sections: [
@@ -91,7 +98,7 @@
             { id: 'a', symbol: 'a', label: 'Max acceleration / deceleration', unit: 'ft/s²', kind: 'input', default: 0 },
             { id: 'Ftin', symbol: 'F_t', label: 'Largest working tension if given directly (optional)', unit: 'lbf', kind: 'input', hint: 'overrides the computed Ft' },
           ] },
-        { id: 'rope', title: 'Rope selection and properties', fig: ['table17-24', 'table17-27', 'fig17-19', 'table7-19'],
+        { id: 'rope', title: 'Rope selection and properties', fig: ['table17-24', 'table17-27', 'fig17-19', 'table7-19', 'wesco-iwrc', 'wesco-7x19', 'wc-6x19', 'wc-dd', 'wr-knuckle'],
           text: 'Choose construction, wire material and nominal diameter d. Properties auto-fill from Table 17-27 as functions of d (Table 17-24 for 8×19). S<sub>u</sub> is the strength of the <i>wire</i>: improved plow (monitor) 240–280, plow 210–240, mild plow 180–210 kpsi — the auto uses the conservative lower bound. The sheave/drum diameter D should be at least the Table 17-27 minimum (better: the "better" value; mine hoists use D/d<sub>w</sub> = 800–1000).',
           vars: [
             { id: 'rope', label: 'Rope construction', kind: 'choice', type: 'text', options: [{ label: '6 × 7 haulage', value: '6x7' }, { label: '6 × 19 standard hoisting', value: '6x19' }, { label: '6 × 37 special flexible', value: '6x37' }, { label: '8 × 19 extra flexible', value: '8x19' }] },
@@ -129,7 +136,7 @@
             { id: 'Fb', symbol: 'F_b', label: 'Equivalent bending load', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'Er', 'dw', 'Am', 'D') ? v.Er * v.dw * v.Am / v.D : undefined,
               work: v => H.has(v, 'Fb') ? '\\(F_b = \\frac{' + H.fmt(v.Er, 3) + '(' + H.fmt(v.dw, 3) + ')(' + H.fmt(v.Am, 3) + ')}{' + H.fmt(v.D) + '} = ' + H.fmt(v.Fb) + '\\ \\text{lbf}\\)' : null },
           ] },
-        { id: 'fu', title: 'Ultimate rope load Fu (nominal strength × nominal area, less the D/d strength loss)', fig: ['table17-24', 'fig17-20', 'wesco'],
+        { id: 'fu', title: 'Ultimate rope load Fu (nominal strength × nominal area, less the D/d strength loss)', fig: ['table17-24', 'fig17-20', 'wesco', 'wesco-iwrc', 'wc-6x19'],
           formula: 'F_u = (S_u)_{nom}\\,\\frac{\\pi d^2}{4}\\,(1 - \\text{loss})',
           text: 'Shigley (p. 920) and the Mech bible: the ultimate strength "must be reduced by the strength loss that occurs when the rope passes over a curved surface" — Figure 17-20 at the actual D/d (auto = a read of the curve; ≈ 5 % at D/d ≥ 40). <b>Course:</b> Tutorial 3 uses no reduction, F<sub>u</sub> = 106 kpsi × π(2)²/4 = 333 kip for the 2-in 6×19 monitor rope — enter 0 for the loss to match it. Compare with the Wesco catalogue breaking strength (352 000 lb for 2 in EIPS); if the vendor gives a breaking strength, enter it directly.',
           vars: [
@@ -154,12 +161,12 @@
               work: v => H.has(v, 'nf') ? '\\(n_f = \\frac{' + H.fmt(v.Ff) + ' - ' + H.fmt(v.Fb) + '}{' + H.fmt(v.Ft) + '} = ' + H.fmt(v.nf, 4) + '\\)' : null },
             { id: 'ns', symbol: 'n_s', label: 'Static factor of safety (Fu − Fb)/Ft', unit: '', kind: 'calc', digits: 4, compute: v => (H.has(v, 'Fu', 'Fb', 'Ft') && v.Ft > 0) ? (v.Fu - v.Fb) / v.Ft : undefined },
           ] },
-        { id: 'fit', title: 'End fitting efficiency and wire-rope clips (course, HW1 P8c)', fig: ['clips'],
+        { id: 'fit', title: 'End fitting efficiency and wire-rope clips (course, HW1 P8c)', fig: ['clips', 'wesco-eff'],
           formula: 'n_{f,fitting} = \\eta\\, n_f,\\qquad \\eta = 0.925\\ (\\text{Flemish eye, 1.625 in}),\\ 0.95\\ (\\text{Flemish eye, 0.75 in}),\\ 0.80\\ (\\text{clips, torqued})',
           text: 'Canvas note / HW1 P8(c): multiply the fatigue factor by the termination efficiency. The clips table gives the minimum number of clips, rope turn-back and torque for the rope size (auto-filled for the nearest listed diameter).',
           vars: [
             { id: 'fit', label: 'End fitting', kind: 'choice', type: 'text', options: [{ label: 'None / ideal (η = 1)', value: 'none' }, { label: 'Flemish eye splice, large rope (92.5 %)', value: 'flemish_large' }, { label: 'Flemish eye splice, small rope (95 %)', value: 'flemish_small' }, { label: 'Wire-rope clips, torqued (80 %)', value: 'clips' }], default: 'none' },
-            { id: 'eta', symbol: '\\eta', label: 'Termination efficiency', unit: '', kind: 'lookup', fig: 'clips', auto: v => ETA[v.fit] },
+            { id: 'eta', symbol: '\\eta', label: 'Termination efficiency', unit: '', kind: 'lookup', fig: 'wesco-eff', auto: v => ETA[v.fit] },
             { id: 'nf0e', symbol: '\\eta n_{f0}', label: 'Fatigue factor (no bending) × efficiency', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'nf0', 'eta') ? v.eta * v.nf0 : undefined,
               work: v => (H.has(v, 'nf0e') && v.eta !== 1) ? '\\(' + H.fmt(v.eta) + '(' + H.fmt(v.nf0, 4) + ') = ' + H.fmt(v.nf0e, 4) + '\\)' : null },
             { id: 'nfe', symbol: '\\eta n_f', label: 'Fatigue factor (with bending) × efficiency', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'nf', 'eta') ? v.eta * v.nf : undefined },

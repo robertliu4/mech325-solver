@@ -39,6 +39,9 @@ window.TOPIC = {
     { id: 't12-9', ref: 'Table 12-9', book: 'shigley', title: 'Wear factors K and limiting PV (Oiles materials) — used by the Fizz thermal/wear steps', src: 'figures/shigley/table12-9.png', page: 693 },
     { id: 't12-10', ref: 'Table 12-10', book: 'shigley', title: 'Coefficients of friction fs — needed for the Fizz minimum-length equation', src: 'figures/shigley/table12-10.png', page: 693 },
     { id: 't12-11', ref: 'Table 12-11', book: 'shigley', title: 'Oiles 500 SP service range (Pmax < 3560 psi, V < 100 ft/min, PV < 46 700)', src: 'figures/shigley/table12-11.png', page: 695 },
+    { id: 'oiles-sp', ref: 'OILES 500SP1 data (catalogue p.94)', book: 'course', title: 'OILES 500SP1 service range (dry: P_max 29 N/mm², V_max 0.50 m/s, PV 1.65 N/mm²·m/s; −40…+300 °C) and mechanical properties', src: 'figures/course/oiles_500sp1_service_range_properties.png', note: 'OILES-Bushings-catalog.pdf p.94. Catalogue source of Shigley Table 12-11 (3560 psi, 100 ft/min, PV 46 700 psi·ft/min) used by the Fizz route.' },
+    { id: 'oiles-spb', ref: 'OILES SPB 500SP1 bushing sizes (p.95)', book: 'course', title: 'Standard SPB (500SP1-SL1) bushing part numbers: I.D. × O.D. × length (mm)', src: 'figures/course/oiles_500sp1_spb_bushing_sizes.png', note: 'OILES-Bushings-catalog.pdf p.95. Pick a stock bushing whose length exceeds the minimum and whose I.D. fits the shaft (Fizz step 3).' },
+    { id: 'oiles-pv', ref: 'OILES PV vs motion and temperature (p.172)', book: 'course', title: 'OILES design notes: allowable PV by motion type (rotation, oscillation, reciprocation), PV vs temperature, intermittent operation, mating-shaft material and hardness', src: 'figures/course/oiles_operating_motion_pv.png', note: 'OILES-Bushings-catalog.pdf p.172.' },
     { id: 't12-12', ref: 'Table 12-12', book: 'shigley', title: 'Available bushing sizes (ID / OD / L, inches)', src: 'figures/shigley/table12-12.png', page: 697 },
   ],
 
@@ -69,7 +72,7 @@ window.TOPIC = {
     ] },
 
     { title: 'Geometry (Mott Steps 1–4)', steps: [
-      { id: 'geo', title: 'Trial diameter, L/D ratio and length', fig: ['t12-12'],
+      { id: 'geo', title: 'Trial diameter, L/D ratio and length', fig: ['t12-12', 'oiles-spb'],
         text: 'Mott Step 1: try <i>D = D<sub>min</sub></i> (or the next convenient size). Step 2: pick <i>L/D</i> in 0.5–2.0 — Mott recommends <i>L/D</i> = 1 for dry or oil-impregnated porous bearings and 1.5 for carbon-graphite. ' +
           'Step 3: <i>L = D(L/D)</i>. Step 4: round <i>L</i> to a convenient (stock) value — if the question gives a catalogue, use Shigley Table 12-12 sizes and make sure <i>L ≥ L<sub>min</sub></i>.',
         vars: [
@@ -110,7 +113,7 @@ window.TOPIC = {
           { id: 'pVdes', symbol: '(pV)_{design}', label: 'Design value 2·pV', unit: 'psi·fpm', kind: 'calc', digits: 5, compute: v => v.pV !== undefined ? 2 * v.pV : undefined },
           { id: 'pVSI', symbol: '(pV)_{design}', label: 'Design value in SI', unit: 'MPa·m/s', kind: 'calc', digits: 4, compute: v => v.pVdes !== undefined ? v.pVdes * 3.5e-5 : undefined },
         ] },
-      { id: 'mat', title: 'Specify a material (Mott Step 9)', fig: ['t16-1', 't12-9', 't12-11'],
+      { id: 'mat', title: 'Specify a material (Mott Step 9)', fig: ['t16-1', 't12-9', 't12-11', 'oiles-sp', 'oiles-pv'],
         text: 'From Table 16-1 pick a material with rated <i>pV</i> ≥ (<i>pV</i>)<sub>design</sub>. Fizz/Oiles style instead: compare the un-doubled <i>pV</i> to the limiting PV of Table 12-9 (e.g. 46 700 for Oiles 500) and also check <i>p<sub>max</sub></i> &lt; 3560 psi and <i>V</i> &lt; 100 ft/min (Table 12-11).',
         vars: [
           { id: 'matName', label: 'Material chosen', kind: 'input', type: 'text', hint: 'e.g. Babbitt high-tin, Porous bronze, Oiles 500' },

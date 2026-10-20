@@ -55,6 +55,8 @@
       { id: 't11-2', ref: 'Table 11-2', title: 'Dimensions and load ratings (C10, C0 in kN) for 02-series deep-groove and angular-contact ball bearings', src: 'figures/shigley/table11-2.png', page: 608,
         note: 'Pick the first bore whose C10 ≥ required. Record C0 for the thrust iteration.' },
       { id: 't11-3', ref: 'Table 11-3', title: 'Dimensions and basic load ratings for cylindrical roller bearings (02- and 03-series)', src: 'figures/shigley/table11-3.png', page: 609 },
+      { id: 'skf-dg', ref: 'SKF table 1.1 (catalogue p.272)', book: 'course', title: 'SKF single-row deep groove ball bearings, d = 25–30 mm: dimensions, C, C_0, fatigue limit P_u, speeds, designations (6205, 6305 …)', src: 'figures/course/skf_deep_groove_ball_d25_30_p272.png', note: 'SKF Bearing Catalogue.pdf p.274 (printed 272). Example page only (one bore range); the product tables continue over the neighbouring pages of the catalogue. Course textbook tables remain the primary source.' },
+      { id: 'skf-cyl', ref: 'SKF table 6.1 (catalogue p.516)', book: 'course', title: 'SKF single-row cylindrical roller bearings, d = 15–25 mm: dimensions, C, C_0, P_u, speeds (NU/NJ/N/NUP 2xx ECP)', src: 'figures/course/skf_cylindrical_roller_d15_25_p516.png', note: 'SKF Bearing Catalogue.pdf p.518 (printed 516). Example page only (one bore range); the product tables continue over the neighbouring pages of the catalogue. Course textbook tables remain the primary source.' },
     ],
 
     sections: [
@@ -121,7 +123,7 @@
               work: v => v.C10r !== undefined ? '\\(C_{10} = ' + H.fmt(v.af) + '(' + H.fmt(v.Fr) + ')\\left[' + H.fmt(v.brk) + '\\right]^{1/' + H.fmt(v.a) + '} = ' + H.fmt(v.C10r) + '\\ ' + v.unit + '\\)' : null },
             { id: 'C10rkN', symbol: 'C_{10}', label: 'Required rating in kN', unit: 'kN', kind: 'calc', digits: 4, compute: v => v.C10r !== undefined ? v.C10r * toKN(v) : undefined },
           ] },
-        { id: 'selr', title: 'Step 8 — select the bearing', fig: ['t11-2', 't11-3', 'fig11-8'], when: v => !thrust(v),
+        { id: 'selr', title: 'Step 8 — select the bearing', fig: ['t11-2', 't11-3', 'fig11-8', 'skf-dg', 'skf-cyl'], when: v => !thrust(v),
           text: 'Table 11-2 for ball bearings, Table 11-3 for cylindrical rollers. Take the first bore whose C10 ≥ the value above (also check the bore fits the shaft).',
           vars: [
             { id: 'boreR', label: 'Selected bearing (bore, mm / series)', kind: 'input', type: 'text', hint: 'e.g. 02-25 mm' },
@@ -199,7 +201,7 @@
       ] },
 
       { title: 'Result', steps: [
-        { id: 'res', title: 'Final selection', fig: ['t11-2', 't11-3'],
+        { id: 'res', title: 'Final selection', fig: ['t11-2', 't11-3', 'skf-dg'],
           vars: [
             { id: 'final', label: 'Status', kind: 'calc', compute: v => {
               if (!thrust(v)) return H.has(v, 'C10selR', 'C10rkN') ? (v.C10selR >= v.C10rkN ? 'PASS' : 'FAIL') : undefined;

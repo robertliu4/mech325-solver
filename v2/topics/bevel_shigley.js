@@ -78,6 +78,10 @@
       { id: 'ckl', ref: 'Helical/Bevel s23', book: 'course', title: 'Bevel stress-cycle factor KL — "use this line for commercial gears"; KT = 1, KR = 1 at 99 %; no KB', src: 'figures/course/bevel_kl_course.png', note: 'Fig 15-9 is the case-hardened line of Fig 14-14: KL = 6.1514 N^-0.1192 up to ~3×10^6, then 1.3558 N^-0.0178 (commercial) — the 1.683 N^-0.0323 line is for critical applications only. "No rim thickness factor for bevel gears, KB always = 1.0."' },
       { id: 'ccs', ref: 'Helical/Bevel s26', book: 'course', title: 'Bevel pitting size factor Cs and crowning factor Cxc — "use Cxc = 1.5 for commercial gears"', src: 'figures/course/bevel_cs_cxc_course.png', note: 'Cs = 0.5 (F < 0.5 in), 0.125F + 0.4375 (0.5 ≤ F ≤ 4.5 in), 1 above (the Mott chart in mm caps at 0.83 for F ≥ 80 mm). Cxc = 1.5 properly crowned, 2.0 uncrowned.' },
       { id: 'ccr', ref: 'Helical/Bevel s29', book: 'course', title: 'Bevel contact-stress reliability factor CR = √KR (Table 15-3) and KT = 1 below 250 °F', src: 'figures/course/bevel_cr_course.png', note: '1 in 10 000 → CR 1.22 / KR 1.50; 1 in 1000 → 1.12 / 1.25; 1 in 100 → 1.00 / 1.00; 1 in 10 → 0.92 / 0.85; 1 in 2 → 0.84 / 0.70.' },
+      { id: 'gk-qv', ref: 'Gear Kinematics s42', book: 'course', title: 'AGMA quality number Q_v by accuracy level (minimal 4–5 … highest 14–15) and how it is produced', src: 'figures/course/gear_agma_quality_accuracy_levels.png', note: 'Gear_Kinematics_and_Forces_-2024.pdf slide 42. Use with the application table to pick Q_v / A_v.' },
+      { id: 'm-t2-2', ref: 'Table 2-2', book: 'mott', title: 'Hardness scales vs tensile strength (HB, HRB, HRC, ksi, MPa) with Figure 2-6 conversion chart', src: 'figures/mott/table2-2_fig2-6.png', page: 49, note: 'Helical/Bevel s38 (material review). s_u ≈ 0.50 HB ksi (Mott Eq. 2-8).' },
+      { id: 'm-f9-20', ref: 'Figure 9-20', book: 'mott', title: 'Effective case depth h_e for carburized gears vs normal diametral pitch (normal / heavy case)', src: 'figures/mott/fig9-20.png', page: 409, note: 'Helical/Bevel s57 (case hardening): case depth typically 0.010–0.040 in.' },
+      { id: 'khk108', ref: 'KHK p.T108', book: 'course', title: 'KHK bending strength of plastic bevel and worm gears, sliding-speed limits for plastic worm pairs', src: 'figures/course/khk_plastic_bevel_worm_strength_t108.png', note: 'KHK Gears Technical Information.pdf p.108 (T108).' },
     ],
 
     sections: [
@@ -175,7 +179,7 @@
             { id: 'Wt', symbol: 'W^t', label: 'Transmitted load for stress (large end)', unit: 'lbf', kind: 'calc', compute: v => has(v, 'H', 'vt') ? 33000 * v.H / v.vt : undefined,
               work: v => has(v, 'H', 'vt', 'TP', 'dP') ? '\\(W^t = 33\\,000(' + fmt(v.H) + ')/' + fmt(v.vt) + ' = 2(' + fmt(v.TP) + ')/' + fmt(v.dP) + ' = ' + fmt(33000 * v.H / v.vt) + '\\) lbf' : null },
           ] },
-        { id: 'ko', title: 'Overload factor Ko and dynamic factor Kv', eq: '15-5 … 15-8', fig: ['t15-2', 'cwt', 't9-5', 'f15-5'],
+        { id: 'ko', title: 'Overload factor Ko and dynamic factor Kv', eq: '15-5 … 15-8', fig: ['t15-2', 'cwt', 't9-5', 'f15-5', 'gk-qv'],
           text: 'K<sub>o</sub> from Table 15-2 for the stated shocks (course: "slightly higher than spur gears"; tutorials use 1.0). Q<sub>v</sub> = "transmission accuracy number": use it if given; otherwise the guides pick A<sub>v</sub> from Table 9-5 by application or pitch-line speed ("just guess what looks right") and Q<sub>v</sub> = 17 − A<sub>v</sub>. K<sub>v</sub> by the Eq. 15-5 curve fit (same as spur/helical).',
           formula: 'B = 0.25(12 - Q_v)^{2/3},\\quad A = 50 + 56(1-B),\\quad K_v = \\left(\\frac{A + \\sqrt{v_t}}{A}\\right)^{B},\\quad v_{t,max} = [A + (Q_v - 3)]^2',
           vars: [
@@ -297,7 +301,7 @@
       ] },
 
       { title: '7 · Result — required hardness / verdict', steps: [
-        { id: 'res', title: 'Required through-hardened steel (Eqs. 15-22, 15-23 solved for H_B)', fig: ['f15-13', 'f15-12'],
+        { id: 'res', title: 'Required through-hardened steel (Eqs. 15-22, 15-23 solved for H_B)', fig: ['f15-13', 'f15-12', 'm-t2-2', 'm-f9-20', 'khk108'],
           text: 'Set s<sub>wt</sub> = s<sub>t</sub> and s<sub>wc</sub> = s<sub>c</sub> and solve the allowable-stress lines for the Brinell hardness. Pick a steel (Shigley App. A-20/A-21 or Mott App. 3) whose core hardness meets the largest value; above ~400 HB use flame/induction or carburized case hardening (Tables 15-4, 15-6).',
           vars: [
             { id: 'satReqP', symbol: 's_{at,req}', label: 'Required allowable bending stress (pinion)  s_t S_F K_T K_R / K_L', unit: 'psi', kind: 'calc', compute: v => has(v, 'stP', 'SF', 'KT', 'KR', 'KLP') ? v.stP * v.SF * v.KT * v.KR / v.KLP : undefined },

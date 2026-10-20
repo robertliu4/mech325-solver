@@ -48,6 +48,8 @@
         note: 'Columns: bore, OD, width, static Co, dynamic C (kN and lbf), max fillet, shoulder diameters S and H. 100-series = extra light, 200 = light, 300 = medium.' },
       { id: 't14-3b', ref: 'Table 14-3 (cont.)', title: 'Bearings 6009–6316 (bore 45–80 mm)', src: 'figures/mott/table14-3b.png', page: 590 },
       { id: 't14-3c', ref: 'Table 14-3 (cont.)', title: 'Bearings 6017–6326 (bore 85–130 mm)', src: 'figures/mott/table14-3c.png', page: 591 },
+      { id: 'skf-dg', ref: 'SKF table 1.1 (catalogue p.272)', book: 'course', title: 'SKF single-row deep groove ball bearings, d = 25–30 mm: dimensions, C, C_0, fatigue limit P_u, speeds, designations (6205, 6305 …)', src: 'figures/course/skf_deep_groove_ball_d25_30_p272.png', note: 'SKF Bearing Catalogue.pdf p.274 (printed 272). Example page only (one bore range); the product tables continue over the neighbouring pages of the catalogue. Course textbook tables remain the primary source.' },
+      { id: 'skf-cyl', ref: 'SKF table 6.1 (catalogue p.516)', book: 'course', title: 'SKF single-row cylindrical roller bearings, d = 15–25 mm: dimensions, C, C_0, P_u, speeds (NU/NJ/N/NUP 2xx ECP)', src: 'figures/course/skf_cylindrical_roller_d15_25_p516.png', note: 'SKF Bearing Catalogue.pdf p.518 (printed 516). Example page only (one bore range); the product tables continue over the neighbouring pages of the catalogue. Course textbook tables remain the primary source.' },
     ],
 
     sections: [
@@ -95,7 +97,7 @@
               work: v => v.Creq !== undefined ? '\\(C = ' + H.fmt(v.Pr) + '\\left(\\dfrac{' + H.fmt(v.Ld) + '}{' + H.fmt(v.CR) + '\\times 10^6}\\right)^{1/' + H.fmt(v.k) + '} = ' + H.fmt(v.Creq) + '\\text{ lb}\\)' : null },
             { id: 'CreqkN', symbol: 'C', label: 'Required C in kN', unit: 'kN', kind: 'calc', digits: 4, compute: v => v.Creq !== undefined ? v.Creq / 224.809 : undefined },
           ] },
-        { id: 'selr', title: 'Select from Table 14-3', fig: ['t14-3a', 't14-3b', 't14-3c'], when: v => !thrust(v),
+        { id: 'selr', title: 'Select from Table 14-3', fig: ['t14-3a', 't14-3b', 't14-3c', 'skf-dg', 'skf-cyl'], when: v => !thrust(v),
           text: 'Find the lightest bearing with dynamic <i>C</i> ≥ required and bore ≥ <i>D<sub>min</sub></i> (Mott Ex. 14-3: 650 lb, 600 rpm, 30 000 h → C = 6670 lb → 6208, bore 40 mm, C = 6902 lb).',
           vars: [
             { id: 'bearR', label: 'Bearing number', kind: 'input', type: 'text', hint: 'e.g. 6208' },
@@ -162,7 +164,7 @@
       ] },
 
       { title: 'Result', steps: [
-        { id: 'res', title: 'Final bearing', fig: ['t14-3a'],
+        { id: 'res', title: 'Final bearing', fig: ['t14-3a', 'skf-dg'],
           text: 'Record bearing number, bore, OD, width, fillet radius and shoulder diameters S / H from Table 14-3 — the bore becomes the minimum shaft diameter at the seat (Fizz Step 23).',
           vars: [
             { id: 'final', label: 'Status', kind: 'calc', compute: v => {

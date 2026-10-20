@@ -139,6 +139,18 @@
       { id: 'czn', ref: 'Gear Stress s44', book: 'course', title: 'Z_N — normal commercial gears line (1.4488 N^-0.023)', src: 'figures/course/gear_zn_course_line.png' },
       { id: 'cproc', ref: 'Gear Stress s47', book: 'course', title: 'Gear stress analysis procedure flow chart', src: 'figures/course/gear_stress_procedure.png' },
       { id: 'cteeth', ref: 'Helical/Bevel s33', book: 'course', title: 'Standard gear teeth proportions (20° FD / 20° stub / 25° FD) and Lewis Y table', src: 'figures/course/standard_gear_teeth_table.png', note: 'a = 1/P, b = 1.25/P, c = 0.25/P, whole depth 2.25/P, t = 1.571/P, face width 9/P < F < 13/P.' },
+      { id: 'm-t8-7', ref: 'Table 8-7', title: 'Number of pinion teeth to ensure no interference (rack: 32/18/12; 20° FD pinion/gear max teeth and ratio)', src: 'figures/mott/table8-7.png', page: 338, note: 'Gear Kinematics s27. 20° full depth: at least 18 teeth with a rack, 16 → max 101-tooth gear.' },
+      { id: 'gk-qv', ref: 'Gear Kinematics s42', book: 'course', title: 'AGMA quality number Q_v by accuracy level (minimal 4–5 … highest 14–15) and how it is produced', src: 'figures/course/gear_agma_quality_accuracy_levels.png', note: 'Gear_Kinematics_and_Forces_-2024.pdf slide 42. Use with the application table to pick Q_v / A_v.' },
+      { id: 'gk-cost', ref: 'Gear Kinematics s41', book: 'course', title: 'Manufacturing cost vs AGMA quality number for cutting, shaving and grinding', src: 'figures/course/gear_cost_vs_accuracy_qv.png', note: 'Gear_Kinematics_and_Forces_-2024.pdf slide 41.' },
+      { id: 'm-t2-2', ref: 'Table 2-2', title: 'Hardness scales vs tensile strength (HB, HRB, HRC, ksi, MPa) with Figure 2-6 conversion chart', src: 'figures/mott/table2-2_fig2-6.png', page: 49, note: 'Helical/Bevel s38 (material review). s_u ≈ 0.50 HB ksi (Mott Eq. 2-8).' },
+      { id: 'm-f2-12', ref: 'Figure 2-12', title: 'SAE/AISI steel designation system (alloy group, carbon content)', src: 'figures/mott/fig2-12.png', page: 61, note: 'Helical/Bevel s41.' },
+      { id: 'm-t2-8', ref: 'Table 2-8', title: 'Alloy groups in the SAE numbering system', src: 'figures/mott/table2-8.png', page: 61, note: 'Helical/Bevel s44.' },
+      { id: 'm-t2-9', ref: 'Table 2-9', title: 'Uses of some steels (1040 shafts/gears, 4140/4340/4640/8650 gears …)', src: 'figures/mott/table2-9.png', page: 63, note: 'Helical/Bevel s43.' },
+      { id: 'm-f9-20', ref: 'Figure 9-20', title: 'Effective case depth h_e for carburized gears vs normal diametral pitch (normal / heavy case)', src: 'figures/mott/fig9-20.png', page: 409, note: 'Helical/Bevel s57 (case hardening): case depth typically 0.010–0.040 in.' },
+      { id: 'm-t9-14', ref: 'Table 9-14', title: 'Approximate allowable bending stress s_at for plastic gears (ABS, acetal, nylon, polycarbonate, polyester, polyurethane; unfilled / glass-filled)', src: 'figures/mott/table9-14.png', page: 431, note: 'Helical/Bevel s32 (plastic gears, Mott).' },
+      { id: 'khk106', ref: 'KHK p.T106', book: 'course', title: 'KHK plastic spur gears: Lewis bending strength F = m y b σ_b K_v (Nylon MC901), Duracon factors, form factor y (Table 18-15), speed, working, lubrication and material factors', src: 'figures/course/khk_plastic_spur_bending_strength_t106.png', note: 'KHK Gears Technical Information.pdf p.106 (T106). Helical/Bevel s34: “See KHK Gear Information Catalogue”.' },
+      { id: 'khk107', ref: 'KHK p.T107', book: 'course', title: 'KHK plastic gears: speed factor and temperature factor charts, surface (Hertz) strength of Duracon spur gears and allowable surface stress', src: 'figures/course/khk_plastic_spur_factors_surface_strength_t107.png', note: 'KHK Gears Technical Information.pdf p.107 (T107).' },
+      { id: 's-f13-5', ref: 'Figure 13-5', book: 'shigley', title: 'Nomenclature of spur-gear teeth (addendum, dedendum, clearance, circular pitch, tooth thickness, face width, flank, lands)', src: 'figures/shigley/fig13-5.png', page: 704, note: 'Gear Kinematics s6 activity and Midterm 2025 Q14 ask students to label this figure.' },
     ],
 
     sections: [
@@ -156,7 +168,7 @@
             { id: 'Pdes', symbol: 'P_{des}', label: 'Design power', unit: 'hp', kind: 'calc', compute: v => has(v, 'P', 'Ko') ? v.P * v.Ko : undefined, work: v => has(v, 'P', 'Ko') ? '\\(P_{des} = ' + f(v.Ko) + '\\times' + f(v.P) + ' = ' + f(v.P * v.Ko) + '\\ \\mathrm{hp}\\)' : null },
             { id: 'VRd', symbol: 'VR_{des}', label: 'Desired velocity ratio', kind: 'calc', compute: v => has(v, 'nP', 'nGd') && v.nGd > 0 ? v.nP / v.nGd : undefined },
           ] },
-        { id: 'tooth', title: 'Diametral pitch and tooth numbers (F4–10 · M4–10)', fig: ['f9-11', 't8-3'],
+        { id: 'tooth', title: 'Diametral pitch and tooth numbers (F4–10 · M4–10)', fig: ['f9-11', 't8-3', 'm-t8-7'],
           text: 'Read P_d from Fig. 9-11 with P_des and n_P ("round to the smallest number" — the smaller standard P_d). Choose N_P between 17 and 20 (17 is used until you type one). Take n_G at the middle of the allowed range, N_G = N_P·VR rounded to an integer, then the actual VR and n_G — check n_G is inside the allowed range, otherwise try another N_P.',
           formula: 'N_G = N_P\\,VR\\ (\\text{integer}),\\qquad VR = m_G = \\frac{N_G}{N_P},\\qquad n_G = n_P\\frac{N_P}{N_G}',
           vars: [
@@ -187,7 +199,7 @@
             { id: 'p', symbol: 'p', label: 'Circular pitch', unit: 'in', kind: 'calc', compute: v => has(v, 'Pd') ? Math.PI / v.Pd : undefined },
             { id: 'm', symbol: 'm', label: 'Module (metric equivalent)', unit: 'mm', kind: 'calc', compute: v => has(v, 'Pd') ? 25.4 / v.Pd : undefined },
           ] },
-        { id: 'geo2', title: 'Addendum, dedendum, clearance, depths, tooth thickness', fig: ['t8-1'],
+        { id: 'geo2', title: 'Addendum, dedendum, clearance, depths, tooth thickness', fig: ['t8-1', 's-f13-5'],
           formula: 'a = \\frac{1}{P_d},\\quad b = \\frac{1.25}{P_d},\\quad c = \\frac{0.25}{P_d},\\quad h_t = a+b,\\quad h_k = 2a,\\quad t = \\frac{\\pi}{2P_d}',
           vars: [
             { id: 'a', symbol: 'a', label: 'Addendum', unit: 'in', kind: 'calc', compute: v => has(v, 'Pd') ? 1 / v.Pd : undefined },
@@ -228,7 +240,7 @@
       ] },
 
       { title: 'Stress-equation factors (Fizz steps 14–24 · Mech steps 14–19, 26–27)', steps: [
-        { id: 'kv', title: 'Quality number A_v and dynamic factor K_v (F16–17 · M14–15)', fig: ['t9-4', 't9-5', 'f9-16', 't9-6'],
+        { id: 'kv', title: 'Quality number A_v and dynamic factor K_v (F16–17 · M14–15)', fig: ['t9-4', 't9-5', 'f9-16', 't9-6', 'gk-qv', 'gk-cost'],
           formula: 'B = 0.25(A_v-5)^{0.667},\\quad C = 50+56(1-B),\\quad K_v = \\left[\\frac{C}{C+\\sqrt{v_t}}\\right]^{-B},\\quad v_{t,max} = [C+(14-A_v)]^2',
           text: 'A_v from the problem, else Table 9-5 by application or pitch-line speed (lower number = more precise; Fizz: "just guess what looks right") — default A_v = 10. A Shigley Q_v maps to A_v = 17 − Q_v (Table 9-4; midterm "A_v = 8 (Q = 9)"). The guides read K_v from Fig. 9-16; the auto value is the Table 9-6 equation of the same curves, which the course prefers ("difficult to read the graph accurately") — the midterm read ≈ 1.16 from the figure vs 1.17 by equation, both accepted.',
           after: v => has(v, 'vt') ? 'Table 9-5 by pitch-line speed (machine-tool / high-quality drives): v_t = ' + f(v.vt) + ' ft/min → A_v ' + AvT95(v.vt) + ' (Q_v ' + (17 - AvT95(v.vt)) + '). By application: cranes, punch press, mining conveyor A10; cement mixer/kiln, steel mill A11; small power drill A9; automotive transmission A6.' : '',
@@ -280,7 +292,7 @@
       ] },
 
       { title: 'Stress numbers (Fizz steps 32, 34 · Mech steps 20, 25, 28)', steps: [
-        { id: 'sb', title: 'Bending stress numbers s_tP, s_tG (F32 · M20)', eq: '9-16',
+        { id: 'sb', title: 'Bending stress numbers s_tP, s_tG (F32 · M20)', fig: ['m-t9-14', 'khk106'], eq: '9-16',
           formula: 's_{tP} = \\frac{W_t P_d}{F J_P}K_o K_s K_m K_B K_v,\\qquad s_{tG} = s_{tP}\\frac{J_P}{J_G}',
           vars: [
             { id: 'stP', symbol: 's_{tP}', label: 'Pinion bending stress number', unit: 'psi', kind: 'calc', compute: v => has(v, 'Wt', 'Pd', 'F', 'JP', 'Ko', 'Ks', 'Km', 'KB', 'Kv') ? v.Wt * v.Pd / (v.F * v.JP) * v.Ko * v.Ks * v.Km * v.KB * v.Kv : undefined,
@@ -332,7 +344,7 @@
             { id: 'sacP', symbol: 's_{ac,P}', label: 'Required contact stress number, pinion', unit: 'psi', kind: 'calc', compute: v => has(v, 'sc', 'KR', 'SFd', 'ZNP') ? v.sc * v.KR * v.SFd / v.ZNP : undefined, work: v => v.sacP !== undefined ? '\\(s_{ac,P} = ' + f(v.sc) + '(' + f(v.KR, 3) + ')(' + f(v.SFd) + ')/' + f(v.ZNP, 4) + ' = ' + f(v.sacP) + '\\ \\mathrm{psi}\\)' : null },
             { id: 'sacG', symbol: 's_{ac,G}', label: 'Required contact stress number, gear', unit: 'psi', kind: 'calc', compute: v => has(v, 'sc', 'KR', 'SFd', 'ZNG') ? v.sc * v.KR * v.SFd / v.ZNG : undefined },
           ] },
-        { id: 'hb', title: 'Required Brinell hardness and material (F37–38, 40 · M23, 30)', fig: ['f9-18', 'f9-19', 't9-8', 'app3a', 'app3b', 'app5', 't9-9', 't9-10'],
+        { id: 'hb', title: 'Required Brinell hardness and material (F37–38, 40 · M23, 30)', fig: ['f9-18', 'f9-19', 't9-8', 'app3a', 'app3b', 'app5', 't9-9', 't9-10', 'm-t2-2', 'm-t2-9', 'm-t2-8', 'm-f2-12'],
           formula: 'HB = \\frac{s_{at}/1000 - 12.80}{0.0773}\\ (\\text{grade 1}),\\qquad HB = \\frac{s_{ac}/1000 - 29.10}{0.322}\\ (\\text{grade 1})',
           text: 'Grade 1 is the course default (Grade 2: HB = (s_at/1000 − 16.40)/0.102, HB = (s_ac/1000 − 34.30)/0.349). Choose the LARGEST. <b>Course material step (Module 2 p27, Midterm P2 part 3):</b> pick an alloy + heat treatment from Table 9-8 / Appendix 3 with at least this hardness and quote its HB and % elongation — e.g. 4140 annealed HB 197, 4140 OQT1300 HB 235, 4140 OQT1000 HB 341, 4340 OQT1000 HB 363 (16 % el.), 4340 OQT700 HB 461 ("OQT1300" = oil-quenched &amp; tempered at 1300 °F; HB ≈ 2 × s_u ksi). Same material for pinion and gear (Fizz p.48; Mech: "design using pinion values as the gear will be the same material"); Mech: "look at appendix 3 or 5 … we normally use Appendix 3". Then confirm 1.0 ≤ SF ≤ 1.5 below. HB > 400 → flame/induction hardening or carburizing (Table 9-9, Appendix 5) instead of through-hardening (Fizz step 40).',
           vars: [
@@ -347,7 +359,7 @@
       ] },
 
       { title: 'Check the chosen material — safety factors (Fizz steps 36, 39 · Mech steps 24, 30)', steps: [
-        { id: 'mat', title: 'Allowable stress numbers of the chosen material (M24, 30)', fig: ['f9-18', 'f9-19', 'app3a', 'app3b', 'app5', 't9-9', 't9-10'],
+        { id: 'mat', title: 'Allowable stress numbers of the chosen material (M24, 30)', fig: ['f9-18', 'f9-19', 'app3a', 'app3b', 'app5', 't9-9', 't9-10', 'm-f9-20'],
           formula: 's_{at} = 0.0773\\,HB + 12.80\\ \\mathrm{ksi},\\qquad s_{ac} = 0.322\\,HB + 29.10\\ \\mathrm{ksi}\\quad(\\text{grade 1, through-hardened})',
           text: 'Enter the Brinell hardness of the chosen steel (Appendix 3), or type s_at / s_ac directly for case-hardened (Table 9-9) or iron/bronze (Table 9-10).',
           vars: [

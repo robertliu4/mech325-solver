@@ -74,6 +74,10 @@
       { id: 'ckl', ref: 'Helical/Bevel s23', book: 'course', title: 'Bevel stress-cycle factor KL — "use this line for commercial gears"; KT = 1, KR = 1 at 99 %; no KB', src: 'figures/course/bevel_kl_course.png', note: 'KL = 6.1514 NL^-0.1192 up to ~3×10^6, then 1.3558 NL^-0.0178 (commercial); 1.683 NL^-0.0323 is for critical applications only.' },
       { id: 'ccs', ref: 'Helical/Bevel s26', book: 'course', title: 'Bevel pitting size factor Cs and crowning factor Cxc — "use Cxc = 1.5 for commercial gears"', src: 'figures/course/bevel_cs_cxc_course.png', note: 'Cs = 0.5 (F < 0.5 in), 0.125F + 0.4375 (0.5 ≤ F ≤ 4.5 in); the Mott chart (mm) caps at 0.83 above 80 mm. Cxc = 1.5 crowned, 2.0 uncrowned.' },
       { id: 'ccr', ref: 'Helical/Bevel s29', book: 'course', title: 'Bevel contact-stress reliability factor CR = √KR (Table 10-3 / Shigley 15-3), KT = 1 below 250 °F', src: 'figures/course/bevel_cr_course.png' },
+      { id: 'gk-qv', ref: 'Gear Kinematics s42', book: 'course', title: 'AGMA quality number Q_v by accuracy level (minimal 4–5 … highest 14–15) and how it is produced', src: 'figures/course/gear_agma_quality_accuracy_levels.png', note: 'Gear_Kinematics_and_Forces_-2024.pdf slide 42. Use with the application table to pick Q_v / A_v.' },
+      { id: 'm-t2-2', ref: 'Table 2-2', title: 'Hardness scales vs tensile strength (HB, HRB, HRC, ksi, MPa) with Figure 2-6 conversion chart', src: 'figures/mott/table2-2_fig2-6.png', page: 49, note: 'Helical/Bevel s38 (material review). s_u ≈ 0.50 HB ksi (Mott Eq. 2-8).' },
+      { id: 'm-f9-20', ref: 'Figure 9-20', title: 'Effective case depth h_e for carburized gears vs normal diametral pitch (normal / heavy case)', src: 'figures/mott/fig9-20.png', page: 409, note: 'Helical/Bevel s57 (case hardening): case depth typically 0.010–0.040 in.' },
+      { id: 'khk108', ref: 'KHK p.T108', book: 'course', title: 'KHK bending strength of plastic bevel and worm gears, sliding-speed limits for plastic worm pairs', src: 'figures/course/khk_plastic_bevel_worm_strength_t108.png', note: 'KHK Gears Technical Information.pdf p.108 (T108).' },
     ],
 
     sections: [
@@ -197,7 +201,7 @@
             { id: 'Km', symbol: 'K_m', label: 'Load-distribution factor', kind: 'calc', compute: v => has(v, 'Kmb', 'F') ? v.Kmb + 0.0036 * v.F * v.F : undefined,
               work: v => has(v, 'Kmb', 'F') ? '\\(K_m = ' + fmt(v.Kmb) + ' + 0.0036(' + fmt(v.F) + ')^2 = ' + fmt(v.Kmb + 0.0036 * v.F * v.F) + '\\)' : null },
           ] },
-        { id: 's3', title: 'Quality number and dynamic factor', fig: ['t9-5', 'f9-16', 't9-6'],
+        { id: 's3', title: 'Quality number and dynamic factor', fig: ['t9-5', 'f9-16', 't9-6', 'gk-qv'],
           formula: 'B = 0.25(A_v - 5.0)^{0.667},\\quad C = 50 + 56(1.0 - B),\\quad K_v = \\left[\\frac{C}{C + \\sqrt{v_t}}\\right]^{-B}',
           text: 'Use A<sub>v</sub> if given (Mech); otherwise pick from Table 9-5 by application or pitch-line speed (Fizz: "just guess what looks right") — A10 for ordinary industrial drives and speeds below 800 ft/min (pre-filled), A8 for 800–2000 ft/min, A6 for 2000–4000 ft/min. Mott\'s example uses A11 ("general commercial processing").',
           vars: [
@@ -281,7 +285,7 @@
       ] },
 
       { title: '7 · Material selection and safety factors (Mech bible step 24-26)', steps: [
-        { id: 'res', title: 'Specify material, then verify SF', fig: ['f10-17', 'f10-21', 't10-4'],
+        { id: 'res', title: 'Specify material, then verify SF', fig: ['f10-17', 'f10-21', 't10-4', 'm-t2-2', 'm-f9-20', 'khk108'],
           formula: 'SF_{bending} = \\frac{s_{at,actual}K_L}{s_t K_R},\\qquad SF_{contact} = \\frac{s_{ac,actual}C_L}{s_c C_R}',
           text: 'The governing requirement is the largest HB. Pick a through-hardened steel from Mott App. 3 / Fig. A4-1 with at least that hardness (Mott Ex. 10-8: 267 HB → SAE 1040 WQT 1000, 269 HB). Above 400 HB specify flame/induction or carburized case hardening (Table 10-4). Enter the chosen hardness to get the actual safety factors; note the bevel SF formula differs from the spur one.',
           vars: [
