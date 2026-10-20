@@ -13,6 +13,17 @@
   const r = d => d * Math.PI / 180, fmt = (x, d) => H.fmt(x, d);
   const has = (v, ...a) => H.has(v, ...a);
   const sq = Math.sqrt;
+  const STD_P = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 24, 32, 48];   // Table 8-3 diametral pitches
+  const STD_M = [0.3, 0.4, 0.5, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 16, 20, 25];  // Table 8-4 standard modules
+  // standard diametral pitch list with Use buttons; ★ = the pitch in use
+  const stdTable = (v, o) => {
+    const cur = v[o.Pd], N = v[o.N], S = o.sym || 'P_d';
+    const near = (x, l) => l.reduce((a, b) => Math.abs(b - x) < Math.abs(a - x) ? b : a);
+    const rows = o.list.map(p => ({ cells: [H.fmt(p), H.fmt(25.4 / p, 3), H.fmt(near(25.4 / p, o.mods)), N > 0 ? H.fmt(N / p, 4) : '—'], pick: p === cur, set: { [o.Pd]: p } }));
+    return H.table(['\\(' + S + '\\)', '\\(m = 25.4/' + S + '\\) (mm)', 'nearest std. \\(m\\)', o.dlabel || '\\(d_P\\) (in)'], rows, {
+      caption: 'Standard diametral pitches (' + o.ref + ')' + (o.list.indexOf(cur) >= 0 ? ' — ★ = in use' : (cur > 0 ? ' — ' + H.fmt(cur) + ' is not in this list' : '')),
+      note: '“Use” sets \\(' + S + '\\); a given module converts with \\(' + S + ' = 25.4/m\\) (' + o.mref + ').' });
+  };
   // Table 8-10: Pd → [B, overall thickness, face width]
   // Course Helical/Bevel s33 (Mott Table 9-15) Lewis Y, load near the pitch point: N → [14.5° FD, 20° FD, 20° stub]
   const Y915_N = [26, 28, 30, 34, 38, 43, 50];
@@ -32,47 +43,46 @@
     title: 'Rack & Pinion — Kinematics, Forces & Tooth Strength',
     subtitle: 'Mott Sec. 8-13 (Table 8-10, Example 8-9) · Fizz p. 75 / Mech p. 114 procedure · strength via Mott Ch. 9 spur equations',
     sibling: 'rack_shigley.html',
-    intro: 'A pinion driving a straight rack (Fig. 8-45). Enter the pinion (P<sub>d</sub>, N<sub>P</sub>, n<sub>P</sub>) and the travel; the sheet gives D<sub>P</sub>, the pitch-line-to-back dimension B (Table 8-10), the pinion-centreline-to-rack-back distance, rack velocity, travel time and pinion revolutions (Mott Ex. 8-9), then the tooth forces (Sec. 9-3) and a bending check with the spur-gear stress equation (Eq. 9-15) — the rack is a spur gear with an infinite number of teeth, so read J for the pinion with the ∞-tooth mate curve of Fig. 9-10. For the complete spur procedure (contact stress, Y<sub>N</sub>, K<sub>R</sub>) take W<sub>t</sub> to the <a href="spur_mott.html">spur-gear calculator</a>. <b>Defaults follow the Fizz / Mech guide assumptions</b> listed in the panel below — the rack pages cover the kinematics; the bending check uses the guides\' spur-gear assumptions (φ = 20°, nominal F = 12/P<sub>d</sub>, A<sub>v</sub> = 10 from Table 9-5, K<sub>s</sub> from Table 9-2, C<sub>ma</sub> commercial enclosed, K<sub>B</sub> = 1, K<sub>R</sub> = 1 at 99 %, SF = 1, grade-1 steel) plus the course\'s (Gear Trains Tutorial 1 Q3h treats the rack as the interference limit N<sub>P</sub> = 2k/sin²φ; K<sub>o</sub> = 1 in tutorials, Y<sub>N</sub> = 1 at 10<sup>7</sup> cycles). A plastic-pinion Lewis check (Helical/Bevel s31–34) is at the end. Load the example to reproduce Example 8-9 (24T, P<sub>d</sub> = 6, 125 rpm, 20 ft).',
+    intro: 'A pinion driving a straight rack (Fig. 8-45). Enter \\(P_d\\), \\(N_P\\), \\(n_P\\) and the travel → \\(D_P\\), \\(B\\) (Table 8-10), centre-to-rack-back, rack speed, time, pinion turns (Ex. 8-9) → forces with directions → bending check with Eq. 9-15 (J from the rack-mate curve of Fig. 9-10). For contact stress carry \\(W_t\\) to the <a href=\"spur_mott.html\">spur-gear calculator</a>. Example = Ex. 8-9 (24T, \\(P_d\\) = 6, 125 rpm, 20 ft).',
     example: { Pd: 6, NP: 24, nP: 125, s: 20, phi: 20, P: 1, Ko: 1.0, Av: 10, F: 1.0, JP: 0.37, HB: 200, SFd: 1 },
 
     assumptions: [
-      { text: 'Pressure angle φ = 20° full depth unless given ("assume 20° unless otherwise specified")', src: 'Fizz p.42 · Mech p.79', var: 'phi' },
-      { text: 'Rack pitch-line-to-back B (and thickness, face width) from Table 8-10 when P_d is listed — manufacturer data in practice', src: 'Fizz p.76 · Mech p.115', var: 'B' },
-      { text: 'Full-depth teeth (k = 1) for the smallest pinion that runs with a rack, N_P = 2k/sin²φ', src: 'course Gear Trains Tut 1 Q3h', var: 'k' },
-      { text: 'Face width not given → nominal F = 12/P_d ("just go for the nominal value"; range 8/P_d … 16/P_d)', src: 'Fizz p.40 · Mech p.77', var: 'F' },
-      { text: 'K_o from Table 9-1 for the stated shocks — no guide default; pre-filled 1.00 (uniform/uniform), as in the course tutorials', src: 'Mech p.74', var: 'Ko' },
-      { text: 'A_v from Table 9-5 by application or pitch-line speed if not given ("just guess what looks right"): A_v = 10 pre-filled (ordinary drives, v_t < 800 ft/min)', src: 'Fizz p.41 · Mech p.77', var: 'Av' },
-      { text: 'K_s from Table 9-2: 1.00 for P_d ≥ 5', src: 'Mech p.80', var: 'Ks' },
-      { text: 'K_m = 1 + C_pf + C_ma with C_ma for commercial enclosed gear units', src: 'Fizz p.44 · Mech p.80', var: 'Km' },
-      { text: 'K_B = 1 ("typically 1 for commercially made gears")', src: 'Fizz p.45 · Mech p.81' },
-      { text: '99 % reliability → K_R = 1; no life given → Y_N = 1 (10^7 cycles) — use the spur calculator for other lives', src: 'Fizz p.45 · Mech p.82' },
-      { text: 'Safety factor SF = 1 to find the minimum s_at, then a steel with 1 ≤ SF ≤ 1.5', src: 'Fizz p.45 · Mech p.82', var: 'SFd' },
-      { text: 'Through-hardened grade 1 steel (Fig. 9-18: s_at = 0.0773HB + 12.80 ksi), material from Appendix 3', src: 'Mech p.84 · Fizz p.40' },
-      { text: 'Plastic pinion: overload ("design") factor SF = 1 in the Lewis check unless given', src: 'course Helical/Bevel s33', var: 'SFp' },
+      { text: '\\(\\phi\\) = 20° full depth unless given', src: 'Fizz p.42 · Mech p.79', var: 'phi' },
+      { text: 'Rack \\(B\\), thickness and face width from Table 8-10 when \\(P_d\\) is listed (manufacturer data in practice)', src: 'Fizz p.76 · Mech p.115', var: 'B' },
+      { text: 'Smallest pinion with a rack: \\(N_P = 2k/\\sin^2\\phi\\), full depth \\(k = 1\\) (18 teeth at 20°)', src: 'course Gear Trains Tut 1 Q3h', var: 'k' },
+      { text: 'No face width given → nominal \\(F = 12/P_d\\) (range \\(8/P_d\\) … \\(16/P_d\\))', src: 'Fizz p.40 · Mech p.77', var: 'F' },
+      { text: '\\(K_o\\) from Table 9-1; pre-filled 1.00 (uniform/uniform, tutorials)', src: 'Mech p.74', var: 'Ko' },
+      { text: '\\(A_v\\) not given → 10 (ordinary drives below 800 ft/min, Table 9-5)', src: 'Fizz p.41 · Mech p.77', var: 'Av' },
+      { text: '\\(K_s\\) from Table 9-2: 1.00 for \\(P_d \\ge 5\\)', src: 'Mech p.80', var: 'Ks' },
+      { text: '\\(K_m = 1 + C_{pf} + C_{ma}\\), commercial enclosed', src: 'Fizz p.44 · Mech p.80', var: 'Km' },
+      { text: '\\(K_B = 1\\), \\(K_R = 1\\) (99 %), \\(Y_N = 1\\) (\\(10^7\\) cycles) — other lives in the spur calculator', src: 'Fizz p.45 · Mech p.81–82', step: 'st' },
+      { text: 'Solve with SF = 1, then pick a steel with SF of 1 … 1.5', src: 'Fizz p.45 · Mech p.82', var: 'SFd' },
+      { text: 'Through-hardened grade 1 steel, \\(s_{at} = 0.0773HB + 12.80\\) ksi (Fig. 9-18)', src: 'Mech p.84 · Fizz p.40', var: 'sat' },
+      { text: 'Plastic pinion: overload SF = 1 in the Lewis check unless given', src: 'course Helical/Bevel s33', var: 'SFp' },
     ],
 
     figures: [
-      { id: 'f8-45', ref: 'Figure 8-45', title: 'Rack driven by a pinion — B, overall thickness, pitch line, rack velocity vR', src: 'figures/mott/fig8-45.png', page: 366 },
-      { id: 't8-10', ref: 'Table 8-10', title: 'Example rack specifications: pitch line to back B, thickness, face width vs Pd', src: 'figures/mott/table8-10.png', page: 367, note: 'Auto-fill uses this table when Pd is a listed value; use manufacturer data in practice.' },
+      { id: 'f8-45', ref: 'Figure 8-45', title: 'Rack driven by a pinion — \\(B\\), overall thickness, pitch line, rack velocity \\(v_R\\)', src: 'figures/mott/fig8-45.png', page: 366 },
+      { id: 't8-10', ref: 'Table 8-10', title: 'Example rack specifications: pitch line to back \\(B\\), thickness, face width vs \\(P_d\\)', src: 'figures/mott/table8-10.png', page: 367, note: 'Auto-fill uses this table when \\(P_d\\) is listed; use manufacturer data in practice.' },
       { id: 'f8-46', ref: 'Figure 8-46', title: 'Pinion and rack of Example Problem 8-9', src: 'figures/mott/fig8-46.png', page: 367 },
-      { id: 't9-1', ref: 'Table 9-1', title: 'Suggested overload factors Ko', src: 'figures/mott/table9-1.png', page: 395 },
-      { id: 't9-2', ref: 'Table 9-2', title: 'Suggested size factors K_s', src: 'figures/mott/table9-2.png', page: 395, note: 'K_s = 1.00 for P_d ≥ 5; 1.05 (4), 1.15 (3), 1.25 (2), 1.40 (1.25).' },
-      { id: 't9-5', ref: 'Table 9-5', title: 'Recommended AGMA quality numbers Av', src: 'figures/mott/table9-5.png', page: 399, note: 'By application, or by pitch-line speed: 0–800 ft/min A10, 800–2000 A8, 2000–4000 A6, over 4000 A4.' },
-      { id: 'f9-16', ref: 'Figure 9-16', title: 'Dynamic factor Kv', src: 'figures/mott/fig9-16.png', page: 400 },
-      { id: 't9-6', ref: 'Table 9-6', title: 'Analytical method for Kv', src: 'figures/mott/table9-6.png', page: 401 },
-      { id: 'f9-10', ref: 'Figure 9-10', title: 'Spur geometry factor J — use the ∞ (rack) mating-gear curve for the pinion', src: 'figures/mott/fig9-10.png', page: 393, note: 'Pinion: ordinate NP, "number of teeth in mating gear" = ∞. Rack tooth: right-hand end of the chart (∞) with mate NP.' },
-      { id: 'f9-18', ref: 'Figure 9-18', title: 'Allowable bending stress number sat vs HB, through-hardened steel (grade 1: sat = 0.0773 HB + 12.80 ksi)', src: 'figures/mott/fig9-18.png', page: 407 },
-      { id: 'f9-12', ref: 'Figure 9-12', title: 'Pinion proportion factor Cpf', src: 'figures/mott/fig9-12.png', page: 397 },
-      { id: 'f9-13', ref: 'Figure 9-13', title: 'Mesh alignment factor Cma', src: 'figures/mott/fig9-13.png', page: 398 },
+      { id: 't9-1', ref: 'Table 9-1', title: 'Suggested overload factors \\(K_o\\)', src: 'figures/mott/table9-1.png', page: 395 },
+      { id: 't9-2', ref: 'Table 9-2', title: 'Suggested size factors \\(K_s\\)', src: 'figures/mott/table9-2.png', page: 395, note: '\\(K_s\\) = 1.00 for \\(P_d \\ge 5\\); 1.05 (4), 1.15 (3), 1.25 (2), 1.40 (1.25).' },
+      { id: 't9-5', ref: 'Table 9-5', title: 'Recommended AGMA quality numbers \\(A_v\\)', src: 'figures/mott/table9-5.png', page: 399, note: 'By application, or speed: to 800 ft/min A10, 2000 A8, 4000 A6, above A4.' },
+      { id: 'f9-16', ref: 'Figure 9-16', title: 'Dynamic factor \\(K_v\\)', src: 'figures/mott/fig9-16.png', page: 400 },
+      { id: 't9-6', ref: 'Table 9-6', title: 'Analytical method for \\(K_v\\)', src: 'figures/mott/table9-6.png', page: 401 },
+      { id: 'f9-10', ref: 'Figure 9-10', title: 'Spur geometry factor \\(J\\) — use the infinite (rack) mating-gear curve for the pinion', src: 'figures/mott/fig9-10.png', page: 393, note: 'Pinion: ordinate \\(N_P\\), mate curve = rack.' },
+      { id: 'f9-18', ref: 'Figure 9-18', title: 'Allowable bending stress number \\(s_{at}\\) vs HB, through-hardened steel (grade 1: \\(0.0773HB + 12.80\\) ksi)', src: 'figures/mott/fig9-18.png', page: 407 },
+      { id: 'f9-12', ref: 'Figure 9-12', title: 'Pinion proportion factor \\(C_{pf}\\)', src: 'figures/mott/fig9-12.png', page: 397 },
+      { id: 'f9-13', ref: 'Figure 9-13', title: 'Mesh alignment factor \\(C_{ma}\\)', src: 'figures/mott/fig9-13.png', page: 398 },
       // ---- course-only slides ----
-      { id: 'cko', ref: 'Gear Stress s12', book: 'course', title: 'Overload factor Ko — Shigley table and Mott Table 9-1 side by side', src: 'figures/course/ko_shigley_vs_mott.png', note: 'Either accepted; Mott is "more conservative". Tutorials use Ko = 1.' },
-      { id: 'ckv', ref: 'Gear Stress s14', book: 'course', title: 'Kv analytical method and Mott Table 9-4: Qv ↔ Av mapping (Av = 17 − Qv)', src: 'figures/course/gear_kv_q_av_table.png' },
-      { id: 'ccma', ref: 'Gear Stress s20', book: 'course', title: 'Cpf and Cma — "default to curve 2 (commercial enclosed gear units)"', src: 'figures/course/gear_cma_curve2.png' },
-      { id: 'cteeth', ref: 'Helical/Bevel s33', book: 'course', title: 'Plastic-gear Lewis stress σt = Wt Pd (SF)/(F Y), Mott Table 9-15 Y, and standard tooth proportions', src: 'figures/course/standard_gear_teeth_table.png', note: 'Y for load near the pitch point, 26–50 teeth. Compare σt with the plastic strength (KHK catalogue) for the true safety factor.' },
-      { id: 'm-t8-7', ref: 'Table 8-7', title: 'Number of pinion teeth to ensure no interference (rack: 32/18/12; 20° FD pinion/gear max teeth and ratio)', src: 'figures/mott/table8-7.png', page: 338, note: 'Gear Kinematics s27. 20° full depth: at least 18 teeth with a rack, 16 → max 101-tooth gear.' },
-      { id: 'm-t9-14', ref: 'Table 9-14', title: 'Approximate allowable bending stress s_at for plastic gears (ABS, acetal, nylon, polycarbonate, polyester, polyurethane; unfilled / glass-filled)', src: 'figures/mott/table9-14.png', page: 431, note: 'Helical/Bevel s32 (plastic gears, Mott).' },
-      { id: 'khk106', ref: 'KHK p.T106', book: 'course', title: 'KHK plastic spur gears: Lewis bending strength F = m y b σ_b K_v (Nylon MC901), Duracon factors, form factor y (Table 18-15), speed, working, lubrication and material factors', src: 'figures/course/khk_plastic_spur_bending_strength_t106.png', note: 'KHK Gears Technical Information.pdf p.106 (T106). Helical/Bevel s34: “See KHK Gear Information Catalogue”.' },
-      { id: 'khk107', ref: 'KHK p.T107', book: 'course', title: 'KHK plastic gears: speed factor and temperature factor charts, surface (Hertz) strength of Duracon spur gears and allowable surface stress', src: 'figures/course/khk_plastic_spur_factors_surface_strength_t107.png', note: 'KHK Gears Technical Information.pdf p.107 (T107).' },
+      { id: 'cko', ref: 'Gear Stress s12', book: 'course', title: 'Overload factor \\(K_o\\) — Shigley table and Mott Table 9-1 side by side', src: 'figures/course/ko_shigley_vs_mott.png', note: 'Either accepted; tutorials use \\(K_o\\) = 1.' },
+      { id: 'ckv', ref: 'Gear Stress s14', book: 'course', title: '\\(K_v\\) analytical method and Mott Table 9-4: \\(A_v = 17 - Q_v\\)', src: 'figures/course/gear_kv_q_av_table.png' },
+      { id: 'ccma', ref: 'Gear Stress s20', book: 'course', title: '\\(C_{pf}\\) and \\(C_{ma}\\) — “default to curve 2 (commercial enclosed gear units)”', src: 'figures/course/gear_cma_curve2.png' },
+      { id: 'cteeth', ref: 'Helical/Bevel s33', book: 'course', title: 'Plastic-gear Lewis stress \\(\\sigma_t = W_tP_d(SF)/(FY)\\), Mott Table 9-15 \\(Y\\), standard tooth proportions', src: 'figures/course/standard_gear_teeth_table.png', note: '\\(Y\\) for load near the pitch point, 26–50 teeth.' },
+      { id: 'm-t8-7', ref: 'Table 8-7', title: 'Number of pinion teeth to ensure no interference (rack: 32/18/12)', src: 'figures/mott/table8-7.png', page: 338, note: 'Gear Kinematics s27: 20° full depth needs at least 18 teeth with a rack.' },
+      { id: 'm-t9-14', ref: 'Table 9-14', title: 'Approximate allowable bending stress \\(s_{at}\\) for plastic gears (unfilled / glass-filled)', src: 'figures/mott/table9-14.png', page: 431, note: 'Helical/Bevel s32 (plastic gears, Mott).' },
+      { id: 'khk106', ref: 'KHK p.T106', book: 'course', title: 'KHK plastic spur gears: Lewis bending strength \\(F = myb\\sigma_bK_v\\) (Nylon MC901) and its factors', src: 'figures/course/khk_plastic_spur_bending_strength_t106.png', note: 'KHK Gears Technical Information p.T106; Helical/Bevel s34.' },
+      { id: 'khk107', ref: 'KHK p.T107', book: 'course', title: 'KHK plastic gears: speed factor and temperature factor charts, surface (Hertz) strength of Duracon spur gears and allowable surface stress', src: 'figures/course/khk_plastic_spur_factors_surface_strength_t107.png', note: 'KHK Gears Technical Information p.T107.' },
     ],
 
     sections: [
@@ -82,15 +92,16 @@
             { id: 'Pd', symbol: 'P_d', label: 'Diametral pitch', unit: 'teeth/in', kind: 'input' },
             { id: 'NP', symbol: 'N_P', label: 'Pinion teeth', kind: 'input' },
             { id: 'nP', symbol: 'n_P', label: 'Pinion speed', unit: 'rpm', kind: 'input' },
-            { id: 's', symbol: 's_{rack}', label: 'Rack travel of interest', unit: 'ft', kind: 'input', hint: 'optional — for t and θP' },
+            { id: 's', symbol: 's_{rack}', label: 'Rack travel of interest', unit: 'ft', kind: 'input', hint: 'optional — for \\(t\\) and \\(\\theta_P\\)' },
             { id: 'phi', symbol: '\\phi', label: 'Pressure angle', unit: '°', kind: 'choice', options: [{ label: '20°', value: 20 }, { label: '25°', value: 25 }, { label: '14.5°', value: 14.5 }], default: 20 },
             { id: 'P', symbol: 'P', label: 'Power at the pinion (if a force analysis is wanted)', unit: 'hp', kind: 'input', hint: 'or give the rack force below' },
             { id: 'Frack', symbol: 'F_{rack}', label: 'Force the rack must deliver (alternative to P)', unit: 'lb', kind: 'input' },
-          ] },
+          ],
+          after: v => stdTable(v, { Pd: 'Pd', N: 'NP', list: STD_P, mods: STD_M, ref: 'Mott Table 8-3', mref: 'Table 8-4' }) },
       ] },
 
       { title: 'Steps 1-3 · Pitch diameter and rack location', steps: [
-        { id: 'k1', title: 'DP, B from Table 8-10, back-of-rack to pinion centreline', fig: ['t8-10', 'f8-46'],
+        { id: 'k1', title: '\\(D_P\\), \\(B\\) from Table 8-10, back-of-rack to pinion centreline', fig: ['t8-10', 'f8-46'],
           formula: 'D_P = \\frac{N_P}{P_d},\\qquad B\\text{-}C = B + \\frac{D_P}{2}',
           vars: [
             { id: 'DP', symbol: 'D_P', label: 'Pinion pitch diameter', unit: 'in', kind: 'calc', compute: v => has(v, 'NP', 'Pd') ? v.NP / v.Pd : undefined, work: v => has(v, 'NP', 'Pd') ? '\\(D_P = ' + v.NP + '/' + fmt(v.Pd) + ' = ' + fmt(v.NP / v.Pd) + '\\) in' : null },
@@ -104,25 +115,25 @@
       { title: 'Interference · smallest pinion that runs with a rack (course Tutorial 1 Q3h)', steps: [
         { id: 'intf', title: 'Minimum pinion teeth with a rack mate', fig: ['m-t8-7'],
           formula: 'N_{P,min} = \\frac{2k}{\\sin^2\\phi}\\quad (k = 1\\ \\text{full depth}, 0.8\\ \\text{stub})',
-          text: 'A rack is a gear of infinite radius, so the Shigley interference equation (13-11) reduces to N<sub>P</sub> = 2k/sin²φ — 17.1 → <b>18 teeth</b> at 20° full depth (11.2 → 12 at 25°; 31.9 → 32 at 14.5°). Mott Table 8-7 gives the same limits for a rack; fewer teeth undercut the pinion.',
+          text: 'A rack is a gear of infinite radius, so the interference equation reduces to \\(N_P = 2k/\\sin^2\\phi\\): 17.1 → <b>18 teeth</b> at 20° (12 at 25°, 32 at 14.5°), as in Table 8-7.',
           vars: [
             { id: 'k', symbol: 'k', label: 'Addendum factor', kind: 'choice', options: [{ label: '1 — full depth', value: 1 }, { label: '0.8 — stub', value: 0.8 }], default: 1 },
             { id: 'NPmin', symbol: 'N_{P,min}', label: 'Minimum pinion teeth with a rack', kind: 'calc', digits: 4, compute: v => has(v, 'k', 'phi') ? 2 * v.k / Math.pow(Math.sin(r(v.phi)), 2) : undefined,
               work: v => has(v, 'k', 'phi') ? '\\(N_{P,min} = 2(' + v.k + ')/\\sin^2 ' + v.phi + '^\\circ = ' + fmt(2 * v.k / Math.pow(Math.sin(r(v.phi)), 2)) + ' \\rightarrow ' + Math.ceil(2 * v.k / Math.pow(Math.sin(r(v.phi)), 2) - 1e-9) + '\\) teeth' : null },
           ],
-          after: v => has(v, 'NP', 'NPmin') ? (v.NP >= v.NPmin ? '<span class="result-ok">N<sub>P</sub> = ' + v.NP + ' ≥ ' + Math.ceil(v.NPmin - 1e-9) + ' — no interference with the rack</span>' : '<span class="result-bad">N<sub>P</sub> = ' + v.NP + ' &lt; ' + Math.ceil(v.NPmin - 1e-9) + ' — the rack will interfere (undercut) with this pinion</span>') : '' },
+          after: v => has(v, 'NP', 'NPmin') ? (v.NP >= v.NPmin ? '<span class="result-ok">\\(N_P = ' + v.NP + '\\), at least ' + Math.ceil(v.NPmin - 1e-9) + ' — no interference with the rack</span>' : '<span class="result-bad">\\(N_P = ' + v.NP + '\\) is below ' + Math.ceil(v.NPmin - 1e-9) + ' — the rack will interfere (undercut) with this pinion</span>') : '' },
       ] },
 
       { title: 'Steps 4-6 · Velocity of rack, time, pinion revolutions', steps: [
         { id: 'k2', title: 'Kinematics', eq: '8-35, 8-37',
           formula: 'v_R = v_t = \\frac{D_P}{2}\\omega_P = \\frac{\\pi D_P n_P}{12}\\ \\text{ft/min},\\qquad t = \\frac{s_{rack}}{V_{rack}}\\cdot 60\\ \\text{s},\\qquad s_{rack} = \\frac{D_P}{2}\\theta_P \\Rightarrow \\theta_P = \\frac{12\\,s_{rack}}{\\pi D_P}\\ \\text{rev}',
-          text: 'The bibles write the velocity as (π/6)(D<sub>P</sub>n<sub>P</sub>/2) — identical to πD<sub>P</sub>n<sub>P</sub>/12 — and the revolutions as (6/π)(2s<sub>rack</sub>/D<sub>P</sub>).',
+          text: 'The guides write \\(v = (\\pi/6)(D_Pn_P/2)\\), identical to \\(\\pi D_Pn_P/12\\), and turns \\((6/\\pi)(2s_{rack}/D_P)\\).',
           vars: [
             { id: 'Vrack', symbol: 'V_{rack}', label: 'Rack velocity (= pinion pitch-line speed)', unit: 'ft/min', kind: 'calc', compute: v => has(v, 'DP', 'nP') ? Math.PI * v.DP * v.nP / 12 : undefined,
               work: v => has(v, 'DP', 'nP') ? '\\(V_{rack} = \\pi(' + fmt(v.DP) + ')(' + fmt(v.nP) + ')/12 = ' + fmt(Math.PI * v.DP * v.nP / 12) + '\\) ft/min' : null },
             { id: 'Vips', symbol: 'V_{rack}', label: 'Rack velocity', unit: 'in/s', kind: 'calc', compute: v => has(v, 'Vrack') ? v.Vrack / 5 : undefined },
-            { id: 'srev', symbol: 's/\\text{rev}', label: 'Travel per pinion revolution πDP', unit: 'in', kind: 'calc', compute: v => has(v, 'DP') ? Math.PI * v.DP : undefined },
-            { id: 't', symbol: 't', label: 'Time to move s_rack', unit: 's', kind: 'calc', compute: v => has(v, 's', 'Vrack') ? 60 * v.s / v.Vrack : undefined, work: v => has(v, 's', 'Vrack') ? '\\(t = \\frac{' + fmt(v.s) + '\\text{ ft}}{' + fmt(v.Vrack) + '\\text{ ft/min}}\\cdot 60 = ' + fmt(60 * v.s / v.Vrack) + '\\) s' : null },
+            { id: 'srev', symbol: 's/\\text{rev}', label: 'Travel per pinion revolution \\(\\pi D_P\\)', unit: 'in', kind: 'calc', compute: v => has(v, 'DP') ? Math.PI * v.DP : undefined },
+            { id: 't', symbol: 't', label: 'Time to move \\(s_{rack}\\)', unit: 's', kind: 'calc', compute: v => has(v, 's', 'Vrack') ? 60 * v.s / v.Vrack : undefined, work: v => has(v, 's', 'Vrack') ? '\\(t = \\frac{' + fmt(v.s) + '\\text{ ft}}{' + fmt(v.Vrack) + '\\text{ ft/min}}\\cdot 60 = ' + fmt(60 * v.s / v.Vrack) + '\\) s' : null },
             { id: 'thP', symbol: '\\theta_P', label: 'Pinion revolutions', unit: 'rev', kind: 'calc', compute: v => has(v, 's', 'DP') ? 12 * v.s / (Math.PI * v.DP) : undefined,
               work: v => has(v, 's', 'DP') ? '\\(\\theta_P = \\frac{s_{rack}}{D_P/2} = \\frac{' + fmt(v.s) + '(12)}{' + fmt(v.DP / 2) + '} = ' + fmt(24 * v.s / v.DP) + '\\text{ rad} = ' + fmt(12 * v.s / (Math.PI * v.DP)) + '\\) rev' : null },
           ] },
@@ -131,7 +142,7 @@
       { title: 'Forces (Sec. 9-3 spur-gear forces)', steps: [
         { id: 'f', title: 'Torque, tangential, radial and normal forces',
           formula: 'T = \\frac{63\\,000P}{n_P},\\quad W_t = \\frac{T}{D_P/2} = \\frac{33\\,000P}{v_t},\\quad W_r = W_t\\tan\\phi,\\quad W_n = \\frac{W_t}{\\cos\\phi}',
-          text: 'W<sub>t</sub> drives the rack along its length (it equals the rack output force); W<sub>r</sub> pushes the rack away from the pinion, normal to the rack back — the rack guides must carry it. If the rack force is given, the sheet works back to the pinion torque and power.',
+          text: 'Driving pinion: \\(W_t\\) on the pinion opposes its rotation; on the rack it acts along the rack in the direction the rack moves (= pinion pitch-point velocity). \\(W_r\\) pushes the rack away from the pinion (carried by the rack guides) and the pinion toward its own centre. Given a rack force instead of power, the sheet works back to torque and power.',
           vars: [
             { id: 'Wt', symbol: 'W_t', label: 'Tangential force', unit: 'lb', kind: 'calc', compute: v => has(v, 'Frack') ? v.Frack : (has(v, 'P', 'Vrack') ? 33000 * v.P / v.Vrack : undefined),
               work: v => !has(v, 'Frack') && has(v, 'P', 'Vrack') ? '\\(W_t = 33\\,000(' + fmt(v.P) + ')/' + fmt(v.Vrack) + ' = ' + fmt(33000 * v.P / v.Vrack) + '\\) lb' : null },
@@ -142,58 +153,58 @@
           ] },
       ] },
 
-      { title: 'Tooth bending check — spur-gear equation (Eq. 9-15)', text: 'A rack is a spur gear with infinite pitch diameter, so the pinion/rack mesh is rated like a spur pair. Bending-only check with the guides\' spur assumptions: nominal F = 12/P<sub>d</sub>, A<sub>v</sub> from Table 9-5, K<sub>s</sub> from Table 9-2 (1.00 for P<sub>d</sub> ≥ 5), K<sub>m</sub> = 1 + C<sub>pf</sub> + C<sub>ma</sub> (Eq. 9-17, commercial enclosed), K<sub>B</sub> = 1, K<sub>R</sub> = 1 at 99 %, plus Y<sub>N</sub> = 1 at 10<sup>7</sup> cycles. For the complete spur procedure use the <a href="spur_mott.html">spur-gear calculator</a> with this W<sub>t</sub>.', steps: [
+      { title: 'Tooth bending check — spur-gear equation (Eq. 9-15)', text: 'A rack is a spur gear with infinite pitch diameter, so the mesh is rated like a spur pair (bending only; contact stress in the <a href=\"spur_mott.html\">spur-gear calculator</a>).', steps: [
         { id: 'fac', title: 'Face width and stress factors', eq: '9-17', fig: ['t9-1', 'cko', 't9-5', 'f9-16', 't9-6', 'ckv', 't9-2', 'f9-12', 'f9-13', 'ccma', 'f9-10'],
           formula: 'K_v = \\left[\\frac{C}{C + \\sqrt{v_t}}\\right]^{-B},\\ B = 0.25(A_v - 5)^{0.667},\\ C = 50 + 56(1 - B),\\qquad K_m = 1 + C_{pf} + C_{ma}',
           vars: [
-            { id: 'F', symbol: 'F', label: 'Face width (smaller of pinion / rack)', unit: 'in', kind: 'input', hint: 'auto = nominal 12/P_d (guides); Mott range 8/P_d … 16/P_d; Table 8-10 rack width is a guide',
+            { id: 'F', symbol: 'F', label: 'Face width (smaller of pinion / rack)', unit: 'in', kind: 'input', hint: 'auto = nominal \\(12/P_d\\); range \\(8/P_d\\) … \\(16/P_d\\)',
               auto: v => has(v, 'Pd') ? 12 / v.Pd : undefined },
-            { id: 'Ko', symbol: 'K_o', label: 'Overload factor', kind: 'lookup', fig: 't9-1', default: 1.0, hint: 'Table 9-1 (course accepts Shigley\'s too); 1.00 = uniform/uniform (tutorials)' },
-            { id: 'Av', symbol: 'A_v', label: 'Quality number (Shigley Q_v in brackets)', kind: 'choice', fig: 't9-5', options: [6, 7, 8, 9, 10, 11, 12].map(q => ({ label: 'A_v = ' + q + '  (Q_v = ' + (17 - q) + ')', value: q })), default: 10, hint: 'given, or Table 9-5 (A10 for ordinary drives, v_t < 800 ft/min)',
-              check: v => (has(v, 'Vrack', 'Av') && v.Av > avSpeed(v.Vrack)) ? 'Table 9-5 speed rows suggest A_v ≤ ' + avSpeed(v.Vrack) + ' at ' + fmt(v.Vrack) + ' ft/min' : null },
-            { id: 'Kv', symbol: 'K_v', label: 'Dynamic factor', kind: 'lookup', fig: 'f9-16', auto: v => has(v, 'Av', 'Vrack') ? (function () { const B = 0.25 * Math.pow(v.Av - 5, 0.667), C = 50 + 56 * (1 - B); return Math.pow(C / (C + sq(v.Vrack)), -B); })() : undefined, hint: 'auto = Table 9-6 equations (course prefers the equation)',
+            { id: 'Ko', symbol: 'K_o', label: 'Overload factor', kind: 'lookup', fig: 't9-1', default: 1.0, hint: 'Table 9-1 (Shigley’s accepted too); 1.00 uniform' },
+            { id: 'Av', symbol: 'A_v', label: 'Quality number (Shigley \\(Q_v\\) in brackets)', kind: 'choice', fig: 't9-5', options: [6, 7, 8, 9, 10, 11, 12].map(q => ({ label: 'A_v = ' + q + '  (Q_v = ' + (17 - q) + ')', value: q })), default: 10, hint: 'given, or Table 9-5 (A10 for ordinary drives)',
+              check: v => (has(v, 'Vrack', 'Av') && v.Av > avSpeed(v.Vrack)) ? 'Table 9-5 speed rows suggest \\(A_v\\) of ' + avSpeed(v.Vrack) + ' or better at ' + fmt(v.Vrack) + ' ft/min' : null },
+            { id: 'Kv', symbol: 'K_v', label: 'Dynamic factor', kind: 'lookup', fig: 'f9-16', auto: v => has(v, 'Av', 'Vrack') ? (function () { const B = 0.25 * Math.pow(v.Av - 5, 0.667), C = 50 + 56 * (1 - B); return Math.pow(C / (C + sq(v.Vrack)), -B); })() : undefined, hint: 'auto = Table 9-6 equations',
               work: v => has(v, 'Av', 'Vrack') ? (function () { const B = 0.25 * Math.pow(v.Av - 5, 0.667), C = 50 + 56 * (1 - B); return '\\(B = ' + fmt(B, 3) + ',\\ C = ' + fmt(C) + ',\\ K_v = [' + fmt(C) + '/(' + fmt(C) + ' + \\sqrt{' + fmt(v.Vrack) + '})]^{-' + fmt(B, 3) + '} = ' + fmt(Math.pow(C / (C + sq(v.Vrack)), -B)) + '\\)'; })() : null },
-            { id: 'Ks', symbol: 'K_s', label: 'Size factor', kind: 'lookup', fig: 't9-2', auto: v => has(v, 'Pd') ? ksTable(v.Pd) : undefined, hint: 'auto = Table 9-2 (1.00 for P_d ≥ 5)' },
+            { id: 'Ks', symbol: 'K_s', label: 'Size factor', kind: 'lookup', fig: 't9-2', auto: v => has(v, 'Pd') ? ksTable(v.Pd) : undefined, hint: 'auto = Table 9-2 (1.00 for \\(P_d \\ge 5\\))' },
             { id: 'Cpf', symbol: 'C_{pf}', label: 'Pinion proportion factor (Fig. 9-12 equations, course 0.05 floor)', kind: 'lookup', fig: 'f9-12', auto: v => has(v, 'F', 'DP') ? Cpf(v.F, v.DP) : undefined,
               work: v => has(v, 'F', 'DP') ? '\\(F/(10D_P) = ' + fmt(v.F / (10 * v.DP), 3) + (v.F / (10 * v.DP) < 0.05 ? ' \\rightarrow 0.05' : '') + ';\\ C_{pf} = ' + fmt(Cpf(v.F, v.DP), 3) + '\\)' : null },
-            { id: 'Cma', symbol: 'C_{ma}', label: 'Mesh alignment factor, commercial enclosed (Fig. 9-13)', kind: 'lookup', fig: 'f9-13', auto: v => has(v, 'F') ? 0.127 + 0.0158 * v.F - 1.093e-4 * v.F * v.F : undefined, hint: 'auto = Mott curve 0.127 + 0.0158F − 1.093e-4 F²',
+            { id: 'Cma', symbol: 'C_{ma}', label: 'Mesh alignment factor, commercial enclosed (Fig. 9-13)', kind: 'lookup', fig: 'f9-13', auto: v => has(v, 'F') ? 0.127 + 0.0158 * v.F - 1.093e-4 * v.F * v.F : undefined, hint: 'auto = commercial enclosed curve',
               work: v => has(v, 'F') ? '\\(C_{ma} = 0.127 + 0.0158(' + fmt(v.F) + ') - 1.093(10^{-4})(' + fmt(v.F) + ')^2 = ' + fmt(0.127 + 0.0158 * v.F - 1.093e-4 * v.F * v.F, 3) + '\\)' : null },
-            { id: 'Km', symbol: 'K_m', label: 'Load-distribution factor', kind: 'lookup', fig: 'ccma', auto: v => has(v, 'Cpf', 'Cma') ? 1 + v.Cpf + v.Cma : undefined, hint: 'auto = 1 + Cpf + Cma (Eq. 9-17); override if given' },
-            { id: 'JP', symbol: 'J', label: 'Geometry factor (pinion with rack mate)', kind: 'lookup', fig: 'f9-10', hint: 'Fig. 9-10: ordinate NP, mating-gear curve ∞ (1000); 24 T → 0.37' },
+            { id: 'Km', symbol: 'K_m', label: 'Load-distribution factor', kind: 'lookup', fig: 'ccma', auto: v => has(v, 'Cpf', 'Cma') ? 1 + v.Cpf + v.Cma : undefined, hint: 'auto = \\(1 + C_{pf} + C_{ma}\\) (Eq. 9-17); override if given' },
+            { id: 'JP', symbol: 'J', label: 'Geometry factor (pinion with rack mate)', kind: 'lookup', fig: 'f9-10', hint: 'Fig. 9-10: ordinate \\(N_P\\), rack mate curve; 24T → 0.37' },
           ] },
         { id: 'st', title: 'Bending stress number and required hardness', eq: '9-15', fig: ['f9-18'],
           formula: 's_t = \\frac{W_t P_d}{F J}K_o K_s K_m K_B K_v,\\qquad s_{at,min} = \\frac{s_t (SF) K_R}{Y_N},\\qquad s_{at} = 0.0773\\,HB + 12.80\\ \\text{ksi (grade 1)}',
           vars: [
             { id: 'st', symbol: 's_t', label: 'Bending stress number (pinion tooth)', unit: 'psi', kind: 'calc', compute: v => has(v, 'Wt', 'Pd', 'F', 'JP', 'Ko', 'Ks', 'Km', 'Kv') ? v.Wt * v.Pd / (v.F * v.JP) * v.Ko * v.Ks * v.Km * v.Kv : undefined,
               work: v => has(v, 'Wt', 'Pd', 'F', 'JP', 'Ko', 'Ks', 'Km', 'Kv') ? '\\(s_t = \\frac{' + fmt(v.Wt) + '(' + fmt(v.Pd) + ')}{' + fmt(v.F) + '(' + fmt(v.JP) + ')}(' + fmt(v.Ko) + ')(' + fmt(v.Ks) + ')(' + fmt(v.Km) + ')(1)(' + fmt(v.Kv) + ') = ' + fmt(v.Wt * v.Pd / (v.F * v.JP) * v.Ko * v.Ks * v.Km * v.Kv, 5) + '\\) psi' : null },
-            { id: 'SFd', symbol: 'SF_d', label: 'Design safety factor target', kind: 'input', default: 1, hint: 'course: solve with SF = 1, then pick a steel giving 1 ≤ SF ≤ 1.5' },
-            { id: 'satMin', symbol: 's_{at,min}', label: 'Minimum allowable bending stress number  s_t (SF) K_R/Y_N', unit: 'psi', kind: 'calc', compute: v => has(v, 'st', 'SFd') ? v.st * v.SFd : undefined, work: v => has(v, 'st', 'SFd') ? '\\(s_{at,min} = ' + fmt(v.st, 5) + '(' + fmt(v.SFd) + ')(1)/1 = ' + fmt(v.st * v.SFd, 5) + '\\) psi' : null },
-            { id: 'HBreq', symbol: 'HB_{req}', label: 'Required hardness (grade 1: (sat,min − 12.80 ksi)/0.0773)', unit: 'HB', kind: 'calc', digits: 3, compute: v => has(v, 'satMin') ? Math.max(0, (v.satMin / 1000 - 12.80) / 0.0773) : undefined, work: v => has(v, 'satMin') ? '\\(HB = (' + fmt(v.satMin / 1000) + ' - 12.80)/0.0773 = ' + fmt(Math.max(0, (v.satMin / 1000 - 12.80) / 0.0773), 3) + '\\)' : null },
-            { id: 'HB', symbol: 'HB', label: 'Hardness of the chosen steel (grade 1 through-hardened; Table 9-8 / App. 3)', unit: 'HB', kind: 'input', hint: 'e.g. 4140 annealed 197, 4140 OQT1300 235, 4140 OQT1000 341, 4340 OQT1000 363' },
-            { id: 'sat', symbol: 's_{at}', label: 'Allowable bending stress number of the chosen steel', unit: 'psi', kind: 'lookup', fig: 'f9-18', auto: v => has(v, 'HB') ? 77.3 * v.HB + 12800 : undefined, hint: 'auto = Fig. 9-18 grade 1: 0.0773 HB + 12.80 ksi' },
-            { id: 'SF', symbol: 'SF', label: 'Actual safety factor sat YN/(KR st)', kind: 'calc', compute: v => has(v, 'sat', 'st') ? v.sat / v.st : undefined, work: v => has(v, 'sat', 'st') ? '\\(SF = ' + fmt(v.sat, 5) + '(1)/(1)(' + fmt(v.st, 5) + ') = ' + fmt(v.sat / v.st, 3) + '\\)' : null },
+            { id: 'SFd', symbol: 'SF_d', label: 'Design safety factor target', kind: 'input', default: 1, hint: 'solve with 1, then pick a steel giving 1 … 1.5' },
+            { id: 'satMin', symbol: 's_{at,min}', label: 'Minimum allowable bending stress number \\(s_t(SF)K_R/Y_N\\)', unit: 'psi', kind: 'calc', compute: v => has(v, 'st', 'SFd') ? v.st * v.SFd : undefined, work: v => has(v, 'st', 'SFd') ? '\\(s_{at,min} = ' + fmt(v.st, 5) + '(' + fmt(v.SFd) + ')(1)/1 = ' + fmt(v.st * v.SFd, 5) + '\\) psi' : null },
+            { id: 'HBreq', symbol: 'HB_{req}', label: 'Required hardness (grade 1: \\((s_{at,min} - 12.80)/0.0773\\), ksi)', unit: 'HB', kind: 'calc', digits: 3, compute: v => has(v, 'satMin') ? Math.max(0, (v.satMin / 1000 - 12.80) / 0.0773) : undefined, work: v => has(v, 'satMin') ? '\\(HB = (' + fmt(v.satMin / 1000) + ' - 12.80)/0.0773 = ' + fmt(Math.max(0, (v.satMin / 1000 - 12.80) / 0.0773), 3) + '\\)' : null },
+            { id: 'HB', symbol: 'HB', label: 'Hardness of the chosen steel (grade 1 through-hardened; Table 9-8 / App. 3)', unit: 'HB', kind: 'input', hint: '4140: annealed 197, OQT1300 235, OQT1000 341' },
+            { id: 'sat', symbol: 's_{at}', label: 'Allowable bending stress number of the chosen steel', unit: 'psi', kind: 'lookup', fig: 'f9-18', auto: v => has(v, 'HB') ? 77.3 * v.HB + 12800 : undefined, hint: 'auto = Fig. 9-18 grade 1: \\(0.0773HB + 12.80\\) ksi' },
+            { id: 'SF', symbol: 'SF', label: 'Actual safety factor \\(s_{at}Y_N/(K_Rs_t)\\)', kind: 'calc', compute: v => has(v, 'sat', 'st') ? v.sat / v.st : undefined, work: v => has(v, 'sat', 'st') ? '\\(SF = ' + fmt(v.sat, 5) + '(1)/(1)(' + fmt(v.st, 5) + ') = ' + fmt(v.sat / v.st, 3) + '\\)' : null },
           ],
           after: v => {
             if (!has(v, 'st')) return '';
-            let s = 'Required grade-1 through-hardened steel: ≥ ' + fmt(Math.max(0, Math.ceil(v.HBreq)), 3) + ' HB for SF = ' + fmt(v.SFd) + '. Pick an alloy/heat treatment with at least this hardness (Table 9-8 / App. 3) and quote its % elongation.';
-            if (has(v, 'SF')) s += v.SF >= v.SFd ? ' <span class="result-ok">PASS — SF = ' + fmt(v.SF, 3) + ' with ' + v.HB + ' HB' + (v.SF > 1.5 ? ' (above the AGMA 1–1.5 range: a softer/cheaper steel would do)' : '') + '</span>' : ' <span class="result-bad">FAIL — SF = ' + fmt(v.SF, 3) + ' &lt; ' + fmt(v.SFd) + ' with ' + v.HB + ' HB</span>';
+            let s = 'Required grade-1 through-hardened steel: at least ' + fmt(Math.max(0, Math.ceil(v.HBreq)), 3) + ' HB for SF = ' + fmt(v.SFd) + '. Pick an alloy/heat treatment with this hardness (Table 9-8 / App. 3) and quote its % elongation.';
+            if (has(v, 'SF')) s += v.SF >= v.SFd ? ' <span class="result-ok">PASS — SF = ' + fmt(v.SF, 3) + ' with ' + v.HB + ' HB' + (v.SF > 1.5 ? ' (above the AGMA 1–1.5 range: a softer/cheaper steel would do)' : '') + '</span>' : ' <span class="result-bad">FAIL — SF = ' + fmt(v.SF, 3) + ', below ' + fmt(v.SFd) + ' with ' + v.HB + ' HB</span>';
             return s;
           } },
       ] },
 
-      { title: 'Plastic pinion — Lewis check (course Helical/Bevel s31–34, Table 9-15)', text: 'Optional: for a plastic (nylon, acetal …) pinion the course uses the unmodified Lewis equation with Y in place of J and an overload "design" SF, then compares with the plastic\'s strength from the KHK catalogue to get the true safety factor. High P<sub>d</sub> (small teeth) is typical.', steps: [
+      { title: 'Plastic pinion — Lewis check (course Helical/Bevel s31–34, Table 9-15)', text: 'Optional: plastic pinion — unmodified Lewis equation with \\(Y\\) for \\(J\\) and an overload SF; compare with the KHK catalogue strength for the true safety factor.', steps: [
         { id: 'plastic', title: 'Lewis bending stress in a plastic pinion', fig: ['cteeth', 'm-t9-14', 'khk106', 'khk107'],
           formula: '\\sigma_t = \\frac{W_t P_d\\,(SF)}{F\\,Y}',
           vars: [
             { id: 'Yform', symbol: '', label: 'Tooth form for Y', kind: 'choice', type: 'text', options: [{ label: '20° full depth', value: '20' }, { label: '14.5° full depth', value: '14.5' }, { label: '20° stub', value: 'stub' }], default: '20' },
             { id: 'Y', symbol: 'Y', label: 'Lewis form factor (load near pitch point)', kind: 'lookup', fig: 'cteeth', auto: v => has(v, 'NP', 'Yform') ? lewisY(v.NP, v.Yform) : undefined, hint: 'Table 9-15 covers 26–50 teeth' },
-            { id: 'SFp', symbol: 'SF', label: 'Overload ("design") factor', kind: 'input', default: 1, hint: 'service/overload factor applied to the load' },
+            { id: 'SFp', symbol: 'SF', label: 'Overload ("design") factor', kind: 'input', default: 1, hint: 'overload factor applied to the load' },
             { id: 'sigP', symbol: '\\sigma_t', label: 'Lewis bending stress', unit: 'psi', kind: 'calc', compute: v => has(v, 'Wt', 'Pd', 'SFp', 'F', 'Y') ? v.Wt * v.Pd * v.SFp / (v.F * v.Y) : undefined,
               work: v => has(v, 'Wt', 'Pd', 'SFp', 'F', 'Y') ? '\\(\\sigma_t = \\frac{' + fmt(v.Wt) + '(' + fmt(v.Pd) + ')(' + fmt(v.SFp) + ')}{' + fmt(v.F) + '(' + fmt(v.Y, 3) + ')} = ' + fmt(v.Wt * v.Pd * v.SFp / (v.F * v.Y), 5) + '\\) psi' : null },
-            { id: 'sPl', symbol: '\\sigma_{all}', label: 'Plastic bending strength (catalogue)', unit: 'psi', kind: 'input', hint: 'KHK catalogue, e.g. nylon ≈ 6 ksi, acetal ≈ 8 ksi' },
-            { id: 'SFpl', symbol: 'SF_{true}', label: 'True safety factor σall/σt', kind: 'calc', compute: v => has(v, 'sPl', 'sigP') ? v.sPl / v.sigP : undefined },
+            { id: 'sPl', symbol: '\\sigma_{all}', label: 'Plastic bending strength (catalogue)', unit: 'psi', kind: 'input', hint: 'KHK catalogue, e.g. nylon about 6 ksi, acetal 8 ksi' },
+            { id: 'SFpl', symbol: 'SF_{true}', label: 'True safety factor \\(\\sigma_{all}/\\sigma_t\\)', kind: 'calc', compute: v => has(v, 'sPl', 'sigP') ? v.sPl / v.sigP : undefined },
           ],
-          after: v => has(v, 'SFpl') ? (v.SFpl >= 1 ? '<span class="result-ok">Plastic pinion OK — SF<sub>true</sub> = ' + fmt(v.SFpl, 3) + '</span>' : '<span class="result-bad">Plastic pinion FAILS — SF<sub>true</sub> = ' + fmt(v.SFpl, 3) + ': wider face, coarser pitch or a stronger plastic</span>') : '' },
+          after: v => has(v, 'SFpl') ? (v.SFpl >= 1 ? '<span class="result-ok">Plastic pinion OK — \\(SF_{true}\\) = ' + fmt(v.SFpl, 3) + '</span>' : '<span class="result-bad">Plastic pinion FAILS — \\(SF_{true}\\) = ' + fmt(v.SFpl, 3) + ': wider face, coarser pitch or a stronger plastic</span>') : '' },
       ] },
     ],
   };
