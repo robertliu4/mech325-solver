@@ -14,7 +14,7 @@ window.TOPIC = {
     { id: 'table17-1m', ref: 'Table 17-1M', title: 'Metric trapezoidal power screws (ISO): D, p, Dp, Dr, At', src: 'figures/mott/table17-1m.png', page: 663, note: 'φ = 15° for trapezoidal threads. Single-start designs; no shear-area column.' },
     { id: 'fig17-5', ref: 'Figure 17-5', title: 'Screw-thread force analysis: load pushed up (a) and down (b) the unrolled thread', src: 'figures/mott/fig17-5.png', page: 663 },
     { id: 'fig17-6', ref: 'Figure 17-6', title: 'Force normal to a square vs. an Acme thread (F → F/cos φ)', src: 'figures/mott/fig17-6.png', page: 665 },
-    { id: 'fizz-anatomy', ref: 'Fizz guide p.123 (anatomy)', title: 'Power screw anatomy — mean diameter, pitch, lead angle λ, helix angle ψ', src: 'figures/bibles/fizz_p123_power_screw_anatomy.png' },
+    { id: 'fizz-anatomy', ref: 'Fizz p.123 anatomy', title: 'Power screw anatomy — mean diameter, pitch, lead angle λ, helix angle ψ', src: 'figures/bibles/fizz_p123_power_screw_anatomy.png' },
     { id: 'table8-5', ref: 'Table 8-5', title: 'Coefficients of friction for threaded pairs', src: 'figures/shigley/table8-5.png', page: 454, book: 'shigley', note: 'Mott only says f = 0.15 is conservative for lubricated steel on steel; Shigley table shown for other pairs.' },
     { id: 'table8-6', ref: 'Table 8-6', title: 'Thrust-collar friction coefficients', src: 'figures/shigley/table8-6.png', page: 454, book: 'shigley', note: 'Mott has no collar table. fc = 0 for a rolling-element thrust bearing (Fizz).' },
   ],

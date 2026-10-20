@@ -17,7 +17,7 @@ window.TOPIC = {
       note: 'Fizz step 2: choose the first row whose tensile stress area At ≥ required. Note As (shear area per 1 in of engagement) for the nut-length step. Shigley has no equivalent table.' },
     { id: 'table17-1m', ref: 'Table 17-1M', title: 'Metric trapezoidal power screws (ISO) — D, p, Dp, Dr, At', src: 'figures/mott/table17-1m.png', page: 663, book: 'mott' },
     { id: 'fig8-5', ref: 'Figure 8-5 / 8-6', title: 'Portion of a power screw; unrolled-thread force diagrams for lifting (a) and lowering (b)', src: 'figures/shigley/fig8-5-6.png', page: 448 },
-    { id: 'fizz-anatomy', ref: 'Fizz guide p.123 (anatomy)', title: 'Power screw anatomy — dm, p, λ, ψ, nut reactions', src: 'figures/bibles/fizz_p123_power_screw_anatomy.png', book: 'mott', note: 'Student-guide sketch (same as Shigley Fig. 8-5).' },
+    { id: 'fizz-anatomy', ref: 'Fizz p.123 anatomy', title: 'Power screw anatomy — dm, p, λ, ψ, nut reactions', src: 'figures/bibles/fizz_p123_power_screw_anatomy.png', book: 'mott', note: 'Student-guide sketch (same as Shigley Fig. 8-5).' },
     { id: 'fig8-7', ref: 'Figure 8-7', title: '(a) Normal thread force increased by thread angle α; (b) thrust collar of frictional diameter dc', src: 'figures/shigley/fig8-7.png', page: 450 },
     { id: 'table8-5', ref: 'Table 8-5', title: 'Coefficients of friction f for threaded pairs', src: 'figures/shigley/table8-5.png', page: 454, note: 'Sliding f in power screws is about 0.10–0.15; Mott suggests 0.15 for lubricated steel on steel.' },
     { id: 'table8-6', ref: 'Table 8-6', title: 'Thrust-collar friction coefficients (running / starting)', src: 'figures/shigley/table8-6.png', page: 454, note: 'If the collar is a rolling-element thrust bearing, take fc = 0 (Fizz guide).' },

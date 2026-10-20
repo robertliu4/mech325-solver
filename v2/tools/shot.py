@@ -15,7 +15,7 @@ with sync_playwright() as p:
     if ex and pg.query_selector('#btn-example'):
         pg.evaluate("localStorage.clear()"); pg.click('#btn-example'); pg.wait_for_timeout(600)
     missing=pg.evaluate("Array.from(document.querySelectorAll('.figcard.missing')).map(e=>e.innerText.split('\\n')[0])")
-    vals=pg.evaluate("""() => { const o={}; document.querySelectorAll('.var').forEach(d=>{const i=d.querySelector('input,select'); if(i&&i.value!=='') o[i.id.replace('v-','')]=i.value;}); return o; }""")
+    vals=pg.evaluate("""() => { const o={}; document.querySelectorAll('.var').forEach(d=>{const i=d.querySelector('input,select'); if(i&&i.value!=='') o[i.id.replace('v-','')]=i.value; else if(i&&i.placeholder&&i.placeholder.startsWith('auto: ')) o[i.id.replace('v-','')]=i.placeholder;}); return o; }""")
     nsteps=pg.evaluate("document.querySelectorAll('.step:not(.hidden)').length")
     nfig=pg.evaluate("document.querySelectorAll('.figcard').length")
     if out: pg.screenshot(path=out[0], full_page=True)
