@@ -5,6 +5,8 @@
 // Guide assumptions (Fizz pp.123–127; the Mech guide has no power-screw unit) are listed in `assumptions` and carried by the field defaults.
 // Verified against: Mott Examples 17-1 / 17-2 (F 12 500 lb, σd 10 000, τd 5000 psi, f 0.15, 15 in in 12 s) → At,req 1.25 in² → 1½-4 Acme,
 //   h 1.07 → 1.25 in, λ 3.39°, Tu 1809 (1814 unrounded), Td 796, e 27.5 %, n 300 rpm, P 8.61 (8.64) hp — reproduced.
+// TX: H.fmt for inside \( \) work lines — writes 3e+7 as 3\times10^{7} so MathJax shows real powers of ten.
+const TX = (x, d) => String(H.fmt(x, d)).replace(/e([+-]?)(\d+)$/, (m, s, e) => '\\times10^{' + (s === '-' ? '-' : '') + e + '}');
 window.TOPIC = {
   id: 'power_screws', book: 'mott',
   title: 'Power Screws — Selection, Torque & Efficiency',
@@ -51,7 +53,7 @@ window.TOPIC = {
         text: 'Choose the first table row with \\(A_t \\ge A_{t,req}\\); copy D, n, p, Dr, Dp, At and As from that row into the yellow boxes.',
         vars: [
           { id: 'Atreq', symbol: 'A_{t,req}', label: 'Required tensile-stress area', unit: 'in² (mm²)', kind: 'calc', compute: v => H.has(v, 'F', 'sigd') ? v.F / v.sigd : undefined,
-            work: v => H.has(v, 'F', 'sigd') ? '\\(A_{t,req} = \\dfrac{' + H.fmt(v.F) + '}{' + H.fmt(v.sigd) + '} = ' + H.fmt(v.F / v.sigd) + '\\)' : null },
+            work: v => H.has(v, 'F', 'sigd') ? '\\(A_{t,req} = \\dfrac{' + TX(v.F) + '}{' + TX(v.sigd) + '} = ' + TX(v.F / v.sigd) + '\\)' : null },
           { id: 'D', symbol: 'D', label: 'Nominal major diameter', unit: 'in (mm)', kind: 'lookup', fig: 'table17-1', hint: 'first Table 17-1 / 17-1M row with At ≥ required' },
           { id: 'tpi', symbol: 'n', label: 'Threads per inch', unit: 'tpi', kind: 'lookup', fig: 'table17-1', hint: 'US only; metric: enter pitch directly below' },
           { id: 'p', symbol: 'p', label: 'Pitch', unit: 'in (mm)', kind: 'lookup', fig: 'table17-1', hint: 'auto = 1/n', auto: v => H.has(v, 'tpi') && v.tpi > 0 ? 1 / v.tpi : undefined },
@@ -67,7 +69,7 @@ window.TOPIC = {
         vars: [
           { id: 'Asreq', symbol: 'A_{s,req}', label: 'Required shear area', unit: 'in²', kind: 'calc', compute: v => H.has(v, 'F', 'taud') ? v.F / v.taud : undefined },
           { id: 'h', symbol: 'h', label: 'Required nut length', unit: 'in', kind: 'calc', compute: v => H.has(v, 'Asreq', 'Asr') ? v.Asreq / v.Asr : undefined,
-            work: v => H.has(v, 'Asreq', 'Asr') ? '\\(h = ' + H.fmt(v.Asreq) + '\\left[\\dfrac{1.0}{' + H.fmt(v.Asr) + '}\\right] = ' + H.fmt(v.h) + '\\ \\text{in}\\)' : null },
+            work: v => H.has(v, 'Asreq', 'Asr') ? '\\(h = ' + TX(v.Asreq) + '\\left[\\dfrac{1.0}{' + TX(v.Asr) + '}\\right] = ' + TX(v.h) + '\\ \\text{in}\\)' : null },
           { id: 'hr', symbol: 'h_{use}', label: 'Rounded up to ¼ in', unit: 'in', kind: 'calc', compute: v => H.has(v, 'h') ? Math.ceil(v.h * 4 - 1e-9) / 4 : undefined },
         ],
         when: v => H.has(v, 'taud') },
@@ -80,7 +82,7 @@ window.TOPIC = {
           { id: 'ns', symbol: 'n_s', label: 'Number of thread starts', kind: 'input', default: 1 },
           { id: 'L', symbol: 'L', label: 'Lead', unit: 'in (mm)', kind: 'calc', compute: v => H.has(v, 'p', 'ns') ? v.p * v.ns : undefined },
           { id: 'lam', symbol: '\\lambda', label: 'Lead angle', unit: '°', kind: 'calc', digits: 4, compute: v => H.has(v, 'L', 'Dp') ? H.deg(Math.atan(v.L / (Math.PI * v.Dp))) : undefined,
-            work: v => H.has(v, 'L', 'Dp') ? '\\(\\lambda = \\tan^{-1}\\dfrac{' + H.fmt(v.L) + '}{\\pi(' + H.fmt(v.Dp) + ')} = ' + H.fmt(v.lam) + '^\\circ\\)' : null },
+            work: v => H.has(v, 'L', 'Dp') ? '\\(\\lambda = \\tan^{-1}\\dfrac{' + TX(v.L) + '}{\\pi(' + TX(v.Dp) + ')} = ' + TX(v.lam) + '^\\circ\\)' : null },
         ] },
     ] },
 
@@ -92,9 +94,9 @@ window.TOPIC = {
           { id: 'cosphi', symbol: '\\cos\\phi', label: 'cos φ', kind: 'calc', digits: 4, compute: v => H.has(v, 'thread') ? Math.cos(H.rad(v.thread)) : undefined },
           { id: 'tanlam', symbol: '\\tan\\lambda', label: 'tan λ', kind: 'calc', digits: 4, compute: v => H.has(v, 'L', 'Dp') ? v.L / (Math.PI * v.Dp) : undefined },
           { id: 'Tu', symbol: 'T_u', label: 'Torque to raise (thread)', unit: 'lb·in (N·mm)', kind: 'calc', compute: v => H.has(v, 'F', 'Dp', 'cosphi', 'tanlam', 'f') ? v.F * v.Dp / 2 * (v.cosphi * v.tanlam + v.f) / (v.cosphi - v.f * v.tanlam) : undefined,
-            work: v => H.has(v, 'F', 'Dp', 'cosphi', 'tanlam', 'f') ? '\\(T_u = \\dfrac{' + H.fmt(v.F) + '(' + H.fmt(v.Dp) + ')}{2}\\left[\\dfrac{' + H.fmt(v.cosphi, 3) + '(' + H.fmt(v.tanlam, 4) + ') + ' + H.fmt(v.f) + '}{' + H.fmt(v.cosphi, 3) + ' - ' + H.fmt(v.f) + '(' + H.fmt(v.tanlam, 4) + ')}\\right] = ' + H.fmt(v.Tu) + '\\)' : null },
+            work: v => H.has(v, 'F', 'Dp', 'cosphi', 'tanlam', 'f') ? '\\(T_u = \\dfrac{' + TX(v.F) + '(' + TX(v.Dp) + ')}{2}\\left[\\dfrac{' + TX(v.cosphi, 3) + '(' + TX(v.tanlam, 4) + ') + ' + TX(v.f) + '}{' + TX(v.cosphi, 3) + ' - ' + TX(v.f) + '(' + TX(v.tanlam, 4) + ')}\\right] = ' + TX(v.Tu) + '\\)' : null },
           { id: 'Td', symbol: 'T_d', label: 'Torque to lower (thread)', unit: 'lb·in (N·mm)', kind: 'calc', compute: v => H.has(v, 'F', 'Dp', 'cosphi', 'tanlam', 'f') ? v.F * v.Dp / 2 * (v.f - v.cosphi * v.tanlam) / (v.cosphi + v.f * v.tanlam) : undefined,
-            work: v => H.has(v, 'F', 'Dp', 'cosphi', 'tanlam', 'f') ? '\\(T_d = \\dfrac{' + H.fmt(v.F) + '(' + H.fmt(v.Dp) + ')}{2}\\left[\\dfrac{' + H.fmt(v.f) + ' - ' + H.fmt(v.cosphi, 3) + '(' + H.fmt(v.tanlam, 4) + ')}{' + H.fmt(v.cosphi, 3) + ' + ' + H.fmt(v.f) + '(' + H.fmt(v.tanlam, 4) + ')}\\right] = ' + H.fmt(v.Td) + '\\)' : null },
+            work: v => H.has(v, 'F', 'Dp', 'cosphi', 'tanlam', 'f') ? '\\(T_d = \\dfrac{' + TX(v.F) + '(' + TX(v.Dp) + ')}{2}\\left[\\dfrac{' + TX(v.f) + ' - ' + TX(v.cosphi, 3) + '(' + TX(v.tanlam, 4) + ')}{' + TX(v.cosphi, 3) + ' + ' + TX(v.f) + '(' + TX(v.tanlam, 4) + ')}\\right] = ' + TX(v.Td) + '\\)' : null },
         ] },
       { id: 'sl', title: 'Self-locking check', eq: '17-5', formula: 'f > \\tan\\lambda',
         text: 'Mott: for f = 0.15 the limiting lead angle is 8.5°; for f = 0.10 it is 5.7°. Table 17-1 screws have λ = 1.94°–5.57° and are all self-locking (avoid vibration).',
@@ -116,7 +118,7 @@ window.TOPIC = {
         text: "\\(T' = FL/2\\pi\\) is the torque with f = 0 (Eq. 17-6). Single-thread Acme screws are typically ≈ 30 % or less; ball screws ≈ 90 %.",
         vars: [
           { id: 'e', symbol: 'e', label: 'Efficiency', kind: 'calc', digits: 3, compute: v => H.has(v, 'F', 'L', 'Tut') && v.Tut > 0 ? v.F * v.L / (2 * Math.PI * v.Tut) : undefined,
-            work: v => H.has(v, 'F', 'L', 'Tut') && v.Tut > 0 ? '\\(e = \\dfrac{' + H.fmt(v.F) + '(' + H.fmt(v.L) + ')}{2\\pi(' + H.fmt(v.Tut) + ')} = ' + H.fmt(v.e, 3) + ' = ' + H.fmt(100 * v.e, 3) + '\\%\\)' : null },
+            work: v => H.has(v, 'F', 'L', 'Tut') && v.Tut > 0 ? '\\(e = \\dfrac{' + TX(v.F) + '(' + TX(v.L) + ')}{2\\pi(' + TX(v.Tut) + ')} = ' + TX(v.e, 3) + ' = ' + TX(100 * v.e, 3) + '\\%\\)' : null },
         ] },
       { id: 'spd', title: 'Rotational speed, linear speed and power', formula: 'n = \\frac{V}{L}\\,(60) \\quad\\text{or}\\quad n = \\frac{63\\,000\\,P}{T_u} \\qquad P = \\frac{T_u\\, n}{63\\,000}',
         text: 'Two ways round: (a) required linear speed V → n → power (Mott Example 17-2); (b) given input power P → max speed n → V = nL/60 (Fizz step 7). Fill in either V or P. SI: \\(P_{kW} = T_{N·mm}\\, n / 9.549\\times10^{6}\\).',
@@ -128,10 +130,10 @@ window.TOPIC = {
               const k = v.units === 'SI' ? 9.549e6 : 63000;
               if (H.has(v, 'Vreq', 'L') && v.L > 0) return v.Vreq / v.L * 60;
               if (H.has(v, 'Pin', 'Tut') && v.Tut > 0) return k * v.Pin / v.Tut; return undefined; },
-            work: v => (H.has(v, 'Vreq', 'L') && v.L > 0) ? '\\(n = \\dfrac{' + H.fmt(v.Vreq) + '}{' + H.fmt(v.L) + '}(60) = ' + H.fmt(v.n) + '\\ \\text{rpm}\\)' : ((H.has(v, 'Pin', 'Tut') && v.Tut > 0) ? '\\(n = \\dfrac{' + (v.units === 'SI' ? '9.549\\times10^6' : '63\\,000') + '(' + H.fmt(v.Pin) + ')}{' + H.fmt(v.Tut) + '} = ' + H.fmt(v.n) + '\\ \\text{rpm}\\)' : null) },
+            work: v => (H.has(v, 'Vreq', 'L') && v.L > 0) ? '\\(n = \\dfrac{' + TX(v.Vreq) + '}{' + TX(v.L) + '}(60) = ' + TX(v.n) + '\\ \\text{rpm}\\)' : ((H.has(v, 'Pin', 'Tut') && v.Tut > 0) ? '\\(n = \\dfrac{' + (v.units === 'SI' ? '9.549\\times10^6' : '63\\,000') + '(' + TX(v.Pin) + ')}{' + TX(v.Tut) + '} = ' + TX(v.n) + '\\ \\text{rpm}\\)' : null) },
           { id: 'V', symbol: 'V', label: 'Linear speed of load', unit: 'in/s (mm/s)', kind: 'calc', compute: v => H.has(v, 'n', 'L') ? v.n * v.L / 60 : undefined },
           { id: 'P', symbol: 'P', label: 'Power to drive the screw', unit: 'hp (kW)', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tut', 'n') ? v.Tut * v.n / (v.units === 'SI' ? 9.549e6 : 63000) : undefined,
-            work: v => H.has(v, 'Tut', 'n') ? '\\(P = \\dfrac{' + H.fmt(v.Tut) + '(' + H.fmt(v.n) + ')}{' + (v.units === 'SI' ? '9.549\\times10^6' : '63\\,000') + '} = ' + H.fmt(v.P) + '\\)' : null },
+            work: v => H.has(v, 'Tut', 'n') ? '\\(P = \\dfrac{' + TX(v.Tut) + '(' + TX(v.n) + ')}{' + (v.units === 'SI' ? '9.549\\times10^6' : '63\\,000') + '} = ' + TX(v.P) + '\\)' : null },
         ],
         after: v => {
           if (v.Tu === undefined) return '';

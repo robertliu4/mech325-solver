@@ -1,13 +1,14 @@
 /* Rack & pinion — Shigley 11e. Kinematics follow the Fizz p75 / Mech p114 procedure (Mott Sec. 8-13 / Table 8-10, which Shigley
  * does not cover); the tooth-strength check reuses the Shigley spur-gear AGMA bending equation (Ch. 14).
- * Defaults follow the UBC MECH 325 course conventions (v2/COURSE_CONVENTIONS.md §0, §6, §7, §11): no dedicated course document for racks —
- *   the course treats the rack as the limiting case of interference (Gear Trains Tut 1 Q3h "smallest pinion that will run with a rack":
- *   NP = 2k/sin²φ → 18 teeth at 20°) plus the spur force equations; the bending check uses the course spur defaults (Ko tutorials 1.0,
- *   Kv by equation with Qv ↔ Av = 17 − Qv, Ks = 1, Km = 1 + Cpf + Cma commercial-enclosed, KB = 1, YN = 1 at 10^7, KT = 1, KR = 1 at 99 %,
- *   grade-1 steel St = 77.3 HB + 12 800, SF = 1 to find the minimum strength then pick a steel with 1 ≤ SF ≤ 1.5) and the plastic-gear
+ * Defaults follow the Fizz / Mech guide assumptions (TOPIC.assumptions, cited by guide page): the rack pages (Fizz pp 75-76, Mech
+ *   pp 114-115) cover the kinematics only; the bending add-on uses the guides' spur-gear assumptions (φ = 20°, F = nominal 12/Pd,
+ *   Av from Table 9-5 → A10 ↔ Q7, Ks from Table 9-2 (1.00 for Pd ≥ 5), Cma commercial enclosed, KB = 1, KR = 1 at 99 %, SF = 1, grade-1
+ *   steel St = 77.3 HB + 12 800) plus the course conventions (v2/COURSE_CONVENTIONS.md §7, §11): rack = interference limit
+ *   NP = 2k/sin²φ (Gear Trains Tut 1 Q3h → 18 teeth at 20°), Ko 1.0 pre-filled, Kv by Eq. 14-27, YN = 1 (10^7), KT = 1, and the plastic-gear
  *   Lewis check of Helical/Bevel s31–34 (σt = Wt Pd SF/(F Y), Mott Table 9-15 Y).
  * Verified against: Mott Ex. 8-9 (24 T, Pd 6, 125 rpm, 20 ft → DP 4.000, B 1.333, B-C 3.333 in, Vrack 130.9 ft/min, t 9.167 s, 19.09 rev)
- *   and Gear Trains Tut 1 Q3h (20° FD pinion with a rack → NP,min = 2/sin²20° = 17.1 → 18 teeth). */
+ *   and Gear Trains Tut 1 Q3h (20° FD pinion with a rack → NP,min = 2/sin²20° = 17.1 → 18 teeth). The example's bending part (1 hp, F 1 in,
+ *   Q_v 7, J 0.37 = Fig. 14-6 for 24 T with the 1000-tooth/rack curve — was 0.35, a mis-read) is illustrative: Wt 252.1 lbf, σ 5 373 psi. */
 (function () {
   const r = d => d * Math.PI / 180, fmt = (x, d) => H.fmt(x, d);
   const has = (v, ...a) => H.has(v, ...a);
@@ -21,22 +22,44 @@
   const Cpf = (F, d) => { let x = F / (10 * d); if (x < 0.05) x = 0.05; return F <= 1 ? x - 0.025 : x - 0.0375 + 0.0125 * F; };
   const Cma = F => 0.127 + 0.0158 * F - 0.930e-4 * F * F;
   const T810 = { 64: [0.109, 0.125, 0.125], 48: [0.104, 0.125, 0.125], 32: [0.156, 0.187, 0.187], 24: [0.208, 0.250, 0.25], 20: [0.450, 0.500, 0.5], 16: [0.688, 0.750, 0.75], 12: [0.917, 1.000, 1], 10: [1.150, 1.250, 1.25], 8: [1.375, 1.500, 1.5], 6: [1.333, 1.500, 2], 5: [1.300, 1.500, 2.5], 4: [1.750, 2.000, 3.5] };
+  // Mott Table 9-2 size factor (Mech p.80): 1.00 for Pd ≥ 5, interpolated below.
+  const ksTable = Pd => Pd >= 5 ? 1.0 : H.interp(Pd, [1.25, 2, 3, 4, 5], [1.40, 1.25, 1.15, 1.05, 1.00]);
+  // Table 9-5 pitch-line-speed rows (the guides' fallback for A_v); A4 is beyond the Kv charts, so the lowest used is A6.
+  const avSpeed = vt => vt <= 800 ? 10 : vt <= 2000 ? 8 : 6;
 
   window.TOPIC = {
     id: 'rack', book: 'shigley',
     title: 'Rack & Pinion — Kinematics, Forces & Tooth Strength',
     subtitle: 'Fizz p. 75 / Mech p. 114 procedure (rack data from Mott Table 8-10) · strength check via Shigley Ch. 14 spur equations',
     sibling: 'rack_mott.html',
-    intro: 'A pinion driving a straight rack. <b>Shigley has no rack-and-pinion section</b>, so the kinematics and the rack dimension B come from Mott (Sec. 8-13, Table 8-10) — those figures are tagged <em>Mott</em>. Enter the pinion (P<sub>d</sub>, N<sub>P</sub>, n<sub>P</sub>) and the travel; the sheet gives pitch diameter, pinion-centre-to-rack-back distance, rack speed, time and pinion revolutions, then the tooth forces and a bending check with Shigley\'s spur-gear AGMA equation (Eq. 14-15) — the rack is a spur gear of infinite radius, so use the ∞ / rack column of Fig. 14-6 for J. For a full spur treatment (contact stress, all K-factors) carry W<sub>t</sub> into the <a href="spur_shigley.html">spur-gear calculator</a>. <b>Defaults are the MECH 325 course assumptions</b> (no dedicated rack document — Gear Trains Tutorial 1 Q3h treats the rack as the interference limit N<sub>P</sub> = 2k/sin²φ, and the spur conventions of Gear_Stress_2026 apply: K<sub>o</sub> = 1 in tutorials, K<sub>v</sub> by Eq. 14-27, K<sub>s</sub> = K<sub>B</sub> = 1, K<sub>m</sub> = 1 + C<sub>pf</sub> + C<sub>ma</sub> for commercial enclosed units, Y<sub>N</sub> = 1 at 10<sup>7</sup> cycles, K<sub>T</sub> = 1, K<sub>R</sub> = 1 at 99 %, grade-1 steel, S<sub>F</sub> = 1 to find the minimum strength then a steel from Mott Table 9-8 / App. 3 with 1 ≤ S<sub>F</sub> ≤ 1.5). A plastic-pinion Lewis check (Helical/Bevel s31–34) is at the end. Load the example to reproduce Mott Example 8-9 (24T, P<sub>d</sub> = 6, 125 rpm, 20 ft).',
-    example: { Pd: 6, NP: 24, nP: 125, s: 20, phi: 20, H: 1, Ko: 1.0, Qv: 7, F: 1.0, JP: 0.35, HB: 200, SFd: 1 },
+    intro: 'A pinion driving a straight rack. <b>Shigley has no rack-and-pinion section</b>, so the kinematics and the rack dimension B come from Mott (Sec. 8-13, Table 8-10) — those figures are tagged <em>Mott</em>. Enter the pinion (P<sub>d</sub>, N<sub>P</sub>, n<sub>P</sub>) and the travel; the sheet gives pitch diameter, pinion-centre-to-rack-back distance, rack speed, time and pinion revolutions, then the tooth forces and a bending check with Shigley\'s spur-gear AGMA equation (Eq. 14-15) — the rack is a spur gear of infinite radius, so use the ∞ / rack column of Fig. 14-6 for J. For a full spur treatment (contact stress, all K-factors) carry W<sub>t</sub> into the <a href="spur_shigley.html">spur-gear calculator</a>. <b>Defaults follow the Fizz / Mech guide assumptions</b> listed in the panel below — the rack pages cover the kinematics; the bending check uses the guides\' spur-gear assumptions (φ = 20°, nominal F = 12/P<sub>d</sub>, A<sub>v</sub> 10 ↔ Q<sub>v</sub> 7, K<sub>s</sub> from Table 9-2, C<sub>ma</sub> commercial enclosed, K<sub>B</sub> = 1, K<sub>R</sub> = 1 at 99 %, S<sub>F</sub> = 1, grade-1 steel) plus the course\'s (Gear Trains Tutorial 1 Q3h treats the rack as the interference limit N<sub>P</sub> = 2k/sin²φ; K<sub>o</sub> = 1 in tutorials, K<sub>v</sub> by Eq. 14-27, Y<sub>N</sub> = 1 at 10<sup>7</sup> cycles, K<sub>T</sub> = 1). A plastic-pinion Lewis check (Helical/Bevel s31–34) is at the end. Load the example to reproduce Mott Example 8-9 (24T, P<sub>d</sub> = 6, 125 rpm, 20 ft).',
+    example: { Pd: 6, NP: 24, nP: 125, s: 20, phi: 20, H: 1, Ko: 1.0, Qv: 7, F: 1.0, JP: 0.37, HB: 200, SFd: 1 },
+
+    assumptions: [
+      { text: 'Pressure angle φ = 20° full depth unless given ("assume 20° unless otherwise specified")', src: 'Fizz p.42 · Mech p.79', var: 'phi' },
+      { text: 'Rack pitch-line-to-back B (and thickness, face width) from Mott\'s example Table 8-10 when P_d is listed — manufacturer data in practice', src: 'Fizz p.76 · Mech p.115', var: 'B' },
+      { text: 'Full-depth teeth (k = 1) for the smallest pinion that runs with a rack, N_P = 2k/sin²φ', src: 'course Gear Trains Tut 1 Q3h', var: 'k' },
+      { text: 'Face width not given → nominal F = 12/P_d ("just use the nominal one"; range 8/P_d … 16/P_d)', src: 'Fizz p.40 · Mech p.77', var: 'F' },
+      { text: 'K_o from the overload table for the stated shocks — no guide default; pre-filled 1.00 (uniform/uniform), as in the course tutorials', src: 'Mech p.74 · course Gear Stress s12', var: 'Ko' },
+      { text: 'Quality from Table 9-5 by application or pitch-line speed ("just guess what looks right"): A_v = 10 ↔ Q_v = 7 pre-filled (ordinary drives, v_t < 800 ft/min)', src: 'Fizz p.41 · Mech p.77', var: 'Qv' },
+      { text: 'K_s from Mott Table 9-2: 1.00 for P_d ≥ 5 (course: "typically K_s = 1"; Shigley\'s Lewis-Y formula also accepted)', src: 'Mech p.80 · course Gear Stress s15', var: 'Ks' },
+      { text: 'K_m = 1 + C_pf + C_ma with C_ma for commercial enclosed gear units (C_mc = C_pm = C_e = 1)', src: 'Fizz p.44 · Mech p.80 · course Gear Stress s19–20', var: 'Km' },
+      { text: 'K_B = 1 (solid commercial gears)', src: 'Fizz p.45 · Mech p.81' },
+      { text: '99 % reliability → K_R = 1; K_T = 1; no life given → Y_N = 1 (10^7 cycles) — use the spur calculator for other lives', src: 'Fizz p.45 · Mech p.82 · course Gear Stress s37–39' },
+      { text: 'Safety factor S_F = 1 to find the minimum strength, then a steel with 1 ≤ S_F ≤ 1.5', src: 'Fizz p.45 · Mech p.82', var: 'SFd' },
+      { text: 'Through-hardened grade 1 steel (S_t = 77.3H_B + 12 800 psi), material from Mott Appendix 3', src: 'Mech p.84 · Fizz p.40' },
+      { text: 'Plastic pinion: overload ("design") factor SF = 1 in the Lewis check unless given', src: 'course Helical/Bevel s33', var: 'SFp' },
+    ],
 
     figures: [
       { id: 'f8-45', ref: 'Figure 8-45', title: 'Rack driven by a pinion — B, overall thickness, pitch line, rack velocity', src: 'figures/mott/fig8-45.png', page: 366, book: 'mott' },
       { id: 't8-10', ref: 'Table 8-10', title: 'Example rack specifications: pitch line to back B, thickness, face width vs Pd', src: 'figures/mott/table8-10.png', page: 367, book: 'mott', note: 'Auto-fill uses this table when Pd is a listed value.' },
       { id: 'f8-46', ref: 'Figure 8-46', title: 'Pinion and rack of Mott Example 8-9', src: 'figures/mott/fig8-46.png', page: 367, book: 'mott' },
       { id: 'f13-29', ref: 'Figure 13-29', title: 'Spur-gear tooth forces (Wt, Wr, W) — same on a rack tooth', src: 'figures/shigley/fig13-29.png', page: 732, note: 'Wr = Wt tan φ points toward the pinion axis / into the rack; the force on the rack is along the rack (Wt) plus the separating force (Wr).' },
-      { id: 't15-2', ref: 'Table 15-2', title: 'Overload factor Ko (also used for spur gears in this course)', src: 'figures/shigley/table15-2.png', page: 818 },
+      { id: 'ko', ref: 'Figure 14-17', title: 'Table of overload factors K_o (bottom of the spur bending road map)', src: 'figures/shigley/fig14-17-ko.png', page: 793, note: 'Rows = power source, columns = driven machine. Uniform/uniform = 1.00.' },
+      { id: 't9-5', ref: 'Table 9-5', book: 'mott', title: 'Recommended AGMA quality numbers A_v (by application or pitch-line speed) — the table the guides use', src: 'figures/mott/table9-5.png', page: 399, note: 'Q_v = 17 − A_v. Speed rows: 0–800 ft/min A10, 800–2000 A8, 2000–4000 A6, over 4000 A4.' },
       { id: 'f14-9', ref: 'Figure 14-9', title: 'Dynamic factor Kv (Eqs. 14-27, 14-28 with Qv)', src: 'figures/shigley/fig14-9.png', page: 785 },
+      { id: 't9-2', ref: 'Table 9-2', book: 'mott', title: 'Suggested size factors K_s (the table the Mech guide uses)', src: 'figures/mott/table9-2.png', page: 395, note: 'K_s = 1.00 for P_d ≥ 5; 1.05 (4), 1.15 (3), 1.25 (2), 1.40 (1.25).' },
       { id: 'f14-6', ref: 'Figure 14-6', title: 'Spur geometry factor J — use the rack / 1000-teeth mate curve for the pinion', src: 'figures/shigley/fig14-6.png', page: 780, note: 'Pinion J: ordinate NP, "number of teeth in mating gear" = ∞ (rack). Rack tooth J: top of the chart (N → ∞) with mate NP.' },
       { id: 'f14-2', ref: 'Figure 14-2', title: 'Allowable bending stress sat for through-hardened steel (grade 1: sat = 77.3 HB + 12 800 psi)', src: 'figures/shigley/fig14-2.png', page: 773 },
       // ---- course-only slides ----
@@ -107,23 +130,30 @@
           ] },
       ] },
 
-      { title: '4 · Tooth bending check — spur-gear AGMA equation (Eq. 14-15)', text: 'The rack is a spur gear of infinite diameter, so the pinion/rack mesh is rated exactly like a spur pair. Bending-only check with the course spur defaults (Gear_Stress_2026): K<sub>s</sub> = 1, K<sub>B</sub> = 1, K<sub>m</sub> = 1 + C<sub>pf</sub> + C<sub>ma</sub> (commercial enclosed, C<sub>mc</sub> = C<sub>pm</sub> = C<sub>e</sub> = 1), Y<sub>N</sub> = 1 (10<sup>7</sup> cycles), K<sub>T</sub> = 1, K<sub>R</sub> = 1 (99 %). For the complete spur procedure (contact stress, other lives/reliabilities) take W<sub>t</sub> to the <a href="spur_shigley.html">spur-gear calculator</a>.', steps: [
-        { id: 'st', title: 'Bending stress and required hardness', eq: '14-15, 14-27, 14-30', fig: ['t15-2', 'cko', 'f14-9', 'ckv', 'ckm', 'ccma', 'f14-6', 'f14-2'],
-          formula: '\\sigma = W_t K_o K_v K_s\\frac{P_d}{F}\\frac{K_m K_B}{J},\\qquad K_v = \\left(\\frac{A + \\sqrt{V}}{A}\\right)^B,\\ B = 0.25(12 - Q_v)^{2/3},\\ A = 50 + 56(1 - B),\\qquad K_m = 1 + C_{pf} + C_{ma}',
+      { title: '4 · Tooth bending check — spur-gear AGMA equation (Eq. 14-15)', text: 'The rack is a spur gear of infinite diameter, so the pinion/rack mesh is rated exactly like a spur pair. Bending-only check with the guides\' spur assumptions: nominal F = 12/P<sub>d</sub>, A<sub>v</sub> from Table 9-5, K<sub>s</sub> from Table 9-2, K<sub>m</sub> = 1 + C<sub>pf</sub> + C<sub>ma</sub> (commercial enclosed, C<sub>mc</sub> = C<sub>pm</sub> = C<sub>e</sub> = 1), K<sub>B</sub> = 1, K<sub>R</sub> = 1 (99 %), plus Y<sub>N</sub> = 1 (10<sup>7</sup> cycles) and K<sub>T</sub> = 1. For the complete spur procedure (contact stress, other lives/reliabilities) take W<sub>t</sub> to the <a href="spur_shigley.html">spur-gear calculator</a>.', steps: [
+        { id: 'fac', title: 'Face width and stress factors', eq: '14-27, 14-30', fig: ['ko', 'cko', 't9-5', 'f14-9', 'ckv', 't9-2', 'ckm', 'ccma', 'f14-6'],
+          formula: 'K_v = \\left(\\frac{A + \\sqrt{V}}{A}\\right)^B,\\ B = 0.25(12 - Q_v)^{2/3},\\ A = 50 + 56(1 - B),\\qquad K_m = 1 + C_{pf} + C_{ma}',
           vars: [
-            { id: 'F', symbol: 'F', label: 'Face width (pinion / rack, the smaller)', unit: 'in', kind: 'input', hint: 'Table 8-10 rack face width is a guide; spur rule 3/P … 5π/P' },
-            { id: 'Ko', symbol: 'K_o', label: 'Overload factor', kind: 'lookup', fig: 'cko', default: 1.0, hint: 'course table (Shigley Fig 14-17 / Mott 9-1); tutorials 1.0' },
-            { id: 'Qv', symbol: 'Q_v', label: 'Quality number', kind: 'choice', options: [5, 6, 7, 8, 9, 10, 11], default: 7, hint: 'Mott Av = 17 − Qv' },
+            { id: 'F', symbol: 'F', label: 'Face width (pinion / rack, the smaller)', unit: 'in', kind: 'input', hint: 'auto = nominal 12/P_d (guides); range 8/P_d … 16/P_d; Table 8-10 rack width is a guide',
+              auto: v => has(v, 'Pd') ? 12 / v.Pd : undefined },
+            { id: 'Ko', symbol: 'K_o', label: 'Overload factor', kind: 'lookup', fig: 'ko', default: 1.0, hint: 'Fig. 14-17 table (or Mott Table 9-1); 1.00 = uniform/uniform (tutorials)' },
+            { id: 'Qv', symbol: 'Q_v', label: 'Quality number (Mott A_v in brackets)', kind: 'choice', fig: 't9-5', options: [5, 6, 7, 8, 9, 10, 11].map(q => ({ label: 'Q_v = ' + q + '  (A_v = ' + (17 - q) + ')', value: q })), default: 7, hint: 'given, or Table 9-5 (A_v 10 = Q_v 7 for ordinary drives)',
+              check: v => (has(v, 'Vrack', 'Qv') && 17 - v.Qv > avSpeed(v.Vrack)) ? 'Table 9-5 speed rows suggest A_v ≤ ' + avSpeed(v.Vrack) + ' (Q_v ≥ ' + (17 - avSpeed(v.Vrack)) + ') at ' + fmt(v.Vrack) + ' ft/min' : null },
             { id: 'Kv', symbol: 'K_v', label: 'Dynamic factor', kind: 'lookup', fig: 'f14-9', auto: v => has(v, 'Qv', 'Vrack') ? (function () { const B = 0.25 * Math.pow(12 - v.Qv, 2 / 3), A = 50 + 56 * (1 - B); return Math.pow((A + sq(v.Vrack)) / A, B); })() : undefined, hint: 'auto = Eq. 14-27 (course prefers the equation)',
               work: v => has(v, 'Qv', 'Vrack') ? (function () { const B = 0.25 * Math.pow(12 - v.Qv, 2 / 3), A = 50 + 56 * (1 - B); return '\\(B = ' + fmt(B, 3) + ',\\ A = ' + fmt(A) + ',\\ K_v = ((' + fmt(A) + ' + \\sqrt{' + fmt(v.Vrack) + '})/' + fmt(A) + ')^{' + fmt(B, 3) + '} = ' + fmt(Math.pow((A + sq(v.Vrack)) / A, B)) + '\\)'; })() : null },
+            { id: 'Ks', symbol: 'K_s', label: 'Size factor', kind: 'lookup', fig: 't9-2', auto: v => has(v, 'Pd') ? ksTable(v.Pd) : undefined, hint: 'auto = Mott Table 9-2 (1.00 for P_d ≥ 5); course: "typically K_s = 1"' },
             { id: 'Cpf', symbol: 'C_{pf}', label: 'Pinion-proportion factor (Eq. 14-32, course 0.05 floor)', kind: 'calc', compute: v => has(v, 'F', 'DP') ? Cpf(v.F, v.DP) : undefined,
               work: v => has(v, 'F', 'DP') ? '\\(F/(10d_P) = ' + fmt(v.F / (10 * v.DP), 3) + (v.F / (10 * v.DP) < 0.05 ? ' \\rightarrow 0.05' : '') + ';\\ C_{pf} = ' + fmt(Cpf(v.F, v.DP), 3) + '\\)' : null },
             { id: 'Cma', symbol: 'C_{ma}', label: 'Mesh-alignment factor, commercial enclosed (Eq. 14-34 curve 2)', kind: 'calc', compute: v => has(v, 'F') ? Cma(v.F) : undefined,
               work: v => has(v, 'F') ? '\\(C_{ma} = 0.127 + 0.0158(' + fmt(v.F) + ') - 0.930(10^{-4})(' + fmt(v.F) + ')^2 = ' + fmt(Cma(v.F), 3) + '\\)' : null },
             { id: 'Km', symbol: 'K_m', label: 'Load-distribution factor', kind: 'lookup', fig: 'ckm', auto: v => has(v, 'Cpf', 'Cma') ? 1 + v.Cpf + v.Cma : undefined, hint: 'auto = 1 + Cpf + Cma (course); override if the question gives Km' },
-            { id: 'JP', symbol: 'J', label: 'Geometry factor (pinion, mate = rack)', kind: 'lookup', fig: 'f14-6', hint: 'Fig. 14-6: ordinate NP, mating-gear curve = 1000 / rack' },
-            { id: 'sig', symbol: '\\sigma', label: 'Bending stress (pinion tooth)', unit: 'psi', kind: 'calc', compute: v => has(v, 'Wt', 'Ko', 'Kv', 'Pd', 'F', 'Km', 'JP') ? v.Wt * v.Ko * v.Kv * v.Pd / v.F * v.Km / v.JP : undefined,
-              work: v => has(v, 'Wt', 'Ko', 'Kv', 'Pd', 'F', 'Km', 'JP') ? '\\(\\sigma = ' + fmt(v.Wt) + '(' + fmt(v.Ko) + ')(' + fmt(v.Kv) + ')(1)\\frac{' + fmt(v.Pd) + '}{' + fmt(v.F) + '}\\frac{' + fmt(v.Km) + '(1)}{' + fmt(v.JP) + '} = ' + fmt(v.Wt * v.Ko * v.Kv * v.Pd / v.F * v.Km / v.JP, 5) + '\\) psi' : null },
+            { id: 'JP', symbol: 'J', label: 'Geometry factor (pinion, mate = rack)', kind: 'lookup', fig: 'f14-6', hint: 'Fig. 14-6: ordinate NP, mating-gear curve = 1000 (rack); 24 T → 0.37' },
+          ] },
+        { id: 'st', title: 'Bending stress and required hardness', eq: '14-15', fig: ['f14-2'],
+          formula: '\\sigma = W_t K_o K_v K_s\\frac{P_d}{F}\\frac{K_m K_B}{J},\\qquad S_{t,min} = \\frac{\\sigma\\,S_F K_T K_R}{Y_N},\\qquad S_t = 77.3H_B + 12\\,800\\ (\\text{grade 1})',
+          vars: [
+            { id: 'sig', symbol: '\\sigma', label: 'Bending stress (pinion tooth)', unit: 'psi', kind: 'calc', compute: v => has(v, 'Wt', 'Ko', 'Kv', 'Ks', 'Pd', 'F', 'Km', 'JP') ? v.Wt * v.Ko * v.Kv * v.Ks * v.Pd / v.F * v.Km / v.JP : undefined,
+              work: v => has(v, 'Wt', 'Ko', 'Kv', 'Ks', 'Pd', 'F', 'Km', 'JP') ? '\\(\\sigma = ' + fmt(v.Wt) + '(' + fmt(v.Ko) + ')(' + fmt(v.Kv) + ')(' + fmt(v.Ks) + ')\\frac{' + fmt(v.Pd) + '}{' + fmt(v.F) + '}\\frac{' + fmt(v.Km) + '(1)}{' + fmt(v.JP) + '} = ' + fmt(v.Wt * v.Ko * v.Kv * v.Ks * v.Pd / v.F * v.Km / v.JP, 5) + '\\) psi' : null },
             { id: 'SFd', symbol: 'S_{F,d}', label: 'Design factor of safety target', kind: 'input', default: 1, hint: 'course: solve with SF = 1, then pick a steel giving 1 ≤ SF ≤ 1.5' },
             { id: 'StMin', symbol: 'S_{t,min}', label: 'Minimum bending strength number  σ S_F,d K_T K_R / Y_N', unit: 'psi', kind: 'calc', compute: v => has(v, 'sig', 'SFd') ? v.sig * v.SFd : undefined, work: v => has(v, 'sig', 'SFd') ? '\\(S_{t,min} = ' + fmt(v.sig, 5) + '(' + fmt(v.SFd) + ')(1)(1)/1 = ' + fmt(v.sig * v.SFd, 5) + '\\) psi' : null },
             { id: 'HBreq', symbol: 'H_{B,req}', label: 'Required hardness (grade 1: (St,min − 12 800)/77.3)', unit: 'HB', kind: 'calc', digits: 3, compute: v => has(v, 'StMin') ? Math.max(0, (v.StMin - 12800) / 77.3) : undefined, work: v => has(v, 'StMin') ? '\\(H_B = (' + fmt(v.StMin, 5) + ' - 12\\,800)/77.3 = ' + fmt(Math.max(0, (v.StMin - 12800) / 77.3), 3) + '\\)' : null },

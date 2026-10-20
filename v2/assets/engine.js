@@ -97,9 +97,12 @@
 
   // ---------- rich text: "K_o" → K<sub>o</sub>, "10^7" → 10<sup>7</sup>, outside \( math \) and outside HTML tags ----------
   const SUBRE = /([\p{L}\p{N}\)\]′'*])_(\{([^{}]*)\}|[\p{L}\p{N}]+(?:,[\p{L}\p{N}]+)*)/gu;
-  const SUPRE = /([\p{L}\p{N}\)\]′'])\^(\{([^{}]*)\}|\(([^()]*)\)|[-+−]?[\p{L}\p{N}.]*[\p{L}\p{N}])/gu;
+  const SUPRE = /([\p{L}\p{N}\)\]′']|<\/sub>)\^(\{([^{}]*)\}|\(([^()]*)\)|[-+−]?[\p{L}\p{N}.]*[\p{L}\p{N}])/gu;
   const FILERE = /[\p{L}\p{N}]+(?:_[\p{L}\p{N}.]+){2,}/gu;   // Gear_Stress_2026 → Gear Stress 2026
+  const ENUM = /(\d(?:\.\d+)?)e([+-]?)(\d{1,3})\b(?![\p{L}])/gu;               // 3e+7 → 3×10^7
+  const texE = (m) => m.replace(ENUM, (x, a, sg, b) => a + '\\times10^{' + (sg === '-' ? '-' : '') + b.replace(/^0+(?=\d)/, '') + '}');
   function richSeg(s) {
+    s = s.replace(ENUM, (x, a, sg, b) => a + '×10<sup>' + (sg === '-' ? '−' : '') + b.replace(/^0+(?=\d)/, '') + '</sup>');
     if (s.indexOf('_') < 0 && s.indexOf('^') < 0) return s;
     s = s.replace(FILERE, m => m.replace(/_/g, ' '));
     s = s.replace(SUBRE, (m, b, sub, br) => b + '<sub>' + (br !== undefined ? br : sub) + '</sub>');
@@ -110,9 +113,9 @@
   function rich(html) {
     if (html === undefined || html === null) return '';
     html = String(html);
-    if (html.indexOf('_') < 0 && html.indexOf('^') < 0) return html;
+    if (html.indexOf('_') < 0 && html.indexOf('^') < 0 && !/\de[+-]?\d/.test(html)) return html;
     let out = '', last = 0, m; SEGRE.lastIndex = 0;
-    while ((m = SEGRE.exec(html))) { out += richSeg(html.slice(last, m.index)) + m[0]; last = SEGRE.lastIndex; }
+    while ((m = SEGRE.exec(html))) { out += richSeg(html.slice(last, m.index)) + (/^\\[(\[]/.test(m[0]) ? texE(m[0]) : m[0]); last = SEGRE.lastIndex; }
     return out + richSeg(html.slice(last));
   }
   const SUBS = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉', a: 'ₐ', e: 'ₑ', h: 'ₕ', i: 'ᵢ', j: 'ⱼ', k: 'ₖ', l: 'ₗ', m: 'ₘ', n: 'ₙ', o: 'ₒ', p: 'ₚ', r: 'ᵣ', s: 'ₛ', t: 'ₜ', u: 'ᵤ', v: 'ᵥ', x: 'ₓ', '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎', 'β': 'ᵦ', 'γ': 'ᵧ', 'ρ': 'ᵨ', 'φ': 'ᵩ', 'χ': 'ᵪ' };

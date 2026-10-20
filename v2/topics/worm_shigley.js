@@ -13,6 +13,9 @@
  *   VW 677.4, VG 56.45, L 0.3927, λ 4.764°, pn 0.3913, Vs 679.8, f 0.0250, cos20° tan λ = 0.078 < 0.15 → self-locking, e 0.7563,
  *   W^t_G 966.1, W^t_W 106.4, Cs 786.9, Cm 0.767, Cv 0.312, HW 2.185, HG 1.653, σa 39 500 psi (Mott Kv 0.955 → 41 360) > 24 ksi FAIL,
  *   Hloss 17 570, hCR 0.396 no fan → ts 96.1 °F (fan 0.568 → 88 °F) — all reproduced.
+ *   Also reproduces Shigley Ex. 15-3 (H0 3 hp, 1800 rpm, NW 1, NG 24, d 3, Pt 4, φn 14.5°, Ka 1.25, chill-cast, A 600 in², FG blank →
+ *   auto 2d/3 = 2 in): f 0.0178, e 0.818, W^t_G 1284, W^t_W 131, Cm 0.823, Cv 0.211, (W^t)all 1456, Wf −23.7, Hf 1.02, HW 5.61, HG 4.58,
+ *   σ 8 200 psi, ts 207.5 °F.
  *   NOT reproduced on purpose (slips in the course solution, which copied numbers from Shigley Ex. 15-3): the solution's (W^t)all = 1787
  *   uses Fe = 2 in although F = 0.5 in (sheet: Fe = 0.5 → 447 lbf < 966 → wear FAIL; the solution's own redesign at F = 7/8 in gives 782 lbf,
  *   consistent with Fe = F); Amin = 1642 uses C = 8.5 in instead of C = 4.25 (sheet: 505.5 in²); Wf = −29.5 is an arithmetic slip for
@@ -35,13 +38,14 @@
       { text: 'Application factor K_a = 1 unless given — the guides\' gear force W_tG = 2T_o/D_G carries no application factor; the course Module 2 example gives K_a = 1.25', src: 'Fizz p.72 · Mech p.110', var: 'Ka' },
       { text: 'Design factor n_d = 1 unless stated', src: 'course Module 2 · course Chains s26', var: 'nd' },
       { text: 'Gear force from Shigley Eq. 15-58, W^t_G = 33 000 n_d H_0 K_a/(V_G e) (course method); the guides use W_tG = 2T_o/D_G with no K_a and no ÷e — shown beside as 2T_o/D', src: 'Fizz p.72 · Mech p.110' },
-      { text: 'Running friction from the AGMA curve: f = 0.103 exp(−0.110V_s^{0.45}) + 0.012 for V_s > 10 ft/min (0.124 exp(−0.074V_s^{0.645}) below)', src: 'Fizz p.72 · Mech p.110', var: 'f' },
+      { text: 'Running friction from the AGMA curve (Eq. 15-38 = the guides\' formula): \\(f = 0.103\\,e^{-0.110V_s^{0.45}} + 0.012\\) for V_s > 10 ft/min (\\(0.124\\,e^{-0.074V_s^{0.645}}\\) below)', src: 'Fizz p.72 · Mech p.110', var: 'f' },
       { text: 'Static friction f = 0.15 (the guides\' value at V_s = 0) for the self-locking test f_stat > cos φ_n tan λ; rule of thumb λ < 6° (Mott: ≤ 5°)', src: 'Fizz p.72 · Mech p.110 · course Worm Gears s11', var: 'fstat' },
       { text: 'Lewis form factor y from Table 10-5 by φ_n (0.100 / 0.125 / 0.150 / 0.175 for 14.5° / 20° / 25° / 30°)', src: 'Fizz p.73 · Mech p.111', var: 'y' },
       { text: 'Bending verdict with Shigley Eq. 15-53 (no dynamic factor, course); the guides divide W_tG by K_v = 1200/(1200 + v_tG) first — shown as σ_d', src: 'Fizz p.73 · Mech p.111 · course Worm Gears s19' },
       { text: 'Allowable bending stress of the bronze gear σ_all = 24 ksi (phosphor bronze; manganese bronze 17 ksi)', src: 'course Worm Gears s19 · Mott Sec. 10-11', var: 'sall' },
       { text: 'Sand-cast bronze for C_s unless stated ("most common"; Mott Ex. 10-10 assumes sand cast)', src: 'Fizz p.74 · Mech p.112 · course Worm Gears', var: 'mat' },
       { text: 'Mean gear diameter D_m = D (standard addendum) in C_s and (W^t)_all — the guides use D_G', src: 'Fizz p.74 · Mech p.112' },
+      { text: 'Gear face width not given → F_G = 2d/3 (Eq. 15-48, p_x > 0.16 in); the guides\' rule F_G = √(D_oW² − D_W²) ≈ 6/P_d is shown beside', src: 'Fizz p.71 · Mech p.108', var: 'FG' },
       { text: 'Effective face width F_e = min(F_G, 0.67d) (Eq. 15-28, Mott Eq. 10-42); both guides print D_W/3 — the textbook limit is used', src: 'Fizz p.74 · Mech p.113', var: 'Fe' },
       { text: 'No fan on the worm shaft ("better to assume no fan")', src: 'course Module 2 p36', var: 'fan' },
       { text: 'Ambient t_a = 70 °F if not given; oil-sump limit 250 °F (120 °C)', src: 'course Worm Gears s20', var: 'tmax' },
@@ -85,7 +89,8 @@
             { id: 'phin', symbol: '\\phi_n', label: 'Normal pressure angle', kind: 'choice', options: [{ label: '14.5°', value: 14.5 }, { label: '20°', value: 20 }, { label: '25°', value: 25 }, { label: '30°', value: 30 }], default: 20, hint: 'Table 13-5 pairs it with λ' },
             { id: 'Ka', symbol: 'K_a', label: 'Application factor', kind: 'input', default: 1, hint: '1 unless given (guides: no K_a); same idea as K_o; course Module 2 example 1.25' },
             { id: 'nd', symbol: 'n_d', label: 'Design factor', kind: 'input', default: 1, hint: 'course: nd = 1.0 unless stated' },
-            { id: 'FG', symbol: 'F_G', label: 'Gear face width', unit: 'in', kind: 'input', hint: 'blank → see (FG)rec below; Fe is capped at 0.67 d' },
+            { id: 'FG', symbol: 'F_G', label: 'Gear face width', unit: 'in', kind: 'input', hint: 'auto = (F_G)_rec of Eq. 15-48 (2d/3 for p_x > 0.16 in); F_e is capped at 0.67 d',
+              auto: v => has(v, 'FGrec') ? v.FGrec : undefined },
             { id: 'mat', symbol: '', label: 'Gear bronze (for Cs)', kind: 'choice', type: 'text', options: [{ label: 'Sand-cast bronze (course: "most common")', value: 'sand' }, { label: 'Chilled-cast (static chill / forged) bronze', value: 'chilled' }, { label: 'Centrifugally cast bronze', value: 'centrifugal' }], default: 'sand' },
           ] },
       ] },
@@ -129,7 +134,8 @@
             { id: 'Dr', symbol: 'D_r', label: 'Gear root diameter', unit: 'in', kind: 'calc', compute: v => has(v, 'D', 'b') ? v.D - 2 * v.b : undefined },
             { id: 'cl', symbol: 'c', label: 'Clearance', unit: 'in', kind: 'calc', compute: v => has(v, 'a', 'b') ? v.b - v.a : undefined },
             { id: 'FWmax', symbol: '(F_W)_{max}', label: 'Worm face length', unit: 'in', kind: 'calc', compute: v => has(v, 'D', 'a') ? 2 * sq(2 * v.D * v.a) : undefined },
-            { id: 'FGrec', symbol: '(F_G)_{rec}', label: 'Recommended gear face width 2d/3 (Eq. 15-48)', unit: 'in', kind: 'calc', compute: v => has(v, 'd') ? 2 * v.d / 3 : undefined },
+            { id: 'FGrec', symbol: '(F_G)_{rec}', label: 'Recommended gear face width (Eq. 15-48: 2d/3 for p_x > 0.16 in)', unit: 'in', kind: 'calc', compute: v => has(v, 'd', 'px') ? (v.px > 0.16 ? 2 * v.d / 3 : (has(v, 'do', 'cl', 'a') ? 1.125 * sq(Math.pow(v.do + 2 * v.cl, 2) - Math.pow(v.do - 4 * v.a, 2)) : undefined)) : undefined,
+              work: v => has(v, 'd', 'px') ? (v.px > 0.16 ? '\\((F_G)_{rec} = 2(' + fmt(v.d) + ')/3 = ' + fmt(2 * v.d / 3) + '\\) in' : (has(v, 'do', 'cl', 'a') ? '\\((F_G)_{rec} = 1.125\\sqrt{(' + fmt(v.do) + ' + 2(' + fmt(v.cl) + '))^2 - (' + fmt(v.do) + ' - 4(' + fmt(v.a) + '))^2} = ' + fmt(1.125 * sq(Math.pow(v.do + 2 * v.cl, 2) - Math.pow(v.do - 4 * v.a, 2))) + '\\) in' : null)) : null },
             { id: 'FGmott', symbol: 'F_G\\ (\\text{bible})', label: 'Bible rule √(do² − d²) ≈ 6/Pd', unit: 'in', kind: 'calc', compute: v => has(v, 'do', 'd') ? sq(v.do * v.do - v.d * v.d) : undefined },
             { id: 'pn', symbol: 'p_n', label: 'Normal circular pitch px cos λ', unit: 'in', kind: 'calc', compute: v => has(v, 'px', 'lam') ? v.px * cos(r(v.lam)) : undefined },
           ] },

@@ -39,6 +39,8 @@ const Ne = v => ENDS[v.ends] ? ENDS[v.ends][0] : undefined;
 const Ls_of = (v, Nt) => v.ends === 'pg' || v.ends === 'sg' ? v.d * Nt : v.d * (Nt + 1);
 const PI = Math.PI;
 
+// TX: H.fmt for inside \( \) work lines — writes 3e+7 as 3\times10^{7} so MathJax shows real powers of ten.
+const TX = (x, d) => String(H.fmt(x, d)).replace(/e([+-]?)(\d+)$/, (m, s, e) => '\\times10^{' + (s === '-' ? '-' : '') + e + '}');
 window.TOPIC = {
   id: 'springs', book: 'shigley',
   title: 'Helical Compression Springs — Static & Fatigue Design',
@@ -46,7 +48,7 @@ window.TOPIC = {
   sibling: 'springs_mott.html',
   intro: 'Designs or checks a round-wire helical compression spring. Pick a <b>mode</b>: (1) <i>choose d</i> — Fizz "iterate wire diameter" / Shigley Fig. 10-3 &amp; Example 10-2: the spring index C comes from Eq. 10-23 so that n<sub>s</sub> = 1.2 at closure; run it once per candidate wire size and compare with the fom; (2) <i>choose C</i> (default) — Fizz "calculate based on C (seems better)" / Example 10-3: solve for d, then pick the next standard wire (Table A-28); (3) <i>spring given</i> — analyse a known d, D, N<sub>t</sub>, L<sub>0</sub> (Examples 10-1, 10-4). '
     + 'Then rate, coils, lengths (Table 10-1), buckling (Table 10-2 / Eq. 10-13), the design-condition checks (Eqs. 10-18 … 10-21), critical frequency and, if F<sub>min</sub> is given, fatigue with Zimmerli data (Eqs. 10-28 … 10-33). Units: US (lbf, in, psi) or SI (N, mm, MPa) — pick once. Mode 4 (<i>extension spring given</i>, Shigley 10-11 / Example 10-6) adds body coils → N<sub>a</sub> = N<sub>b</sub> + G/E, free length (Eq. 10-39), initial-tension check (Eq. 10-41) and the hook stresses σ<sub>A</sub>, τ<sub>B</sub> (Eqs. 10-34 … 10-37) against Table 10-7. <b>Course note:</b> MECH 325 provides only the Module 5 reading guide for springs (Shigley 10-1 … 10-4, 10-9, 10-11 required; 10-5 … 10-8, 10-12 beneficial) and no worked numbers, so the textbook defaults (ξ = 0.15, n<sub>s</sub> = 1.2, Table 10-6 / 10-7 fractions, Zimmerli data) apply unchanged.',
-  example: { units: 'US', Fmax: 20, ymax: 2, xi: 0.15, nsd: 1.2, mat: 'A228', set: 0, ends: 'sg', mode: 'd', d: 0.080, alpha: 0.5, gamma: 0.284 },
+  example: { units: 'US', Fmax: 20, ymax: 2, xi: 0.15, nsd: 1.2, mat: 'A228', set: 0, ends: 'sg', mode: 'd', d: 0.080, alpha: 0.5 },
 
   assumptions: [
     { text: 'Fractional overrun to closure ξ = 0.15, i.e. F_s = 1.15 F_max (unless the problem gives the solid-height force)', src: 'Fizz p.138 · Fizz p.136', var: 'xi' },
@@ -121,7 +123,7 @@ window.TOPIC = {
             compute: v => { if (v.mode !== 'C' || !H.has(v, 'Ctry', 'Fmax', 'nsd', 'frac', 'A', 'm')) return undefined;
               const KB = (4 * v.Ctry + 2) / (4 * v.Ctry - 3); const Fs = v.Fsg !== undefined ? v.Fsg : (H.has(v, 'xi') ? (1 + v.xi) * v.Fmax : undefined); if (Fs === undefined) return undefined;
               return Math.pow(8 * v.nsd * Fs * KB * v.Ctry / (PI * v.frac * v.A * KU(v)), 1 / (2 - v.m)); },
-            work: v => v.dcalc !== undefined ? '\\(d = \\left[\\dfrac{8\\,n_s F_s K_B C}{\\pi\\,(' + H.fmt(v.frac) + ')\\,A' + (SI(v) ? '' : '\\times10^3') + '}\\right]^{1/(2-m)} = ' + H.fmt(v.dcalc, 4) + '\\)  (Example 10-3 Eq. 5: 0.163 K_B C/A for F_s = 24 lbf, n_s = 1.2)' : null },
+            work: v => v.dcalc !== undefined ? '\\(d = \\left[\\dfrac{8\\,n_s F_s K_B C}{\\pi\\,(' + TX(v.frac) + ')\\,A' + (SI(v) ? '' : '\\times10^3') + '}\\right]^{1/(2-m)} = ' + TX(v.dcalc, 4) + '\\)  (Example 10-3 Eq. 5: 0.163 K_B C/A for F_s = 24 lbf, n_s = 1.2)' : null },
           { id: 'd', symbol: 'd', label: 'Wire diameter (standard size, Table A-28)', unit: 'in / mm', kind: 'lookup', fig: 'tableA-28a', hint: 'Table A-28; mode 2: the gauge closest to d_calc (Fizz p.145) — Shigley Ex. 10-3 then checks n_s and moves up a gauge if needed' },
           { id: 'Dg', symbol: 'D', label: 'Mean coil diameter (modes 3, 4)', unit: 'in / mm', kind: 'input', hint: 'D = OD − d' },
           { id: 'Ntg', symbol: 'N_t', label: 'Total coils, if given (mode 3)', kind: 'input' },
@@ -142,9 +144,9 @@ window.TOPIC = {
         formula: 'S_{ut} = \\frac{A}{d^m} \\qquad S_{sy} = (\\text{Table 10-6 fraction})\\,S_{ut}',
         vars: [
           { id: 'Sut', symbol: 'S_{ut}', label: 'Minimum tensile strength', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'A', 'm', 'd') ? v.A / Math.pow(v.d, v.m) * KU(v) : undefined,
-            work: v => H.has(v, 'A', 'm', 'd') ? '\\(S_{ut} = \\dfrac{' + H.fmt(v.A) + '}{' + H.fmt(v.d) + '^{' + H.fmt(v.m) + '}} = ' + H.fmt(v.A / Math.pow(v.d, v.m), 4) + (SI(v) ? '\\ \\text{MPa}' : '\\ \\text{kpsi}') + '\\)' : null },
+            work: v => H.has(v, 'A', 'm', 'd') ? '\\(S_{ut} = \\dfrac{' + TX(v.A) + '}{' + TX(v.d) + '^{' + TX(v.m) + '}} = ' + TX(v.A / Math.pow(v.d, v.m), 4) + (SI(v) ? '\\ \\text{MPa}' : '\\ \\text{kpsi}') + '\\)' : null },
           { id: 'Ssy', symbol: 'S_{sy}', label: 'Torsional yield strength', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'Sut', 'frac') ? v.frac * v.Sut : undefined,
-            work: v => H.has(v, 'Sut', 'frac') ? '\\(S_{sy} = ' + H.fmt(v.frac) + '(' + H.fmt(v.Sut, 5) + ') = ' + H.fmt(v.Ssy, 5) + '\\)' : null },
+            work: v => H.has(v, 'Sut', 'frac') ? '\\(S_{sy} = ' + TX(v.frac) + '(' + TX(v.Sut, 5) + ') = ' + TX(v.Ssy, 5) + '\\)' : null },
         ] },
       { id: 'cidx', title: 'Spring index C and mean diameter D', eq: '10-1, 10-23', fig: ['fig10-3'],
         formula: '\\alpha = \\frac{S_{sy}}{n_s},\\;\\; \\beta = \\frac{8(1+\\xi)F_{max}}{\\pi d^2},\\;\\; C = \\frac{2\\alpha-\\beta}{4\\beta} + \\sqrt{\\left(\\frac{2\\alpha-\\beta}{4\\beta}\\right)^2 - \\frac{3\\alpha}{4\\beta}} \\qquad D = C d',
@@ -158,7 +160,7 @@ window.TOPIC = {
               if (v.mode === 'C') return v.Ctry;
               if (v.mode === 'given' || v.mode === 'ext') return H.has(v, 'Dg', 'd') ? v.Dg / v.d : undefined;
               if (!H.has(v, 'alph', 'beta')) return undefined; const a = (2 * v.alph - v.beta) / (4 * v.beta); const r = a * a - 3 * v.alph / (4 * v.beta); return r >= 0 ? a + Math.sqrt(r) : undefined; },
-            work: v => (v.mode === 'd' && H.has(v, 'alph', 'beta', 'C')) ? '\\(C = \\dfrac{2(' + H.fmt(v.alph, 5) + ') - ' + H.fmt(v.beta, 5) + '}{4(' + H.fmt(v.beta, 5) + ')} + \\sqrt{\\left[\\dfrac{2(' + H.fmt(v.alph, 5) + ') - ' + H.fmt(v.beta, 5) + '}{4(' + H.fmt(v.beta, 5) + ')}\\right]^2 - \\dfrac{3(' + H.fmt(v.alph, 5) + ')}{4(' + H.fmt(v.beta, 5) + ')}} = ' + H.fmt(v.C, 4) + '\\)' : null,
+            work: v => (v.mode === 'd' && H.has(v, 'alph', 'beta', 'C')) ? '\\(C = \\dfrac{2(' + TX(v.alph, 5) + ') - ' + TX(v.beta, 5) + '}{4(' + TX(v.beta, 5) + ')} + \\sqrt{\\left[\\dfrac{2(' + TX(v.alph, 5) + ') - ' + TX(v.beta, 5) + '}{4(' + TX(v.beta, 5) + ')}\\right]^2 - \\dfrac{3(' + TX(v.alph, 5) + ')}{4(' + TX(v.beta, 5) + ')}} = ' + TX(v.C, 4) + '\\)' : null,
             check: v => (v.C !== undefined && (v.C < 4 || v.C > 12)) ? 'Outside 4 ≤ C ≤ 12 (Eq. 10-18)' : null },
           { id: 'D', symbol: 'D', label: 'Mean coil diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => (v.mode === 'given' || v.mode === 'ext') ? v.Dg : (H.has(v, 'C', 'd') ? v.C * v.d : undefined) },
           { id: 'OD', symbol: 'OD', label: 'Outside diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'D', 'd') ? v.D + v.d : undefined },
@@ -171,10 +173,10 @@ window.TOPIC = {
           { id: 'KB', symbol: 'K_B', label: 'Bergsträsser factor', kind: 'calc', digits: 4, compute: v => H.has(v, 'C') ? (4 * v.C + 2) / (4 * v.C - 3) : undefined },
           { id: 'KW', symbol: 'K_W', label: 'Wahl factor (for reference)', kind: 'calc', digits: 4, compute: v => H.has(v, 'C') ? (4 * v.C - 1) / (4 * v.C - 4) + 0.615 / v.C : undefined },
           { id: 'taus', symbol: '\\tau_s', label: 'Shear stress at solid height', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'KB', 'Fs', 'D', 'd') ? v.KB * 8 * v.Fs * v.D / (PI * Math.pow(v.d, 3)) : undefined,
-            work: v => H.has(v, 'KB', 'Fs', 'D', 'd') ? '\\(\\tau_s = ' + H.fmt(v.KB, 4) + '\\,\\dfrac{8(' + H.fmt(v.Fs) + ')(' + H.fmt(v.D, 4) + ')}{\\pi(' + H.fmt(v.d) + ')^3} = ' + H.fmt(v.taus, 5) + '\\)' : null },
+            work: v => H.has(v, 'KB', 'Fs', 'D', 'd') ? '\\(\\tau_s = ' + TX(v.KB, 4) + '\\,\\dfrac{8(' + TX(v.Fs) + ')(' + TX(v.D, 4) + ')}{\\pi(' + TX(v.d) + ')^3} = ' + TX(v.taus, 5) + '\\)' : null },
           { id: 'taumax', symbol: '\\tau_{max}', label: 'Shear stress at Fmax', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'KB', 'Fmax', 'D', 'd') ? v.KB * 8 * v.Fmax * v.D / (PI * Math.pow(v.d, 3)) : undefined },
           { id: 'ns', symbol: 'n_s', label: 'Factor of safety at closure', kind: 'calc', digits: 3, compute: v => H.has(v, 'Ssy', 'taus') && v.taus > 0 ? v.Ssy / v.taus : undefined,
-            work: v => H.has(v, 'Ssy', 'taus') ? '\\(n_s = ' + H.fmt(v.Ssy, 5) + '/' + H.fmt(v.taus, 5) + ' = ' + H.fmt(v.ns, 3) + '\\)' : null },
+            work: v => H.has(v, 'Ssy', 'taus') ? '\\(n_s = ' + TX(v.Ssy, 5) + '/' + TX(v.taus, 5) + ' = ' + TX(v.ns, 3) + '\\)' : null },
         ],
         after: v => v.ns === undefined ? '' : (v.ns >= (v.nsd || 1.2) ? '<span class="result-ok">ns = ' + H.fmt(v.ns, 3) + ' ≥ ' + H.fmt(v.nsd || 1.2) + ' — no yielding when compressed solid.</span>' : '<span class="result-bad">ns = ' + H.fmt(v.ns, 3) + ' &lt; ' + H.fmt(v.nsd || 1.2) + ' — spring yields at solid height: larger d, smaller C, or stronger wire.</span>') },
     ] },
@@ -185,13 +187,13 @@ window.TOPIC = {
         text: 'If the spring is given with its total coils, Na = Nt − Ne (Table 10-1) and k follows from Eq. 10-9; otherwise k comes from the required load–deflection point.',
         vars: [
           { id: 'Nag', symbol: 'N_{a,given}', label: 'Active coils from given Nt (mode 3) or Nb + G/E (mode 4, Eq. 10-40)', kind: 'calc', digits: 4, compute: v => EXT(v) ? (H.has(v, 'Nbg', 'G', 'E') ? v.Nbg + v.G / v.E : undefined) : ((H.has(v, 'Ntg') && Ne(v) !== undefined) ? v.Ntg - Ne(v) : undefined),
-            work: v => (EXT(v) && H.has(v, 'Nag')) ? '\\(N_a = N_b + G/E = ' + H.fmt(v.Nbg) + ' + ' + H.fmt(v.G, 4) + '/' + H.fmt(v.E, 4) + ' = ' + H.fmt(v.Nag, 4) + '\\)' : null },
+            work: v => (EXT(v) && H.has(v, 'Nag')) ? '\\(N_a = N_b + G/E = ' + TX(v.Nbg) + ' + ' + TX(v.G, 4) + '/' + TX(v.E, 4) + ' = ' + TX(v.Nag, 4) + '\\)' : null },
           { id: 'k', symbol: 'k', label: 'Spring rate', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => {
               if (H.has(v, 'Nag', 'd', 'G', 'D') && v.Nag > 0) return Math.pow(v.d, 4) * v.G / (8 * Math.pow(v.D, 3) * v.Nag);
               return (H.has(v, 'Fmax', 'ymax') && v.ymax > 0) ? v.Fmax / v.ymax : undefined; },
-            work: v => H.has(v, 'Nag', 'd', 'G', 'D') && v.Nag > 0 ? '\\(k = \\dfrac{(' + H.fmt(v.d) + ')^4(' + H.fmt(v.G, 4) + ')}{8(' + H.fmt(v.D, 4) + ')^3(' + H.fmt(v.Nag, 4) + ')} = ' + H.fmt(v.k, 4) + '\\)' : (H.has(v, 'Fmax', 'ymax') ? '\\(k = ' + H.fmt(v.Fmax) + '/' + H.fmt(v.ymax) + ' = ' + H.fmt(v.k, 4) + '\\)' : null) },
+            work: v => H.has(v, 'Nag', 'd', 'G', 'D') && v.Nag > 0 ? '\\(k = \\dfrac{(' + TX(v.d) + ')^4(' + TX(v.G, 4) + ')}{8(' + TX(v.D, 4) + ')^3(' + TX(v.Nag, 4) + ')} = ' + TX(v.k, 4) + '\\)' : (H.has(v, 'Fmax', 'ymax') ? '\\(k = ' + TX(v.Fmax) + '/' + TX(v.ymax) + ' = ' + TX(v.k, 4) + '\\)' : null) },
           { id: 'Na', symbol: 'N_a', label: 'Active coils', kind: 'calc', digits: 4, compute: v => H.has(v, 'Nag') ? v.Nag : (H.has(v, 'd', 'G', 'D', 'k') && v.k > 0 ? Math.pow(v.d, 4) * v.G / (8 * Math.pow(v.D, 3) * v.k) : undefined),
-            work: v => (!H.has(v, 'Nag') && H.has(v, 'd', 'G', 'D', 'k')) ? '\\(N_a = \\dfrac{(' + H.fmt(v.d) + ')^4(' + H.fmt(v.G, 4) + ')}{8(' + H.fmt(v.D, 4) + ')^3(' + H.fmt(v.k, 4) + ')} = ' + H.fmt(v.Na, 4) + '\\)' : null,
+            work: v => (!H.has(v, 'Nag') && H.has(v, 'd', 'G', 'D', 'k')) ? '\\(N_a = \\dfrac{(' + TX(v.d) + ')^4(' + TX(v.G, 4) + ')}{8(' + TX(v.D, 4) + ')^3(' + TX(v.k, 4) + ')} = ' + TX(v.Na, 4) + '\\)' : null,
             check: v => (v.Na !== undefined && (v.Na < 3 || v.Na > 15)) ? 'Outside 3 ≤ Na ≤ 15 (Eq. 10-19) — mode 2: raise C to lower Na' : null },
           { id: 'Nt', symbol: 'N_t', label: 'Total coils', kind: 'calc', digits: 4, compute: v => EXT(v) ? v.Nbg : (H.has(v, 'Ntg') ? v.Ntg : (H.has(v, 'Na') && Ne(v) !== undefined ? v.Na + Ne(v) : undefined)),
             hint: 'Table 10-1: Nt = Na + Ne' },
@@ -200,10 +202,10 @@ window.TOPIC = {
         formula: 'y_s = \\frac{F_s}{k} \\qquad L_0 = L_s + y_s \\qquad p = \\frac{L_0 - (\\text{end allowance})}{N_a}',
         vars: [
           { id: 'Ls', symbol: 'L_s', label: 'Solid length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Nt', 'd') && ENDS[v.ends] ? Ls_of(v, v.Nt) : undefined,
-            work: v => H.has(v, 'Nt', 'd') && ENDS[v.ends] ? '\\(L_s = ' + ENDS[v.ends][2].replace('Nt', '(' + H.fmt(v.Nt, 4) + ')').replace('d', H.fmt(v.d)) + ' = ' + H.fmt(v.Ls, 4) + '\\)' : null },
+            work: v => H.has(v, 'Nt', 'd') && ENDS[v.ends] ? '\\(L_s = ' + ENDS[v.ends][2].replace('Nt', '(' + TX(v.Nt, 4) + ')').replace('d', TX(v.d)) + ' = ' + TX(v.Ls, 4) + '\\)' : null },
           { id: 'ys', symbol: 'y_s', label: 'Deflection to closure', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'L0g', 'Ls') ? v.L0g - v.Ls : (H.has(v, 'Fs', 'k') && v.k > 0 ? v.Fs / v.k : undefined) },
           { id: 'L0', symbol: 'L_0', label: 'Free length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'L0g') ? v.L0g : (H.has(v, 'Ls', 'ys') ? v.Ls + v.ys : undefined),
-            work: v => (!H.has(v, 'L0g') && H.has(v, 'Ls', 'ys')) ? '\\(L_0 = ' + H.fmt(v.Ls, 4) + ' + ' + H.fmt(v.ys, 4) + ' = ' + H.fmt(v.L0, 4) + '\\)' : null },
+            work: v => (!H.has(v, 'L0g') && H.has(v, 'Ls', 'ys')) ? '\\(L_0 = ' + TX(v.Ls, 4) + ' + ' + TX(v.ys, 4) + ' = ' + TX(v.L0, 4) + '\\)' : null },
           { id: 'Fsact', symbol: 'F_{s,act}', label: 'Actual force at solid height = k ys', unit: 'lbf / N', kind: 'calc', compute: v => H.has(v, 'k', 'ys') ? v.k * v.ys : undefined, hint: 'differs from Fs only when L0 is given' },
           { id: 'p', symbol: 'p', label: 'Pitch', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => { if (!H.has(v, 'L0', 'Na', 'd') || !ENDS[v.ends]) return undefined;
               return { plain: (v.L0 - v.d) / v.Na, pg: v.L0 / (v.Na + 1), sq: (v.L0 - 3 * v.d) / v.Na, sg: (v.L0 - 2 * v.d) / v.Na }[v.ends]; } },
@@ -220,7 +222,7 @@ window.TOPIC = {
         vars: [
           { id: 'alpha', symbol: '\\alpha', label: 'End-condition constant', kind: 'choice', options: [{ label: '0.5 — flat parallel surfaces (fixed–fixed)', value: 0.5 }, { label: '0.707 — fixed–hinged', value: 0.707 }, { label: '1.0 — hinged–hinged', value: 1 }, { label: '2.0 — clamped–free', value: 2 }], default: 0.5 },
           { id: 'L0cr', symbol: '(L_0)_{cr}', label: 'Critical free length (steel, Eq. 10-13)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'D', 'alpha') ? 2.63 * v.D / v.alpha : undefined,
-            work: v => H.has(v, 'D', 'alpha') ? '\\((L_0)_{cr} = 2.63(' + H.fmt(v.D, 4) + ')/' + H.fmt(v.alpha) + ' = ' + H.fmt(v.L0cr, 4) + '\\)' : null },
+            work: v => H.has(v, 'D', 'alpha') ? '\\((L_0)_{cr} = 2.63(' + TX(v.D, 4) + ')/' + TX(v.alpha) + ' = ' + TX(v.L0cr, 4) + '\\)' : null },
           { id: 'alphreq', symbol: '\\alpha_{req}', label: 'Max α for stability = 2.63 D / L0', kind: 'calc', digits: 3, compute: v => H.has(v, 'D', 'L0') && v.L0 > 0 ? 2.63 * v.D / v.L0 : undefined },
           { id: 'ycr', symbol: 'y_{cr}', label: 'Critical deflection (Eq. 10-10)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => { if (!H.has(v, 'L0', 'D', 'alpha', 'E', 'G')) return undefined;
               const C1 = v.E / (2 * (v.E - v.G)), C2 = 2 * PI * PI * (v.E - v.G) / (2 * v.G + v.E), lam = v.alpha * v.L0 / v.D; const t = 1 - C2 / (lam * lam); return t < 0 ? Infinity : v.L0 * C1 * (1 - Math.sqrt(t)); } },
@@ -238,7 +240,7 @@ window.TOPIC = {
         text: 'Repeat for each candidate wire size (mode 1) and tabulate as in Example 10-2; eliminate rows that violate a condition; among the survivors the <b>largest (least negative) fom</b> wins.',
         vars: [
           { id: 'fom', symbol: 'fom', label: 'Figure of merit (γ omitted)', kind: 'calc', digits: 4, compute: v => H.has(v, 'cost', 'd', 'Nt', 'D') ? -v.cost * PI * PI * v.d * v.d * v.Nt * v.D / 4 : undefined,
-            work: v => H.has(v, 'cost', 'd', 'Nt', 'D') ? '\\(fom = -' + H.fmt(v.cost) + '\\pi^2(' + H.fmt(v.d) + ')^2(' + H.fmt(v.Nt, 4) + ')(' + H.fmt(v.D, 4) + ')/4 = ' + H.fmt(v.fom, 4) + '\\)' : null },
+            work: v => H.has(v, 'cost', 'd', 'Nt', 'D') ? '\\(fom = -' + TX(v.cost) + '\\pi^2(' + TX(v.d) + ')^2(' + TX(v.Nt, 4) + ')(' + TX(v.D, 4) + ')/4 = ' + TX(v.fom, 4) + '\\)' : null },
         ],
         after: v => { if (v.C === undefined) return '';
           const rows = [['4 ≤ C ≤ 12', v.C, v.C >= 4 && v.C <= 12], ['3 ≤ Na ≤ 15', v.Na, v.Na !== undefined && v.Na >= 3 && v.Na <= 15], ['ξ ≥ 0.15', v.xie, v.xie !== undefined && v.xie >= 0.15 - 1e-9], ['ns ≥ 1.2', v.ns, v.ns !== undefined && v.ns >= 1.2 - 1e-6], ['L0 < (L0)cr', v.L0, v.L0 !== undefined && v.L0cr !== undefined && v.L0 < v.L0cr]];
@@ -253,7 +255,7 @@ window.TOPIC = {
           { id: 'gamma', symbol: '\\gamma', label: 'Specific weight of wire', unit: 'lbf/in³ / N/mm³', kind: 'input', auto: v => SI(v) ? 7.65e-5 : 0.284, hint: 'steel 0.284 lbf/in³ = 7.65e-5 N/mm³ (auto by unit system)' },
           { id: 'W', symbol: 'W', label: 'Weight of active coils', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'd', 'D', 'Na', 'gamma') ? PI * PI * v.d * v.d * v.D * v.Na * v.gamma / 4 : undefined },
           { id: 'fn', symbol: 'f', label: 'Fundamental frequency (both ends on plates)', unit: 'Hz', kind: 'calc', digits: 4, compute: v => H.has(v, 'k', 'W') && v.W > 0 ? 0.5 * Math.sqrt(v.k * (SI(v) ? 9810 : 386.1) / v.W) : undefined,
-            work: v => H.has(v, 'k', 'W') && v.W > 0 ? '\\(f = \\tfrac12\\sqrt{' + H.fmt(v.k, 4) + '(' + (SI(v) ? '9810' : '386') + ')/' + H.fmt(v.W, 4) + '} = ' + H.fmt(v.fn, 4) + '\\ \\text{Hz}\\)' : null },
+            work: v => H.has(v, 'k', 'W') && v.W > 0 ? '\\(f = \\tfrac12\\sqrt{' + TX(v.k, 4) + '(' + (SI(v) ? '9810' : '386') + ')/' + TX(v.W, 4) + '} = ' + TX(v.fn, 4) + '\\ \\text{Hz}\\)' : null },
           { id: 'fop', symbol: 'f_{op}', label: 'Operating frequency (if cyclic)', unit: 'Hz', kind: 'input' },
         ],
         after: v => H.has(v, 'fn', 'fop') && v.fop > 0 ? (v.fn / v.fop >= 15 ? '<span class="result-ok">f / f_op = ' + H.fmt(v.fn / v.fop, 3) + ' ≥ 15 — no surge/resonance problem.</span>' : '<span class="result-bad">f / f_op = ' + H.fmt(v.fn / v.fop, 3) + ' &lt; 15 — redesign for higher k or lower W.</span>') : '' },
@@ -266,7 +268,7 @@ window.TOPIC = {
           { id: 'Fa', symbol: 'F_a', label: 'Alternating force', unit: 'lbf / N', kind: 'calc', compute: v => H.has(v, 'Fmax', 'Fmin') ? (v.Fmax - v.Fmin) / 2 : undefined },
           { id: 'Fm', symbol: 'F_m', label: 'Mean force', unit: 'lbf / N', kind: 'calc', compute: v => H.has(v, 'Fmax', 'Fmin') ? (v.Fmax + v.Fmin) / 2 : undefined },
           { id: 'taua', symbol: '\\tau_a', label: 'Alternating shear stress', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'KB', 'Fa', 'D', 'd') ? v.KB * 8 * v.Fa * v.D / (PI * Math.pow(v.d, 3)) : undefined,
-            work: v => H.has(v, 'KB', 'Fa', 'D', 'd') ? '\\(\\tau_a = ' + H.fmt(v.KB, 4) + '\\dfrac{8(' + H.fmt(v.Fa) + ')(' + H.fmt(v.D, 4) + ')}{\\pi(' + H.fmt(v.d) + ')^3} = ' + H.fmt(v.taua, 5) + '\\)' : null },
+            work: v => H.has(v, 'KB', 'Fa', 'D', 'd') ? '\\(\\tau_a = ' + TX(v.KB, 4) + '\\dfrac{8(' + TX(v.Fa) + ')(' + TX(v.D, 4) + ')}{\\pi(' + TX(v.d) + ')^3} = ' + TX(v.taua, 5) + '\\)' : null },
           { id: 'taum', symbol: '\\tau_m', label: 'Mean shear stress', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'KB', 'Fm', 'D', 'd') ? v.KB * 8 * v.Fm * v.D / (PI * Math.pow(v.d, 3)) : undefined },
         ],
         when: v => H.has(v, 'Fmin') },
@@ -281,7 +283,7 @@ window.TOPIC = {
           { id: 'Ssu', symbol: 'S_{su}', label: 'Torsional modulus of rupture', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'Sut') ? 0.67 * v.Sut : undefined },
           { id: 'Sse', symbol: 'S_{se}', label: 'Shear endurance limit', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => { if (!H.has(v, 'Ssa', 'Ssm', 'Ssu')) return undefined; const r = v.Ssm / v.Ssu;
               return v.crit === 'goodman' ? v.Ssa / (1 - r) : v.crit === 'sines' ? v.Ssa : v.Ssa / (1 - r * r); },
-            work: v => H.has(v, 'Sse') && v.crit !== 'sines' ? '\\(S_{se} = \\dfrac{' + H.fmt(v.Ssa) + '}{1 - (' + H.fmt(v.Ssm) + '/' + H.fmt(v.Ssu, 5) + ')' + (v.crit === 'gerber' ? '^2' : '') + '} = ' + H.fmt(v.Sse, 5) + '\\)' : null },
+            work: v => H.has(v, 'Sse') && v.crit !== 'sines' ? '\\(S_{se} = \\dfrac{' + TX(v.Ssa) + '}{1 - (' + TX(v.Ssm) + '/' + TX(v.Ssu, 5) + ')' + (v.crit === 'gerber' ? '^2' : '') + '} = ' + TX(v.Sse, 5) + '\\)' : null },
         ],
         when: v => H.has(v, 'Fmin') },
       { id: 'nf', title: 'Fatigue factor of safety', eq: '6-41 / 6-48 adapted to shear',
@@ -292,7 +294,7 @@ window.TOPIC = {
               if (v.crit === 'sines') return v.Ssa / v.taua;
               if (v.taum <= 0) return v.Sse / v.taua;
               const q = 2 * v.taum * v.Sse / (v.Ssu * v.taua); return 0.5 * Math.pow(v.Ssu / v.taum, 2) * (v.taua / v.Sse) * (-1 + Math.sqrt(1 + q * q)); },
-            work: v => H.has(v, 'nfat') ? (v.crit === 'gerber' ? '\\(n_f = \\tfrac12\\left(\\dfrac{' + H.fmt(v.Ssu, 5) + '}{' + H.fmt(v.taum, 5) + '}\\right)^2\\dfrac{' + H.fmt(v.taua, 5) + '}{' + H.fmt(v.Sse, 5) + '}\\left[-1 + \\sqrt{1 + \\left(\\dfrac{2(' + H.fmt(v.taum, 5) + ')(' + H.fmt(v.Sse, 5) + ')}{' + H.fmt(v.Ssu, 5) + '(' + H.fmt(v.taua, 5) + ')}\\right)^2}\\right] = ' + H.fmt(v.nfat, 3) + '\\)'
+            work: v => H.has(v, 'nfat') ? (v.crit === 'gerber' ? '\\(n_f = \\tfrac12\\left(\\dfrac{' + TX(v.Ssu, 5) + '}{' + TX(v.taum, 5) + '}\\right)^2\\dfrac{' + TX(v.taua, 5) + '}{' + TX(v.Sse, 5) + '}\\left[-1 + \\sqrt{1 + \\left(\\dfrac{2(' + TX(v.taum, 5) + ')(' + TX(v.Sse, 5) + ')}{' + TX(v.Ssu, 5) + '(' + TX(v.taua, 5) + ')}\\right)^2}\\right] = ' + TX(v.nfat, 3) + '\\)'
               : v.crit === 'goodman' ? '\\(n_f = \\left(\\dfrac{' + H.fmt(v.taua, 5) + '}{' + H.fmt(v.Sse, 5) + '} + \\dfrac{' + H.fmt(v.taum, 5) + '}{' + H.fmt(v.Ssu, 5) + '}\\right)^{-1} = ' + H.fmt(v.nfat, 3) + '\\)' : '\\(n_f = ' + H.fmt(v.Ssa) + '/' + H.fmt(v.taua, 5) + ' = ' + H.fmt(v.nfat, 3) + '\\)') : null },
           { id: 'ny', symbol: 'n_y', label: 'Static yield check at Fmax: Ssy/τmax', kind: 'calc', digits: 3, compute: v => H.has(v, 'Ssy', 'taumax') && v.taumax > 0 ? v.Ssy / v.taumax : undefined },
         ],
@@ -306,24 +308,24 @@ window.TOPIC = {
         text: 'The body is analysed like a compression spring (K<sub>B</sub> from C, Eq. 10-5). Free length is measured inside the hooks (Figure 10-7b); the loops add G/E ≈ 0.4 turn to N<sub>a</sub> (Eq. 10-40, in the coils step above).',
         vars: [
           { id: 'xL0', symbol: 'L_0', label: 'Free length inside hooks', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'C', 'Nbg', 'd') ? (2 * v.C - 1 + v.Nbg) * v.d : undefined,
-            work: v => H.has(v, 'xL0') ? '\\(L_0 = [2(' + H.fmt(v.C, 4) + ') - 1 + ' + H.fmt(v.Nbg) + '](' + H.fmt(v.d) + ') = ' + H.fmt(v.xL0, 4) + '\\)' : null },
+            work: v => H.has(v, 'xL0') ? '\\(L_0 = [2(' + TX(v.C, 4) + ') - 1 + ' + TX(v.Nbg) + '](' + TX(v.d) + ') = ' + TX(v.xL0, 4) + '\\)' : null },
           { id: 'xy', symbol: 'y_{max}', label: 'Extension under Fmax', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => (H.has(v, 'Fmax', 'Fi', 'k') && v.k > 0) ? (v.Fmax - v.Fi) / v.k : undefined,
-            work: v => H.has(v, 'xy') ? '\\(y_{max} = (' + H.fmt(v.Fmax) + ' - ' + H.fmt(v.Fi) + ')/' + H.fmt(v.k, 4) + ' = ' + H.fmt(v.xy, 4) + '\\)' : null },
+            work: v => H.has(v, 'xy') ? '\\(y_{max} = (' + TX(v.Fmax) + ' - ' + TX(v.Fi) + ')/' + TX(v.k, 4) + ' = ' + TX(v.xy, 4) + '\\)' : null },
           { id: 'xLmax', symbol: 'L_{max}', label: 'Loaded length L0 + ymax', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'xL0', 'xy') ? v.xL0 + v.xy : undefined },
           { id: 'xtau', symbol: '\\tau_{max}', label: 'Body shear stress at Fmax', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'KB', 'Fmax', 'D', 'd') ? v.KB * 8 * v.Fmax * v.D / (PI * Math.pow(v.d, 3)) : undefined,
-            work: v => H.has(v, 'xtau') ? '\\(\\tau_{max} = ' + H.fmt(v.KB, 4) + '\\dfrac{8(' + H.fmt(v.Fmax) + ')(' + H.fmt(v.D, 4) + ')}{\\pi(' + H.fmt(v.d) + ')^3} = ' + H.fmt(v.xtau, 5) + '\\)' : null },
+            work: v => H.has(v, 'xtau') ? '\\(\\tau_{max} = ' + TX(v.KB, 4) + '\\dfrac{8(' + TX(v.Fmax) + ')(' + TX(v.D, 4) + ')}{\\pi(' + TX(v.d) + ')^3} = ' + TX(v.xtau, 5) + '\\)' : null },
           { id: 'xn', symbol: 'n', label: 'Body factor of safety Ssy/τmax', kind: 'calc', digits: 3, compute: v => (H.has(v, 'Ssy', 'xtau') && v.xtau > 0) ? v.Ssy / v.xtau : undefined,
-            work: v => H.has(v, 'xn') ? '\\(n = ' + H.fmt(v.Ssy, 5) + '/' + H.fmt(v.xtau, 5) + ' = ' + H.fmt(v.xn, 3) + '\\)' : null },
+            work: v => H.has(v, 'xn') ? '\\(n = ' + TX(v.Ssy, 5) + '/' + TX(v.xtau, 5) + ' = ' + TX(v.xn, 3) + '\\)' : null },
         ] },
       { id: 'xinit', title: 'Initial tension check', eq: '10-41', fig: ['fig10-7'], when: EXT,
         formula: '(\\tau_i)_{uncorr} = \\frac{8F_iD}{\\pi d^3} \\qquad (\\tau_i)_{pref} = \\frac{33\\,500}{\\exp(0.105C)} \\pm 1000\\left(4 - \\frac{C-3}{6.5}\\right)\\ \\text{psi}',
         text: 'The springmaker can routinely wind in an initial tension inside the preferred band of Figure 10-7c (Eq. 10-41 is in psi; SI values are converted at 6.895 kPa/psi).',
         vars: [
           { id: 'xtaui', symbol: '(\\tau_i)_{uncorr}', label: 'Uncorrected initial-tension stress', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'Fi', 'D', 'd') ? 8 * v.Fi * v.D / (PI * Math.pow(v.d, 3)) : undefined,
-            work: v => H.has(v, 'xtaui') ? '\\((\\tau_i)_{uncorr} = \\dfrac{8(' + H.fmt(v.Fi) + ')(' + H.fmt(v.D, 4) + ')}{\\pi(' + H.fmt(v.d) + ')^3} = ' + H.fmt(v.xtaui, 5) + '\\)' : null },
+            work: v => H.has(v, 'xtaui') ? '\\((\\tau_i)_{uncorr} = \\dfrac{8(' + TX(v.Fi) + ')(' + TX(v.D, 4) + ')}{\\pi(' + TX(v.d) + ')^3} = ' + TX(v.xtaui, 5) + '\\)' : null },
           { id: 'xtlo', symbol: '(\\tau_i)_{min}', label: 'Preferred range, lower', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'C') ? (33500 / Math.exp(0.105 * v.C) - 1000 * (4 - (v.C - 3) / 6.5)) * (SI(v) ? 0.006895 : 1) : undefined },
           { id: 'xthi', symbol: '(\\tau_i)_{max}', label: 'Preferred range, upper', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'C') ? (33500 / Math.exp(0.105 * v.C) + 1000 * (4 - (v.C - 3) / 6.5)) * (SI(v) ? 0.006895 : 1) : undefined,
-            work: v => H.has(v, 'xthi', 'xtlo') ? '\\((\\tau_i)_{pref} = \\dfrac{33\\,500}{\\exp[0.105(' + H.fmt(v.C, 4) + ')]} \\pm 1000\\left(4 - \\dfrac{' + H.fmt(v.C, 4) + ' - 3}{6.5}\\right) = ' + H.fmt(v.xtlo, 5) + ',\\; ' + H.fmt(v.xthi, 5) + '\\)' : null },
+            work: v => H.has(v, 'xthi', 'xtlo') ? '\\((\\tau_i)_{pref} = \\dfrac{33\\,500}{\\exp[0.105(' + TX(v.C, 4) + ')]} \\pm 1000\\left(4 - \\dfrac{' + TX(v.C, 4) + ' - 3}{6.5}\\right) = ' + TX(v.xtlo, 5) + ',\\; ' + TX(v.xthi, 5) + '\\)' : null },
         ],
         after: v => H.has(v, 'xtaui', 'xtlo', 'xthi') ? ((v.xtaui >= v.xtlo && v.xtaui <= v.xthi) ? '<span class="result-ok">Initial tension ' + H.fmt(v.xtaui, 4) + ' is inside the preferred range ' + H.fmt(v.xtlo, 4) + ' – ' + H.fmt(v.xthi, 4) + '.</span>' : '<span class="result-bad">Initial tension ' + H.fmt(v.xtaui, 4) + ' is outside the preferred range ' + H.fmt(v.xtlo, 4) + ' – ' + H.fmt(v.xthi, 4) + ' (available on special request / difficult to attain).</span>') : '' },
       { id: 'xhookA', title: 'Hook bending at A', eq: '10-34, 10-35', fig: ['fig10-6', 'table10-7'], when: EXT,
@@ -332,10 +334,10 @@ window.TOPIC = {
           { id: 'C1', symbol: 'C_1', label: 'Hook bending index 2r1/d', kind: 'calc', digits: 4, compute: v => H.has(v, 'r1', 'd') ? 2 * v.r1 / v.d : undefined, check: v => (v.C1 !== undefined && v.C1 < 4) ? 'C1 < 4 — very high hook stress' : null },
           { id: 'KA', symbol: '(K)_A', label: 'Bending stress-correction factor', kind: 'calc', digits: 4, compute: v => (H.has(v, 'C1') && v.C1 > 1) ? (4 * v.C1 * v.C1 - v.C1 - 1) / (4 * v.C1 * (v.C1 - 1)) : undefined },
           { id: 'sigA', symbol: '\\sigma_A', label: 'Hook tensile stress at A', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'Fmax', 'KA', 'D', 'd') ? v.Fmax * (v.KA * 16 * v.D / (PI * Math.pow(v.d, 3)) + 4 / (PI * v.d * v.d)) : undefined,
-            work: v => H.has(v, 'sigA') ? '\\(\\sigma_A = ' + H.fmt(v.Fmax) + '\\left[' + H.fmt(v.KA, 4) + '\\dfrac{16(' + H.fmt(v.D, 4) + ')}{\\pi(' + H.fmt(v.d) + ')^3} + \\dfrac{4}{\\pi(' + H.fmt(v.d) + ')^2}\\right] = ' + H.fmt(v.sigA, 5) + '\\)' : null },
+            work: v => H.has(v, 'sigA') ? '\\(\\sigma_A = ' + TX(v.Fmax) + '\\left[' + TX(v.KA, 4) + '\\dfrac{16(' + TX(v.D, 4) + ')}{\\pi(' + TX(v.d) + ')^3} + \\dfrac{4}{\\pi(' + TX(v.d) + ')^2}\\right] = ' + TX(v.sigA, 5) + '\\)' : null },
           { id: 'fracA', symbol: 'S_y/S_{ut}', label: 'Table 10-7 end-bending fraction', kind: 'lookup', fig: 'table10-7', auto: v => SPR_MAT[v.mat] ? EXT_FRAC[SPR_MAT[v.mat].cls][2] : undefined, hint: 'Table 10-7: 0.75 steels, 0.55 stainless / nonferrous' },
           { id: 'nA', symbol: 'n_A', label: 'Factor of safety at A', kind: 'calc', digits: 3, compute: v => (H.has(v, 'fracA', 'Sut', 'sigA') && v.sigA > 0) ? v.fracA * v.Sut / v.sigA : undefined,
-            work: v => H.has(v, 'nA') ? '\\(n_A = ' + H.fmt(v.fracA) + '(' + H.fmt(v.Sut, 5) + ')/' + H.fmt(v.sigA, 5) + ' = ' + H.fmt(v.nA, 3) + '\\)' : null },
+            work: v => H.has(v, 'nA') ? '\\(n_A = ' + TX(v.fracA) + '(' + TX(v.Sut, 5) + ')/' + TX(v.sigA, 5) + ' = ' + TX(v.nA, 3) + '\\)' : null },
         ] },
       { id: 'xhookB', title: 'Hook torsion at B', eq: '10-36, 10-37', fig: ['fig10-6', 'table10-7'], when: EXT,
         formula: '(K)_B = \\frac{4C_2 - 1}{4C_2 - 4},\\; C_2 = \\frac{2r_2}{d} \\qquad \\tau_B = (K)_B\\frac{8FD}{\\pi d^3} \\qquad n_B = \\frac{S_{sy}}{\\tau_B},\\; S_{sy} = 0.40S_{ut}',
@@ -343,10 +345,10 @@ window.TOPIC = {
           { id: 'C2', symbol: 'C_2', label: 'Hook torsion index 2r2/d', kind: 'calc', digits: 4, compute: v => H.has(v, 'r2', 'd') ? 2 * v.r2 / v.d : undefined, check: v => (v.C2 !== undefined && v.C2 < 4) ? 'C2 < 4 — very high hook stress' : null },
           { id: 'KB2', symbol: '(K)_B', label: 'Torsion stress-correction factor', kind: 'calc', digits: 4, compute: v => (H.has(v, 'C2') && v.C2 > 1) ? (4 * v.C2 - 1) / (4 * v.C2 - 4) : undefined },
           { id: 'tauB', symbol: '\\tau_B', label: 'Hook torsional stress at B', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'Fmax', 'KB2', 'D', 'd') ? v.KB2 * 8 * v.Fmax * v.D / (PI * Math.pow(v.d, 3)) : undefined,
-            work: v => H.has(v, 'tauB') ? '\\(\\tau_B = ' + H.fmt(v.KB2, 4) + '\\dfrac{8(' + H.fmt(v.Fmax) + ')(' + H.fmt(v.D, 4) + ')}{\\pi(' + H.fmt(v.d) + ')^3} = ' + H.fmt(v.tauB, 5) + '\\)' : null },
+            work: v => H.has(v, 'tauB') ? '\\(\\tau_B = ' + TX(v.KB2, 4) + '\\dfrac{8(' + TX(v.Fmax) + ')(' + TX(v.D, 4) + ')}{\\pi(' + TX(v.d) + ')^3} = ' + TX(v.tauB, 5) + '\\)' : null },
           { id: 'fracB', symbol: 'S_{sy}/S_{ut}', label: 'Table 10-7 end-torsion fraction', kind: 'lookup', fig: 'table10-7', auto: v => SPR_MAT[v.mat] ? EXT_FRAC[SPR_MAT[v.mat].cls][1] : undefined, hint: 'Table 10-7: 0.40 steels, 0.30 stainless / nonferrous' },
           { id: 'nB', symbol: 'n_B', label: 'Factor of safety at B', kind: 'calc', digits: 3, compute: v => (H.has(v, 'fracB', 'Sut', 'tauB') && v.tauB > 0) ? v.fracB * v.Sut / v.tauB : undefined,
-            work: v => H.has(v, 'nB') ? '\\(n_B = ' + H.fmt(v.fracB) + '(' + H.fmt(v.Sut, 5) + ')/' + H.fmt(v.tauB, 5) + ' = ' + H.fmt(v.nB, 3) + '\\)' : null },
+            work: v => H.has(v, 'nB') ? '\\(n_B = ' + TX(v.fracB) + '(' + TX(v.Sut, 5) + ')/' + TX(v.tauB, 5) + ' = ' + TX(v.nB, 3) + '\\)' : null },
         ] },
     ] },
 

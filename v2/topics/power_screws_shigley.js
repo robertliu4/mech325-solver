@@ -6,6 +6,8 @@
 // Verified against: Shigley Example 8-1 (d 32, p 4, 2 starts, F 6.4 kN, f = fc = 0.08, dc 40 mm) → dm 30, dr 28, l 8 mm, TR 15.94 + Tc 10.24
 //   = 26.18 N·m, TL −0.466 + 10.24 = 9.77 N·m, e 0.311, τ 6.07, σ −10.39, σB −12.9, σx 41.5, τzx −4.04, σ′ 49.2 MPa — reproduced.
 const TB = v => (v.Tbody !== undefined ? v.Tbody : v.TRt);
+// TX: H.fmt for inside \( \) work lines — writes 3e+7 as 3\times10^{7} so MathJax shows real powers of ten.
+const TX = (x, d) => String(H.fmt(x, d)).replace(/e([+-]?)(\d+)$/, (m, s, e) => '\\times10^{' + (s === '-' ? '-' : '') + e + '}');
 window.TOPIC = {
   id: 'power_screws', book: 'shigley',
   title: 'Power Screws — Torque, Efficiency & Stresses',
@@ -58,7 +60,7 @@ window.TOPIC = {
         text: 'Fizz step 1–2: choose the first row of the Acme table (Mott Table 17-1 / 17-1M — Shigley has no power-screw size table) with \\(A_t \\ge A_{t,req}\\). Write down its D, n (tpi), p, Dr, Dp and the shear area As per inch of nut.',
         vars: [
           { id: 'Atreq', symbol: 'A_{t,req}', label: 'Required tensile-stress area', unit: 'in² or mm²', kind: 'calc', compute: v => H.has(v, 'F', 'sigd') ? v.F / v.sigd : undefined,
-            work: v => H.has(v, 'F', 'sigd') ? '\\(A_{t,req} = ' + H.fmt(v.F) + '/' + H.fmt(v.sigd) + ' = ' + H.fmt(v.F / v.sigd) + '\\)' : null },
+            work: v => H.has(v, 'F', 'sigd') ? '\\(A_{t,req} = ' + TX(v.F) + '/' + TX(v.sigd) + ' = ' + TX(v.F / v.sigd) + '\\)' : null },
           { id: 'Atsel', symbol: 'A_t', label: 'Tensile-stress area of chosen screw', unit: 'in² or mm²', kind: 'lookup', fig: 'table17-1', hint: 'from the table row you picked',
             check: v => (H.has(v, 'Atsel', 'Atreq') && v.Atsel < v.Atreq) ? 'Chosen At is smaller than required — pick a bigger screw' : null },
           { id: 'Asr', symbol: 'A_{s}', label: 'Rated thread shear area per inch of nut', unit: 'in²/in', kind: 'lookup', fig: 'table17-1', hint: 'last column of Table 17-1 (US only)' },
@@ -70,7 +72,7 @@ window.TOPIC = {
         vars: [
           { id: 'Asreq', symbol: 'A_{s,req}', label: 'Required shear area', unit: 'in²', kind: 'calc', compute: v => H.has(v, 'F', 'taud') ? v.F / v.taud : undefined },
           { id: 'h', symbol: 'h', label: 'Required nut length', unit: 'in', kind: 'calc', compute: v => H.has(v, 'Asreq', 'Asr') ? v.Asreq / v.Asr : undefined,
-            work: v => H.has(v, 'Asreq', 'Asr') ? '\\(h = ' + H.fmt(v.Asreq) + '/' + H.fmt(v.Asr) + ' = ' + H.fmt(v.Asreq / v.Asr) + '\\ \\text{in}\\)' : null },
+            work: v => H.has(v, 'Asreq', 'Asr') ? '\\(h = ' + TX(v.Asreq) + '/' + TX(v.Asr) + ' = ' + TX(v.Asreq / v.Asr) + '\\ \\text{in}\\)' : null },
           { id: 'hr', symbol: 'h_{use}', label: 'Nut length rounded up to ¼ in', unit: 'in', kind: 'calc', compute: v => H.has(v, 'h') ? Math.ceil(v.h * 4 - 1e-9) / 4 : undefined },
         ],
         when: v => H.has(v, 'taud') },
@@ -88,7 +90,7 @@ window.TOPIC = {
           { id: 'dr', symbol: 'd_r', label: 'Minor (root) diameter', unit: 'in or mm', kind: 'lookup', fig: 'table17-1', hint: 'auto = d − p; or Dr from Table 17-1', auto: v => H.has(v, 'd', 'p') ? v.d - v.p : undefined },
           { id: 'l', symbol: 'l', label: 'Lead', unit: 'in or mm', kind: 'calc', compute: v => H.has(v, 'p', 'ns') ? v.p * v.ns : undefined },
           { id: 'lam', symbol: '\\lambda', label: 'Lead angle', unit: '°', kind: 'calc', digits: 4, compute: v => H.has(v, 'l', 'dm') ? H.deg(Math.atan(v.l / (Math.PI * v.dm))) : undefined,
-            work: v => H.has(v, 'l', 'dm') ? '\\(\\lambda = \\tan^{-1}\\!\\left(\\dfrac{' + H.fmt(v.l) + '}{\\pi\\,' + H.fmt(v.dm) + '}\\right) = ' + H.fmt(H.deg(Math.atan(v.l / (Math.PI * v.dm)))) + '^\\circ\\)' : null },
+            work: v => H.has(v, 'l', 'dm') ? '\\(\\lambda = \\tan^{-1}\\!\\left(\\dfrac{' + TX(v.l) + '}{\\pi\\,' + TX(v.dm) + '}\\right) = ' + TX(H.deg(Math.atan(v.l / (Math.PI * v.dm)))) + '^\\circ\\)' : null },
         ] },
     ] },
 
@@ -120,7 +122,7 @@ window.TOPIC = {
           { id: 'fc', symbol: 'f_c', label: 'Collar friction coefficient', kind: 'lookup', fig: 'table8-6', default: 0, hint: '0 for a rolling thrust bearing' },
           { id: 'dc', symbol: 'd_c', label: 'Mean collar diameter', unit: 'in or mm', kind: 'input', hint: 'dc = 2 Rc' },
           { id: 'Tc', symbol: 'T_c', label: 'Collar torque', unit: 'lbf·in or N·mm', kind: 'calc', compute: v => H.has(v, 'F', 'fc') ? (v.fc === 0 ? 0 : (H.has(v, 'dc') ? v.F * v.fc * v.dc / 2 : undefined)) : undefined,
-            work: v => (H.has(v, 'F', 'fc', 'dc') && v.fc !== 0) ? '\\(T_c = ' + H.fmt(v.F) + '(' + H.fmt(v.fc) + ')(' + H.fmt(v.dc) + ')/2 = ' + H.fmt(v.Tc) + '\\)' : null },
+            work: v => (H.has(v, 'F', 'fc', 'dc') && v.fc !== 0) ? '\\(T_c = ' + TX(v.F) + '(' + TX(v.fc) + ')(' + TX(v.dc) + ')/2 = ' + TX(v.Tc) + '\\)' : null },
           { id: 'TRt', symbol: 'T_{R,tot}', label: 'Total torque to raise = TR + Tc', unit: 'lbf·in or N·mm', kind: 'calc', compute: v => H.has(v, 'TR', 'Tc') ? v.TR + v.Tc : undefined },
           { id: 'TLt', symbol: 'T_{L,tot}', label: 'Total torque to lower = TL + Tc', unit: 'lbf·in or N·mm', kind: 'calc', compute: v => H.has(v, 'TL', 'Tc') ? v.TL + v.Tc : undefined },
         ] },
@@ -128,7 +130,7 @@ window.TOPIC = {
         text: '\\(T_0 = Fl/2\\pi\\) is the frictionless torque. Shigley Example 8-1 computes the <i>overall</i> efficiency with the total raising torque (thread + collar); the thread-only value is also shown.',
         vars: [
           { id: 'e', symbol: 'e', label: 'Overall efficiency (incl. collar)', kind: 'calc', digits: 3, compute: v => H.has(v, 'F', 'l', 'TRt') && v.TRt > 0 ? v.F * v.l / (2 * Math.PI * v.TRt) : undefined,
-            work: v => H.has(v, 'F', 'l', 'TRt') && v.TRt > 0 ? '\\(e = \\dfrac{' + H.fmt(v.F) + '(' + H.fmt(v.l) + ')}{2\\pi(' + H.fmt(v.TRt) + ')} = ' + H.fmt(v.e, 3) + '\\)' : null },
+            work: v => H.has(v, 'F', 'l', 'TRt') && v.TRt > 0 ? '\\(e = \\dfrac{' + TX(v.F) + '(' + TX(v.l) + ')}{2\\pi(' + TX(v.TRt) + ')} = ' + TX(v.e, 3) + '\\)' : null },
           { id: 'eth', symbol: 'e_{thread}', label: 'Thread-only efficiency', kind: 'calc', digits: 3, compute: v => H.has(v, 'F', 'l', 'TR') && v.TR > 0 ? v.F * v.l / (2 * Math.PI * v.TR) : undefined },
         ],
         after: v => v.e !== undefined ? '<span>' + (v.e < 0.25 ? 'Low efficiency (&lt; 25 %) — typical for single-start Acme; a multi-start or ball screw would do better.' : 'Efficiency ' + H.fmt(100 * v.e, 3) + ' %.') + '</span>' : '' },
@@ -148,9 +150,9 @@ window.TOPIC = {
         vars: [
           { id: 'Tbody', symbol: 'T', label: 'Torque in screw body (blank = total raising torque)', unit: 'lbf·in or N·mm', kind: 'input', hint: 'leave blank to use T_R,tot' },
           { id: 'tau', symbol: '\\tau_{yz}', label: 'Torsional shear stress', unit: 'psi or MPa', kind: 'calc', compute: v => (TB(v) !== undefined && H.has(v, 'dr')) ? 16 * TB(v) / (Math.PI * Math.pow(v.dr, 3)) : undefined,
-            work: v => (TB(v) !== undefined && H.has(v, 'dr')) ? '\\(\\tau = \\dfrac{16(' + H.fmt(TB(v)) + ')}{\\pi(' + H.fmt(v.dr) + ')^3} = ' + H.fmt(v.tau) + '\\)' : null },
+            work: v => (TB(v) !== undefined && H.has(v, 'dr')) ? '\\(\\tau = \\dfrac{16(' + TX(TB(v)) + ')}{\\pi(' + TX(v.dr) + ')^3} = ' + TX(v.tau) + '\\)' : null },
           { id: 'sig', symbol: '\\sigma_y', label: 'Axial (compressive) stress', unit: 'psi or MPa', kind: 'calc', compute: v => H.has(v, 'F', 'dr') ? -4 * v.F / (Math.PI * v.dr * v.dr) : undefined,
-            work: v => H.has(v, 'F', 'dr') ? '\\(\\sigma = -\\dfrac{4(' + H.fmt(v.F) + ')}{\\pi(' + H.fmt(v.dr) + ')^2} = ' + H.fmt(v.sig) + '\\)' : null },
+            work: v => H.has(v, 'F', 'dr') ? '\\(\\sigma = -\\dfrac{4(' + TX(v.F) + ')}{\\pi(' + TX(v.dr) + ')^2} = ' + TX(v.sig) + '\\)' : null },
         ] },
       { id: 'thr', title: 'Thread stresses: bearing, bending, tangential shear', eq: '8-10, 8-11, 8-12', fig: ['fig8-8', 'table8-4'],
         formula: '\\sigma_B = -\\frac{2 F_1}{\\pi d_m n_t p} \\qquad \\sigma_x = \\frac{6 F_1}{\\pi d_r n_t p} \\qquad \\tau_{zx} = -\\frac{4 T_1}{\\pi d_r^2 n_t p}',
@@ -159,10 +161,10 @@ window.TOPIC = {
           { id: 'share', symbol: 's', label: 'Load share on analysed thread', kind: 'choice', options: [{ label: '0.38 — first engaged thread (Shigley)', value: 0.38 }, { label: '1.0 — equal sharing over nt threads', value: 1 }], default: 0.38 },
           { id: 'nt', symbol: 'n_t', label: 'Engaged threads considered', kind: 'input', default: 1, hint: '1 with s = 0.38; nut length / p for equal sharing' },
           { id: 'sigB', symbol: '\\sigma_B', label: 'Bearing stress on thread', unit: 'psi or MPa', kind: 'calc', compute: v => H.has(v, 'F', 'dm', 'nt', 'p', 'share') ? -2 * v.share * v.F / (Math.PI * v.dm * v.nt * v.p) : undefined,
-            work: v => H.has(v, 'F', 'dm', 'nt', 'p', 'share') ? '\\(\\sigma_B = -\\dfrac{2(' + H.fmt(v.share) + ')(' + H.fmt(v.F) + ')}{\\pi(' + H.fmt(v.dm) + ')(' + H.fmt(v.nt) + ')(' + H.fmt(v.p) + ')} = ' + H.fmt(v.sigB) + '\\)' : null },
+            work: v => H.has(v, 'F', 'dm', 'nt', 'p', 'share') ? '\\(\\sigma_B = -\\dfrac{2(' + TX(v.share) + ')(' + TX(v.F) + ')}{\\pi(' + TX(v.dm) + ')(' + TX(v.nt) + ')(' + TX(v.p) + ')} = ' + TX(v.sigB) + '\\)' : null },
           { id: 'pb', symbol: 'p_b', label: 'Safe bearing pressure', unit: 'psi or MPa', kind: 'lookup', fig: 'table8-4', hint: 'Table 8-4 (psi; ÷145 for MPa)' },
           { id: 'sigx', symbol: '\\sigma_x', label: 'Thread-root bending stress', unit: 'psi or MPa', kind: 'calc', compute: v => H.has(v, 'F', 'dr', 'nt', 'p', 'share') ? 6 * v.share * v.F / (Math.PI * v.dr * v.nt * v.p) : undefined,
-            work: v => H.has(v, 'F', 'dr', 'nt', 'p', 'share') ? '\\(\\sigma_x = \\dfrac{6(' + H.fmt(v.share) + ')(' + H.fmt(v.F) + ')}{\\pi(' + H.fmt(v.dr) + ')(' + H.fmt(v.nt) + ')(' + H.fmt(v.p) + ')} = ' + H.fmt(v.sigx) + '\\)' : null },
+            work: v => H.has(v, 'F', 'dr', 'nt', 'p', 'share') ? '\\(\\sigma_x = \\dfrac{6(' + TX(v.share) + ')(' + TX(v.F) + ')}{\\pi(' + TX(v.dr) + ')(' + TX(v.nt) + ')(' + TX(v.p) + ')} = ' + TX(v.sigx) + '\\)' : null },
           { id: 'tzx', symbol: '\\tau_{zx}', label: 'Tangential shear at root', unit: 'psi or MPa', kind: 'calc', compute: v => (TB(v) !== undefined && H.has(v, 'dr', 'nt', 'p', 'share')) ? -4 * v.share * TB(v) / (Math.PI * v.dr * v.dr * v.nt * v.p) : undefined },
         ],
         after: v => H.has(v, 'sigB', 'pb') ? (Math.abs(v.sigB) <= v.pb ? '<span class="result-ok">|σ<sub>B</sub>| = ' + H.fmt(Math.abs(v.sigB)) + ' ≤ p<sub>b</sub> = ' + H.fmt(v.pb) + ' — bearing pressure OK.</span>' : '<span class="result-bad">|σ<sub>B</sub>| = ' + H.fmt(Math.abs(v.sigB)) + ' &gt; p<sub>b</sub> = ' + H.fmt(v.pb) + ' — thread wear: lengthen nut / larger screw.</span>') : '' },
@@ -171,7 +173,7 @@ window.TOPIC = {
         text: 'Stress element at the outer radius of the screw body next to the first thread root: \\(\\sigma_z = 0,\\ \\tau_{xy} = 0\\).',
         vars: [
           { id: 'svm', symbol: "\\sigma'", label: 'Von Mises stress', unit: 'psi or MPa', kind: 'calc', compute: v => H.has(v, 'sigx', 'sig', 'tau', 'tzx') ? Math.sqrt(0.5 * (Math.pow(v.sigx - v.sig, 2) + v.sig * v.sig + v.sigx * v.sigx + 6 * v.tau * v.tau + 6 * v.tzx * v.tzx)) : undefined,
-            work: v => H.has(v, 'sigx', 'sig', 'tau', 'tzx') ? "\\(\\sigma' = \\tfrac{1}{\\sqrt2}\\{[" + H.fmt(v.sigx) + ' - (' + H.fmt(v.sig) + ')]^2 + (' + H.fmt(v.sig) + ')^2 + (' + H.fmt(v.sigx) + ')^2 + 6(' + H.fmt(v.tau) + ')^2 + 6(' + H.fmt(v.tzx) + ')^2\\}^{1/2} = ' + H.fmt(v.svm) + '\\)' : null },
+            work: v => H.has(v, 'sigx', 'sig', 'tau', 'tzx') ? "\\(\\sigma' = \\tfrac{1}{\\sqrt2}\\{[" + TX(v.sigx) + ' - (' + TX(v.sig) + ')]^2 + (' + TX(v.sig) + ')^2 + (' + TX(v.sigx) + ')^2 + 6(' + TX(v.tau) + ')^2 + 6(' + TX(v.tzx) + ')^2\\}^{1/2} = ' + TX(v.svm) + '\\)' : null },
           { id: 'Sy', symbol: 'S_y', label: 'Screw yield strength', unit: 'psi or MPa', kind: 'input', hint: 'Table A-20 for the screw steel' },
           { id: 'nfs', symbol: 'n', label: 'Static factor of safety', kind: 'calc', digits: 3, compute: v => H.has(v, 'Sy', 'svm') && v.svm > 0 ? v.Sy / v.svm : undefined },
         ],

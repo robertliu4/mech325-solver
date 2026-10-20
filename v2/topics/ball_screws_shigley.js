@@ -15,6 +15,8 @@ const BS_SIZES = [
 ];
 const BS = v => BS_SIZES.find(s => s.value === v.size);
 
+// TX: H.fmt for inside \( \) work lines — writes 3e+7 as 3\times10^{7} so MathJax shows real powers of ten.
+const TX = (x, d) => String(H.fmt(x, d)).replace(/e([+-]?)(\d+)$/, (m, s, e) => '\\times10^{' + (s === '-' ? '-' : '') + e + '}');
 window.TOPIC = {
   id: 'ball_screws', book: 'shigley',
   title: 'Ball Screws — Life, Selection, Torque & Power',
@@ -57,7 +59,7 @@ window.TOPIC = {
               if (!H.has(v, 'dist', 'cyc', 'days', 'yrs')) return undefined;
               const perDay = v.basis === 'day' ? v.cyc : (H.has(v, 'hrs') ? v.cyc * v.hrs : undefined);
               return perDay === undefined ? undefined : v.dist * perDay * v.days * v.yrs; },
-            work: v => H.has(v, 'life') ? '\\(L_{req} = ' + H.fmt(v.dist) + ' \\times ' + H.fmt(v.cyc) + (v.basis === 'day' ? '' : ' \\times ' + H.fmt(v.hrs)) + ' \\times ' + H.fmt(v.days) + ' \\times ' + H.fmt(v.yrs) + ' = ' + H.fmt(v.life) + '\\ \\text{in}\\)' : null },
+            work: v => H.has(v, 'life') ? '\\(L_{req} = ' + TX(v.dist) + ' \\times ' + TX(v.cyc) + (v.basis === 'day' ? '' : ' \\times ' + TX(v.hrs)) + ' \\times ' + TX(v.days) + ' \\times ' + TX(v.yrs) + ' = ' + TX(v.life) + '\\ \\text{in}\\)' : null },
         ] },
     ] },
 
@@ -71,9 +73,9 @@ window.TOPIC = {
           { id: 'L', symbol: 'L', label: 'Lead', unit: 'in', kind: 'calc', compute: v => BS(v) ? BS(v).L : undefined },
           { id: 'P6', symbol: 'P_{1M}', label: 'Rated load at 10⁶ in travel (chart)', unit: 'lb', kind: 'lookup', fig: 'fig17-8', hint: 'auto from chart trace', auto: v => BS(v) ? BS(v).P6 : undefined },
           { id: 'Prl', symbol: 'P_{rated}', label: 'Rated load at required life', unit: 'lb', kind: 'calc', compute: v => H.has(v, 'P6', 'life') && v.life > 0 ? v.P6 * Math.pow(1e6 / v.life, 1 / 3) : undefined,
-            work: v => H.has(v, 'P6', 'life') && v.life > 0 ? '\\(P_{rated} = ' + H.fmt(v.P6) + '\\left(\\dfrac{10^6}{' + H.fmt(v.life) + '}\\right)^{1/3} = ' + H.fmt(v.Prl) + '\\ \\text{lb}\\)' : null },
+            work: v => H.has(v, 'P6', 'life') && v.life > 0 ? '\\(P_{rated} = ' + TX(v.P6) + '\\left(\\dfrac{10^6}{' + TX(v.life) + '}\\right)^{1/3} = ' + TX(v.Prl) + '\\ \\text{lb}\\)' : null },
           { id: 'Lexp', symbol: 'L_{exp}', label: 'Expected life at load F', unit: 'in', kind: 'calc', digits: 3, compute: v => H.has(v, 'P6', 'F') && v.F > 0 ? 1e6 * Math.pow(v.P6 / v.F, 3) : undefined,
-            work: v => H.has(v, 'P6', 'F') && v.F > 0 ? '\\(L_{exp} = 10^6\\left(\\dfrac{' + H.fmt(v.P6) + '}{' + H.fmt(v.F) + '}\\right)^3 = ' + H.fmt(v.Lexp, 3) + '\\ \\text{in}\\)' : null },
+            work: v => H.has(v, 'P6', 'F') && v.F > 0 ? '\\(L_{exp} = 10^6\\left(\\dfrac{' + TX(v.P6) + '}{' + TX(v.F) + '}\\right)^3 = ' + TX(v.Lexp, 3) + '\\ \\text{in}\\)' : null },
           { id: 'ratio', symbol: 'L_{exp}/L_{req}', label: 'Life margin', kind: 'calc', digits: 3, compute: v => H.has(v, 'Lexp', 'life') && v.life > 0 ? v.Lexp / v.life : undefined },
         ],
         after: v => H.has(v, 'ratio') ? (v.ratio >= 1 ? '<span class="result-ok">Screw OK: expected life is ' + H.fmt(v.ratio, 3) + '× the required travel life.</span>' : '<span class="result-bad">Too small: expected life is only ' + H.fmt(v.ratio, 3) + '× the required travel — choose a larger screw.</span>') : '' },
@@ -85,16 +87,16 @@ window.TOPIC = {
         vars: [
           { id: 'eff', symbol: 'e', label: 'Efficiency', kind: 'input', default: 0.9, hint: 'Mott: typically 0.90' },
           { id: 'Tu', symbol: 'T_u', label: 'Torque to drive', unit: 'lb·in', kind: 'calc', compute: v => H.has(v, 'F', 'L', 'eff') && v.eff > 0 ? v.F * v.L / (2 * Math.PI * v.eff) : undefined,
-            work: v => H.has(v, 'F', 'L', 'eff') && v.eff > 0 ? '\\(T_u = \\dfrac{' + H.fmt(v.F) + '(' + H.fmt(v.L) + ')}{2\\pi(' + H.fmt(v.eff) + ')} = ' + H.fmt(1 / (2 * Math.PI * v.eff), 3) + 'FL = ' + H.fmt(v.Tu) + '\\ \\text{lb·in}\\)' : null },
+            work: v => H.has(v, 'F', 'L', 'eff') && v.eff > 0 ? '\\(T_u = \\dfrac{' + TX(v.F) + '(' + TX(v.L) + ')}{2\\pi(' + TX(v.eff) + ')} = ' + TX(1 / (2 * Math.PI * v.eff), 3) + 'FL = ' + TX(v.Tu) + '\\ \\text{lb·in}\\)' : null },
           { id: 'Tb', symbol: 'T_b', label: 'Back-driving torque', unit: 'lb·in', kind: 'calc', compute: v => H.has(v, 'F', 'L', 'eff') ? v.F * v.L * v.eff / (2 * Math.PI) : undefined },
         ] },
       { id: 'spd', title: 'Rotational speed and power', formula: 'n = \\frac{V}{L}\\,(60) \\qquad P = \\frac{T_u\\,n}{63\\,000}',
         vars: [
           { id: 'Vreq', symbol: 'V', label: 'Required linear speed', unit: 'in/s', kind: 'input', hint: 'stroke ÷ allowed time' },
           { id: 'n', symbol: 'n', label: 'Screw speed', unit: 'rpm', kind: 'calc', compute: v => H.has(v, 'Vreq', 'L') && v.L > 0 ? v.Vreq / v.L * 60 : undefined,
-            work: v => H.has(v, 'Vreq', 'L') && v.L > 0 ? '\\(n = \\dfrac{' + H.fmt(v.Vreq) + '}{' + H.fmt(v.L) + '}(60) = ' + H.fmt(v.n) + '\\ \\text{rpm}\\)' : null },
+            work: v => H.has(v, 'Vreq', 'L') && v.L > 0 ? '\\(n = \\dfrac{' + TX(v.Vreq) + '}{' + TX(v.L) + '}(60) = ' + TX(v.n) + '\\ \\text{rpm}\\)' : null },
           { id: 'P', symbol: 'P', label: 'Power to drive screw', unit: 'hp', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tu', 'n') ? v.Tu * v.n / 63000 : undefined,
-            work: v => H.has(v, 'Tu', 'n') ? '\\(P = \\dfrac{' + H.fmt(v.Tu) + '(' + H.fmt(v.n) + ')}{63\\,000} = ' + H.fmt(v.P) + '\\ \\text{hp}\\)' : null },
+            work: v => H.has(v, 'Tu', 'n') ? '\\(P = \\dfrac{' + TX(v.Tu) + '(' + TX(v.n) + ')}{63\\,000} = ' + TX(v.P) + '\\ \\text{hp}\\)' : null },
         ] },
     ] },
 
@@ -107,7 +109,7 @@ window.TOPIC = {
           { id: 'SF', symbol: 'SF', label: 'Safety factor', kind: 'input', default: 2, hint: '1.25–3.0' },
           { id: 'Lsup', symbol: 'L_s', label: 'Length between supports', unit: 'in', kind: 'input' },
           { id: 'ncrit', symbol: 'n_c', label: 'Critical speed', unit: 'rpm', kind: 'calc', compute: v => H.has(v, 'dmin', 'Ks', 'SF', 'Lsup') && v.Lsup > 0 ? 4.76e6 * v.dmin * v.Ks / (v.SF * v.Lsup * v.Lsup) : undefined,
-            work: v => H.has(v, 'ncrit') ? '\\(n_c = 4.76\\times10^6\\,\\dfrac{' + H.fmt(v.dmin) + '(' + H.fmt(v.Ks) + ')}{' + H.fmt(v.SF) + '(' + H.fmt(v.Lsup) + ')^2} = ' + H.fmt(v.ncrit) + '\\ \\text{rpm}\\)' : null },
+            work: v => H.has(v, 'ncrit') ? '\\(n_c = 4.76\\times10^6\\,\\dfrac{' + TX(v.dmin) + '(' + TX(v.Ks) + ')}{' + TX(v.SF) + '(' + TX(v.Lsup) + ')^2} = ' + TX(v.ncrit) + '\\ \\text{rpm}\\)' : null },
           { id: 'nratio', symbol: 'n/n_c', label: 'Operating / critical speed', kind: 'calc', digits: 3, compute: v => H.has(v, 'n', 'ncrit') && v.ncrit > 0 ? v.n / v.ncrit : undefined },
         ],
         after: v => H.has(v, 'nratio') ? (v.nratio < 0.8 ? '<span class="result-ok">n = ' + H.fmt(v.n) + ' rpm &lt; 0.8 n<sub>c</sub> = ' + H.fmt(0.8 * v.ncrit) + ' rpm — critical speed OK.</span>' : '<span class="result-bad">n = ' + H.fmt(v.n) + ' rpm ≥ 0.8 n<sub>c</sub> = ' + H.fmt(0.8 * v.ncrit) + ' rpm — shorten the span, stiffen the supports or use a larger screw.</span>') : '' },
@@ -118,11 +120,11 @@ window.TOPIC = {
           { id: 'Esc', symbol: 'E', label: 'Modulus of the screw steel', unit: 'psi', kind: 'input', default: 30e6 },
           { id: 'Sysc', symbol: 'S_y', label: 'Yield strength of the screw', unit: 'psi', kind: 'input', hint: 'e.g. 4140 / induction-hardened: ~ 90 000 psi; Mott App. 3' },
           { id: 'SR', symbol: 'KL/r', label: 'Slenderness ratio', kind: 'calc', digits: 4, compute: v => H.has(v, 'dmin', 'Lsup', 'Ksc') && v.dmin > 0 ? (1 / Math.sqrt(v.Ksc)) * v.Lsup / (v.dmin / 4) : undefined,
-            work: v => H.has(v, 'SR') ? '\\(KL/r = \\dfrac{(1/\\sqrt{' + H.fmt(v.Ksc) + '})(' + H.fmt(v.Lsup) + ')}{' + H.fmt(v.dmin) + '/4} = ' + H.fmt(v.SR, 4) + '\\)' : null },
+            work: v => H.has(v, 'SR') ? '\\(KL/r = \\dfrac{(1/\\sqrt{' + TX(v.Ksc) + '})(' + TX(v.Lsup) + ')}{' + TX(v.dmin) + '/4} = ' + TX(v.SR, 4) + '\\)' : null },
           { id: 'Cc', symbol: 'C_c', label: 'Column constant (Euler / Johnson transition)', kind: 'calc', digits: 4, compute: v => H.has(v, 'Esc', 'Sysc') && v.Sysc > 0 ? Math.sqrt(2 * Math.PI * Math.PI * v.Esc / v.Sysc) : undefined },
           { id: 'Pcr', symbol: 'P_{cr}', label: 'Critical buckling load', unit: 'lb', kind: 'calc', digits: 4, compute: v => { if (!H.has(v, 'SR', 'Cc', 'Esc', 'Sysc', 'dmin')) return undefined; const Ar = Math.PI * v.dmin * v.dmin / 4;
               return v.SR > v.Cc ? Math.PI * Math.PI * v.Esc * Ar / (v.SR * v.SR) : Ar * v.Sysc * (1 - v.Sysc * v.SR * v.SR / (4 * Math.PI * Math.PI * v.Esc)); },
-            work: v => H.has(v, 'Pcr') ? (v.SR > v.Cc ? '\\(P_{cr} = \\dfrac{\\pi^2(' + H.fmt(v.Esc, 3) + ')(' + H.fmt(Math.PI * v.dmin * v.dmin / 4, 4) + ')}{(' + H.fmt(v.SR, 4) + ')^2} = ' + H.fmt(v.Pcr, 4) + '\\ \\text{lb (Euler)}\\)' : '\\(P_{cr} = ' + H.fmt(Math.PI * v.dmin * v.dmin / 4, 4) + '(' + H.fmt(v.Sysc) + ')\\left[1 - \\dfrac{' + H.fmt(v.Sysc) + '(' + H.fmt(v.SR, 4) + ')^2}{4\\pi^2(' + H.fmt(v.Esc, 3) + ')}\\right] = ' + H.fmt(v.Pcr, 4) + '\\ \\text{lb (Johnson)}\\)') : null },
+            work: v => H.has(v, 'Pcr') ? (v.SR > v.Cc ? '\\(P_{cr} = \\dfrac{\\pi^2(' + TX(v.Esc, 3) + ')(' + TX(Math.PI * v.dmin * v.dmin / 4, 4) + ')}{(' + TX(v.SR, 4) + ')^2} = ' + TX(v.Pcr, 4) + '\\ \\text{lb (Euler)}\\)' : '\\(P_{cr} = ' + TX(Math.PI * v.dmin * v.dmin / 4, 4) + '(' + TX(v.Sysc) + ')\\left[1 - \\dfrac{' + TX(v.Sysc) + '(' + TX(v.SR, 4) + ')^2}{4\\pi^2(' + TX(v.Esc, 3) + ')}\\right] = ' + TX(v.Pcr, 4) + '\\ \\text{lb (Johnson)}\\)') : null },
           { id: 'Pall', symbol: 'P_{cr}/SF', label: 'Allowable compressive load', unit: 'lb', kind: 'calc', digits: 4, compute: v => H.has(v, 'Pcr', 'SF') && v.SF > 0 ? v.Pcr / v.SF : undefined },
           { id: 'nbuck', symbol: 'P_{cr}/F', label: 'Buckling factor of safety', kind: 'calc', digits: 3, compute: v => H.has(v, 'Pcr', 'F') && v.F > 0 ? v.Pcr / v.F : undefined },
         ],

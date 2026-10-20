@@ -24,6 +24,8 @@ const SIu = v => v.units === 'SI';
 const NE = { plain: 0, pg: 1, sq: 2, sg: 2 };
 const PI2 = Math.PI;
 
+// TX: H.fmt for inside \( \) work lines — writes 3e+7 as 3\times10^{7} so MathJax shows real powers of ten.
+const TX = (x, d) => String(H.fmt(x, d)).replace(/e([+-]?)(\d+)$/, (m, s, e) => '\\times10^{' + (s === '-' ? '-' : '') + e + '}');
 window.TOPIC = {
   id: 'springs', book: 'mott',
   title: 'Helical Compression Springs — Analysis & Design',
@@ -102,9 +104,9 @@ window.TOPIC = {
               if (v.mode === 'analyse') return (H.has(v, 'Fo', 'fo') && v.fo > 0) ? v.Fo / v.fo : undefined;
               if (v.mode === 'ext') return (H.has(v, 'Fo', 'Fi', 'Li', 'Lo') && v.Lo !== v.Li) ? (v.Fo - v.Fi) / (v.Lo - v.Li) : undefined;
               return (H.has(v, 'Fo', 'Fi', 'Li', 'Lo') && v.Li !== v.Lo) ? (v.Fo - v.Fi) / (v.Li - v.Lo) : undefined; },
-            work: v => (v.mode !== 'analyse' && H.has(v, 'Fo', 'Fi', 'Li', 'Lo')) ? (v.mode === 'ext' ? '\\(k = \\dfrac{' + H.fmt(v.Fo) + ' - ' + H.fmt(v.Fi) + '}{' + H.fmt(v.Lo) + ' - ' + H.fmt(v.Li) + '} = ' + H.fmt(v.k, 4) + '\\)' : '\\(k = \\dfrac{' + H.fmt(v.Fo) + ' - ' + H.fmt(v.Fi) + '}{' + H.fmt(v.Li) + ' - ' + H.fmt(v.Lo) + '} = ' + H.fmt(v.k, 4) + '\\)') : (v.mode === 'analyse' && H.has(v, 'Fo', 'fo') ? '\\(k = F_o/f_o = ' + H.fmt(v.Fo) + '/' + H.fmt(v.fo, 4) + ' = ' + H.fmt(v.k, 4) + '\\)' : null) },
+            work: v => (v.mode !== 'analyse' && H.has(v, 'Fo', 'Fi', 'Li', 'Lo')) ? (v.mode === 'ext' ? '\\(k = \\dfrac{' + TX(v.Fo) + ' - ' + TX(v.Fi) + '}{' + TX(v.Lo) + ' - ' + TX(v.Li) + '} = ' + TX(v.k, 4) + '\\)' : '\\(k = \\dfrac{' + TX(v.Fo) + ' - ' + TX(v.Fi) + '}{' + TX(v.Li) + ' - ' + TX(v.Lo) + '} = ' + TX(v.k, 4) + '\\)') : (v.mode === 'analyse' && H.has(v, 'Fo', 'fo') ? '\\(k = F_o/f_o = ' + TX(v.Fo) + '/' + TX(v.fo, 4) + ' = ' + TX(v.k, 4) + '\\)' : null) },
           { id: 'Lf', symbol: 'L_f', label: 'Free length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? v.Lfg : (v.mode === 'ext' ? (H.has(v, 'Lfx') ? v.Lfx : v.Lfcalc) : (H.has(v, 'Li', 'Fi', 'k') && v.k > 0 ? v.Li + v.Fi / v.k : undefined)), hint: 'extension: from the body-length step below'
-            , work: v => (v.mode === 'design' && H.has(v, 'Li', 'Fi', 'k')) ? '\\(L_f = ' + H.fmt(v.Li) + ' + ' + H.fmt(v.Fi) + '/' + H.fmt(v.k, 4) + ' = ' + H.fmt(v.Lf, 4) + '\\)' : null },
+            , work: v => (v.mode === 'design' && H.has(v, 'Li', 'Fi', 'k')) ? '\\(L_f = ' + TX(v.Li) + ' + ' + TX(v.Fi) + '/' + TX(v.k, 4) + ' = ' + TX(v.Lf, 4) + '\\)' : null },
         ] },
       { id: 'trial', title: 'Trial mean diameter, design stress and trial wire diameter', eq: '18-7', fig: ['fig18-5', 'fig18-8', 'fig18-9', 'fig18-10', 'fig18-11', 'fig18-12', 'fig18-13'],
         formula: 'D_w = \\left[\\frac{8 K F_o D_m}{\\pi\\tau_d}\\right]^{1/3} \\approx \\left[\\frac{3.06\\,F_o D_m}{\\tau_d}\\right]^{1/3}\\ (K \\approx 1.2)',
@@ -113,7 +115,7 @@ window.TOPIC = {
           { id: 'Dmt', symbol: 'D_m', label: 'Trial mean diameter', unit: 'in / mm', kind: 'input' },
           { id: 'tdi', symbol: '\\tau_{d,i}', label: 'Initial design-stress estimate', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-11', hint: 'read the service curve for the material' },
           { id: 'Dwt', symbol: 'D_{w,t}', label: 'Trial wire diameter (Eq. 18-7)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fo', 'Dmt', 'tdi') && v.tdi > 0 ? Math.pow(8 * 1.2 * v.Fo * v.Dmt / (Math.PI * v.tdi), 1 / 3) : undefined,
-            work: v => H.has(v, 'Dwt') ? '\\(D_w = \\left[\\dfrac{3.06(' + H.fmt(v.Fo) + ')(' + H.fmt(v.Dmt) + ')}{' + H.fmt(v.tdi) + '}\\right]^{1/3} = ' + H.fmt(v.Dwt, 4) + '\\)' : null },
+            work: v => H.has(v, 'Dwt') ? '\\(D_w = \\left[\\dfrac{3.06(' + TX(v.Fo) + ')(' + TX(v.Dmt) + ')}{' + TX(v.tdi) + '}\\right]^{1/3} = ' + TX(v.Dwt, 4) + '\\)' : null },
           { id: 'Dwt2', symbol: 'D_{w,t}^{(C=7)}', label: 'Trial wire diameter, Method 2 (Eq. 18-9 with C = 7, K = 1.2)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fo', 'tdi') && v.tdi > 0 ? Math.sqrt(8 * 1.2 * 7 * v.Fo / (Math.PI * v.tdi)) : undefined },
         ],
         when: v => v.mode !== 'analyse' },
@@ -138,12 +140,12 @@ window.TOPIC = {
           { id: 'ID', symbol: 'ID', label: 'Inside diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dm', 'Dw') ? v.Dm - v.Dw : undefined },
           { id: 'C', symbol: 'C', label: 'Spring index', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dm', 'Dw') && v.Dw > 0 ? v.Dm / v.Dw : undefined, check: v => (v.C !== undefined && v.C < 5) ? 'Mott: C should be ≥ 5 (forming cracks below 5); typical 5–12' : (v.C > 12 ? 'C > 12 — springs tangle; consider a smaller Dm' : null) },
           { id: 'K', symbol: 'K', label: 'Wahl factor', kind: 'calc', digits: 4, compute: v => H.has(v, 'C') && v.C > 1 ? (4 * v.C - 1) / (4 * v.C - 4) + 0.615 / v.C : undefined,
-            work: v => H.has(v, 'K') ? '\\(K = \\dfrac{4(' + H.fmt(v.C, 4) + ') - 1}{4(' + H.fmt(v.C, 4) + ') - 4} + \\dfrac{0.615}{' + H.fmt(v.C, 4) + '} = ' + H.fmt(v.K, 4) + '\\)' : null },
+            work: v => H.has(v, 'K') ? '\\(K = \\dfrac{4(' + TX(v.C, 4) + ') - 1}{4(' + TX(v.C, 4) + ') - 4} + \\dfrac{0.615}{' + TX(v.C, 4) + '} = ' + TX(v.K, 4) + '\\)' : null },
         ] },
       { id: 'stress', title: 'Stress at the operating force', eq: '18-4', formula: '\\tau_o = \\frac{8 K F_o D_m}{\\pi D_w^3} = \\frac{8 K F_o C}{\\pi D_w^2}',
         vars: [
           { id: 'tauo', symbol: '\\tau_o', label: 'Operating shear stress', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'K', 'Fo', 'Dm', 'Dw') ? 8 * v.K * v.Fo * v.Dm / (Math.PI * Math.pow(v.Dw, 3)) : undefined,
-            work: v => H.has(v, 'tauo') ? '\\(\\tau_o = \\dfrac{8(' + H.fmt(v.K, 4) + ')(' + H.fmt(v.Fo) + ')(' + H.fmt(v.Dm, 4) + ')}{\\pi(' + H.fmt(v.Dw) + ')^3} = ' + H.fmt(v.tauo, 5) + '\\)' : null },
+            work: v => H.has(v, 'tauo') ? '\\(\\tau_o = \\dfrac{8(' + TX(v.K, 4) + ')(' + TX(v.Fo) + ')(' + TX(v.Dm, 4) + ')}{\\pi(' + TX(v.Dw) + ')^3} = ' + TX(v.tauo, 5) + '\\)' : null },
           { id: 'nso', symbol: '\\tau_d/\\tau_o', label: 'Margin against design stress', kind: 'calc', digits: 3, compute: v => H.has(v, 'td', 'tauo') && v.tauo > 0 ? v.td / v.tauo : undefined },
         ],
         after: v => H.has(v, 'td', 'tauo') ? (v.tauo <= v.td ? '<span class="result-ok">τo = ' + H.fmt(v.tauo, 5) + ' ≤ τd = ' + H.fmt(v.td) + ' — safe at the operating load.</span>' : '<span class="result-bad">τo = ' + H.fmt(v.tauo, 5) + ' &gt; τd = ' + H.fmt(v.td) + ' — increase Dw or reduce Dm.</span>') : '' },
@@ -156,14 +158,14 @@ window.TOPIC = {
           { id: 'Na', symbol: 'N_a', label: 'Active coils', kind: 'calc', digits: 4, compute: v => {
               if (v.mode === 'analyse') return H.has(v, 'Ng') ? v.Ng - NE[v.ends] : undefined;
               return H.has(v, 'G', 'Dw', 'k', 'C') && v.k > 0 ? v.G * v.Dw / (8 * v.k * Math.pow(v.C, 3)) : undefined; },
-            work: v => (v.mode !== 'analyse' && H.has(v, 'Na')) ? '\\(N_a = \\dfrac{' + H.fmt(v.G, 4) + '(' + H.fmt(v.Dw) + ')}{8(' + H.fmt(v.k, 4) + ')(' + H.fmt(v.C, 4) + ')^3} = ' + H.fmt(v.Na, 4) + '\\)' : null,
+            work: v => (v.mode !== 'analyse' && H.has(v, 'Na')) ? '\\(N_a = \\dfrac{' + TX(v.G, 4) + '(' + TX(v.Dw) + ')}{8(' + TX(v.k, 4) + ')(' + TX(v.C, 4) + ')^3} = ' + TX(v.Na, 4) + '\\)' : null,
             check: v => (v.Na !== undefined && v.Na < 3) ? 'Fewer than 3 active coils' : null },
           { id: 'N', symbol: 'N', label: 'Total coils', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? v.Ng : (H.has(v, 'Na') ? v.Na + NE[v.ends] : undefined) },
           { id: 'fo', symbol: 'f_o', label: 'Operating deflection from free length (extension: Lo − Lf)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => {
               if (v.mode === 'analyse') return H.has(v, 'Fo', 'C', 'Na', 'G', 'Dw') ? 8 * v.Fo * Math.pow(v.C, 3) * v.Na / (v.G * v.Dw) : undefined;
               if (v.mode === 'ext') return H.has(v, 'Lf', 'Lo') ? v.Lo - v.Lf : undefined;
               return H.has(v, 'Lf', 'Lo') ? v.Lf - v.Lo : undefined; },
-            work: v => (v.mode === 'analyse' && H.has(v, 'fo')) ? '\\(f_o = \\dfrac{8(' + H.fmt(v.Fo) + ')(' + H.fmt(v.C, 4) + ')^3(' + H.fmt(v.Na, 4) + ')}{' + H.fmt(v.G, 4) + '(' + H.fmt(v.Dw) + ')} = ' + H.fmt(v.fo, 4) + '\\)' : null },
+            work: v => (v.mode === 'analyse' && H.has(v, 'fo')) ? '\\(f_o = \\dfrac{8(' + TX(v.Fo) + ')(' + TX(v.C, 4) + ')^3(' + TX(v.Na, 4) + ')}{' + TX(v.G, 4) + '(' + TX(v.Dw) + ')} = ' + TX(v.fo, 4) + '\\)' : null },
           { id: 'Loa', symbol: 'L_o', label: 'Operating length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? (H.has(v, 'Lf', 'fo') ? v.Lf - v.fo : undefined) : v.Lo },
         ] },
       { id: 'solid', title: 'Solid length, force and stress at solid height', when: v => v.mode !== 'ext', formula: 'L_s = D_w N \\;(\\text{ground ends}) \\quad\\text{or}\\quad D_w(N+1) \\qquad F_s = k(L_f - L_s) \\qquad \\tau_s = \\tau_o\\frac{F_s}{F_o}',
@@ -171,9 +173,9 @@ window.TOPIC = {
         vars: [
           { id: 'Ls', symbol: 'L_s', label: 'Solid length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dw', 'N') ? ((v.ends === 'sg' || v.ends === 'pg') ? v.Dw * v.N : v.Dw * (v.N + 1)) : undefined },
           { id: 'Fs', symbol: 'F_s', label: 'Force at solid length', unit: 'lb / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'k', 'Lf', 'Ls') ? v.k * (v.Lf - v.Ls) : undefined,
-            work: v => H.has(v, 'Fs') ? '\\(F_s = ' + H.fmt(v.k, 4) + '(' + H.fmt(v.Lf, 4) + ' - ' + H.fmt(v.Ls, 4) + ') = ' + H.fmt(v.Fs, 4) + '\\)' : null },
+            work: v => H.has(v, 'Fs') ? '\\(F_s = ' + TX(v.k, 4) + '(' + TX(v.Lf, 4) + ' - ' + TX(v.Ls, 4) + ') = ' + TX(v.Fs, 4) + '\\)' : null },
           { id: 'taus', symbol: '\\tau_s', label: 'Stress at solid length', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'tauo', 'Fs', 'Fo') && v.Fo > 0 ? v.tauo * v.Fs / v.Fo : undefined,
-            work: v => H.has(v, 'taus') ? '\\(\\tau_s = ' + H.fmt(v.tauo, 5) + '(' + H.fmt(v.Fs, 4) + '/' + H.fmt(v.Fo) + ') = ' + H.fmt(v.taus, 5) + '\\)' : null },
+            work: v => H.has(v, 'taus') ? '\\(\\tau_s = ' + TX(v.tauo, 5) + '(' + TX(v.Fs, 4) + '/' + TX(v.Fo) + ') = ' + TX(v.taus, 5) + '\\)' : null },
         ],
         after: v => { let s = '';
           if (H.has(v, 'Ls', 'Loa')) s += v.Ls < v.Loa ? '<span class="result-ok">Ls = ' + H.fmt(v.Ls, 4) + ' &lt; Lo = ' + H.fmt(v.Loa, 4) + '.</span> ' : '<span class="result-bad">Ls = ' + H.fmt(v.Ls, 4) + ' ≥ Lo = ' + H.fmt(v.Loa, 4) + ' — spring goes solid before the operating length! Fewer coils / smaller Dw.</span> ';
@@ -217,10 +219,10 @@ window.TOPIC = {
         text: 'All coils of an extension spring are active. Example 18-4 proposes a full loop at each end, adding one ID per end; if the resulting F<sub>I</sub> below comes out negative the free length is too short — enter a longer chosen L<sub>f</sub> (Mott revised 2.21 → 2.50 in) and redesign the ends.',
         vars: [
           { id: 'Lbody', symbol: 'L_{body}', label: 'Body length Dw(Na + 1)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dw', 'Na') ? v.Dw * (v.Na + 1) : undefined,
-            work: v => H.has(v, 'Lbody') ? '\\(L_{body} = ' + H.fmt(v.Dw) + '(' + H.fmt(v.Na, 4) + ' + 1) = ' + H.fmt(v.Lbody, 4) + '\\)' : null },
+            work: v => H.has(v, 'Lbody') ? '\\(L_{body} = ' + TX(v.Dw) + '(' + TX(v.Na, 4) + ' + 1) = ' + TX(v.Lbody, 4) + '\\)' : null },
           { id: 'Lend', symbol: 'L_{end}', label: 'Length added per end loop', unit: 'in / mm', kind: 'input', auto: v => H.has(v, 'ID') ? v.ID : undefined, hint: 'auto = ID (full loop, Example 18-4); consult the springmaker for other ends' },
           { id: 'Lfcalc', symbol: 'L_{f,calc}', label: 'Free length with the proposed ends', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Lbody', 'Lend') ? v.Lbody + 2 * v.Lend : undefined,
-            work: v => H.has(v, 'Lfcalc') ? '\\(L_f = ' + H.fmt(v.Lbody, 4) + ' + 2(' + H.fmt(v.Lend, 4) + ') = ' + H.fmt(v.Lfcalc, 4) + '\\)' : null },
+            work: v => H.has(v, 'Lfcalc') ? '\\(L_f = ' + TX(v.Lbody, 4) + ' + 2(' + TX(v.Lend, 4) + ') = ' + TX(v.Lfcalc, 4) + '\\)' : null },
           { id: 'Lfx', symbol: 'L_{f,chosen}', label: 'Chosen free length (overrides)', unit: 'in / mm', kind: 'input', hint: 'blank = calculated; Example 18-4 chose 2.50 in', check: v => (H.has(v, 'Lfx', 'Lo') && v.Lfx >= v.Lo) ? 'Free length must be shorter than the operating length' : null },
         ] },
       { id: 'xinit', title: 'Initial force and initial-tension stress', fig: ['fig18-19', 'fig18-21'], when: v => v.mode === 'ext',
@@ -228,10 +230,10 @@ window.TOPIC = {
         text: 'F<sub>I</sub> is the force at which the coils just begin to separate (typically 10–25 % of the maximum design force). Compare τ<sub>I</sub> with the preferred band of Figure 18-21 for the spring index.',
         vars: [
           { id: 'FI', symbol: 'F_I', label: 'Initial force', unit: 'lb / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fo', 'k', 'fo') ? v.Fo - v.k * v.fo : undefined,
-            work: v => H.has(v, 'FI') ? '\\(F_I = ' + H.fmt(v.Fo) + ' - ' + H.fmt(v.k, 4) + '(' + H.fmt(v.fo, 4) + ') = ' + H.fmt(v.FI, 4) + '\\)' : null,
+            work: v => H.has(v, 'FI') ? '\\(F_I = ' + TX(v.Fo) + ' - ' + TX(v.k, 4) + '(' + TX(v.fo, 4) + ') = ' + TX(v.FI, 4) + '\\)' : null,
             check: v => (v.FI !== undefined && v.FI < 0) ? 'Negative initial force — the free length is too short for the specified lengths' : null },
           { id: 'tauI', symbol: '\\tau_I', label: 'Torsional stress due to initial tension', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => (H.has(v, 'tauo', 'FI', 'Fo') && v.Fo > 0) ? v.tauo * v.FI / v.Fo : undefined,
-            work: v => H.has(v, 'tauI') ? '\\(\\tau_I = ' + H.fmt(v.tauo, 5) + '(' + H.fmt(v.FI, 4) + '/' + H.fmt(v.Fo) + ') = ' + H.fmt(v.tauI, 5) + '\\)' : null },
+            work: v => H.has(v, 'tauI') ? '\\(\\tau_I = ' + TX(v.tauo, 5) + '(' + TX(v.FI, 4) + '/' + TX(v.Fo) + ') = ' + TX(v.tauI, 5) + '\\)' : null },
           { id: 'tIlo', symbol: '\\tau_{I,min}', label: 'Preferred range, lower (Fig. 18-21)', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-21', auto: v => H.has(v, 'C') ? (33500 / Math.exp(0.105 * v.C) - 1000 * (4 - (v.C - 3) / 6.5)) * (SIu(v) ? 0.006895 : 1) : undefined, hint: 'read the lower curve at C (auto = Shigley Eq. 10-41)' },
           { id: 'tIhi', symbol: '\\tau_{I,max}', label: 'Preferred range, upper (Fig. 18-21)', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-21', auto: v => H.has(v, 'C') ? (33500 / Math.exp(0.105 * v.C) + 1000 * (4 - (v.C - 3) / 6.5)) * (SIu(v) ? 0.006895 : 1) : undefined, hint: 'read the upper curve at C' },
         ],
@@ -244,7 +246,7 @@ window.TOPIC = {
           { id: 'C1', symbol: 'C_1', label: 'Loop index 2R1/Dw', kind: 'calc', digits: 4, compute: v => H.has(v, 'R1', 'Dw') ? 2 * v.R1 / v.Dw : undefined, check: v => (v.C1 !== undefined && v.C1 < 4) ? 'C1 < 4 — high loop stress; increase R1' : null },
           { id: 'K1', symbol: 'K_1', label: 'Bending curvature factor', kind: 'calc', digits: 4, compute: v => (H.has(v, 'C1') && v.C1 > 1) ? (4 * v.C1 * v.C1 - v.C1 - 1) / (4 * v.C1 * (v.C1 - 1)) : undefined },
           { id: 'sigA', symbol: '\\sigma_A', label: 'Bending stress at A', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'Dm', 'Fo', 'K1', 'Dw') ? 16 * v.Dm * v.Fo * v.K1 / (Math.PI * Math.pow(v.Dw, 3)) + 4 * v.Fo / (Math.PI * v.Dw * v.Dw) : undefined,
-            work: v => H.has(v, 'sigA') ? '\\(\\sigma_A = \\dfrac{16(' + H.fmt(v.Dm, 4) + ')(' + H.fmt(v.Fo) + ')(' + H.fmt(v.K1, 4) + ')}{\\pi(' + H.fmt(v.Dw) + ')^3} + \\dfrac{4(' + H.fmt(v.Fo) + ')}{\\pi(' + H.fmt(v.Dw) + ')^2} = ' + H.fmt(v.sigA, 5) + '\\)' : null },
+            work: v => H.has(v, 'sigA') ? '\\(\\sigma_A = \\dfrac{16(' + TX(v.Dm, 4) + ')(' + TX(v.Fo) + ')(' + TX(v.K1, 4) + ')}{\\pi(' + TX(v.Dw) + ')^3} + \\dfrac{4(' + TX(v.Fo) + ')}{\\pi(' + TX(v.Dw) + ')^2} = ' + TX(v.sigA, 5) + '\\)' : null },
           { id: 'sbA', symbol: '\\sigma_{d,bend}', label: 'Allowable bending stress for the loop', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-22', auto: v => H.has(v, 'td') ? v.td / 0.6 : undefined, hint: 'Mott 18-8 torsion-spring design-stress charts; auto ≈ τd/0.6 (Shigley Table 10-7: 0.75 Sut)' },
         ] },
       { id: 'xhookB', title: 'End loop: torsional stress at B', eq: '18-15, 18-16', fig: ['fig18-22'], when: v => v.mode === 'ext',
@@ -255,7 +257,7 @@ window.TOPIC = {
           { id: 'C2', symbol: 'C_2', label: 'Bend index 2R2/Dw', kind: 'calc', digits: 4, compute: v => H.has(v, 'R2', 'Dw') ? 2 * v.R2 / v.Dw : undefined, check: v => (v.C2 !== undefined && v.C2 < 4) ? 'C2 < 4 — high loop stress; increase R2' : null },
           { id: 'K2', symbol: 'K_2', label: 'Torsion curvature factor', kind: 'calc', digits: 4, compute: v => (H.has(v, 'C2') && v.C2 > 1) ? (4 * v.C2 - 1) / (4 * v.C2 - 4) : undefined },
           { id: 'tauB', symbol: '\\tau_B', label: 'Torsional stress at B', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'Dm', 'Fo', 'K2', 'Dw') ? 8 * v.Dm * v.Fo * v.K2 / (Math.PI * Math.pow(v.Dw, 3)) : undefined,
-            work: v => H.has(v, 'tauB') ? '\\(\\tau_B = \\dfrac{8(' + H.fmt(v.Dm, 4) + ')(' + H.fmt(v.Fo) + ')(' + H.fmt(v.K2, 4) + ')}{\\pi(' + H.fmt(v.Dw) + ')^3} = ' + H.fmt(v.tauB, 5) + '\\)' : null },
+            work: v => H.has(v, 'tauB') ? '\\(\\tau_B = \\dfrac{8(' + TX(v.Dm, 4) + ')(' + TX(v.Fo) + ')(' + TX(v.K2, 4) + ')}{\\pi(' + TX(v.Dw) + ')^3} = ' + TX(v.tauB, 5) + '\\)' : null },
           { id: 'tdB', symbol: '0.9\\tau_d', label: 'Allowable for the loop (design stress − 10 %)', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'td') ? 0.9 * v.td : undefined },
         ] },
     ] },

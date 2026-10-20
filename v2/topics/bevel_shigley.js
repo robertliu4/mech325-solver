@@ -1,7 +1,8 @@
 /* Straight bevel gears — Shigley 11e (Ch. 13-15 force analysis, Ch. 15 AGMA 2003-B97 rating).
  * Merged Fizz bible pp 59-68 + Mech bible pp 68-72, 98-106 procedure, in Shigley notation.
  * Defaults follow the Fizz / Mech guide assumptions (TOPIC.assumptions, cited by guide page), with the UBC MECH 325 course
- *   conventions (v2/COURSE_CONVENTIONS.md §9) where the guides are silent: φ = 20°, F = Table 13-3 value (= guides' F_nom = 0.3A0),
+ *   conventions (v2/COURSE_CONVENTIONS.md §9) where the guides are silent: φ = 20°, F = roundest value in the guides' F_nom … F_max
+ *   (Shigley's Table 13-3 min(0.3A0, 10/Pd) shown beside),
  *   forces at r_av but stress with W^t = 33 000H/v_t at the large end, Ko from the table (1.00 pre-filled), A_v 10 ↔ Q_v 7 (Table 9-5),
  *   Kmb = 1.00 (Mott: both straddle unless noted), Kx = 1, no KB, R = 0.99 → KR = CR = 1, KL/CL commercial lines, KT = 1, SF = SH = 1,
  *   grade-1 steel, Cp = 2300, Cs = 0.125F + 0.4375, Cxc = 1.5 (properly crowned — "what we usually assume"), CH = 1.
