@@ -392,3 +392,8 @@ the textbook crops in `v2/figures/shigley` and `v2/figures/mott`.
 - Module 2 helical solution: printed Shigley numbers are for ψ = 30° (Wt 682.3, σc 69 640); handwritten corrections (714 lbf, dP 2.942, I 0.190, σc ≈ 74 ksi) are for the 25° version actually assigned.
 - Tutorial 3 wire rope: Ff for 10⁵ bends computed with D = 72 in (drum) although the 90-in sheave was used elsewhere.
 - Wire Rope s19 reproduces Shigley Table 17-25 but the slide heading calls them "factors of safety"; HW1 calls 240 kpsi "plow steel" though it is the monitor/IPS lower bound.
+
+### Added during calculator alignment — Worm Gears 2024 / Module 2 p28–37 worked solution
+- (W^t)all = 1787 lbf in the slides uses Fe = 2 in (carried over from Shigley Ex 15-3) although the problem's F = 0.5 in; with Fe = F the allowable is ≈447 lbf and wear fails (the slides' own redesign at F = 7/8 in → 782 lbf is consistent with Fe = F). Calculators use Fe = min(F, 0.67 dm).
+- Amin = 1642 in² uses C = 8.5 in instead of the problem's C = 4.25 in (correct ≈ 506 in²).
+- Wf = −29.5 lbf is an arithmetic slip for −25.9 lbf (Hf 0.53 hp, not 0.61).

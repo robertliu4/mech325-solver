@@ -1,3 +1,12 @@
+// Helical springs — Mott Ch. 18 (Fizz §5.3; Example Problems 18-1 … 18-4) with the design-stress charts Figs. 18-8 … 18-13
+// Course alignment (v2/COURSE_CONVENTIONS.md §14): the course has only the Module 5 reading guide — required Mott 18-1 … 18-4 (compression
+// springs) and the 18-6 design example; beneficial 18-5 stability, 18-7/18-8 extension & torsion springs (Shigley 10-11 extension springs is
+// required, so Mott 18-7 / Example 18-4 is implemented here as mode 3; torsion springs are not). No course worked numbers exist, so textbook
+// defaults apply (service-class curves, K ≈ 1.2 trial, Ls = Dw·N for ground ends, C = 5–12, Lf/Dm < 5.2 no buckling).
+// Verified against: Mott Example 18-4 (extension, A227, Fo 26.75 lb @ 4.25 in, Fi 16.25 @ 3.50, OD 0.625, Dm trial 0.5, τd 110 → 120 ksi,
+//   Dw 0.072) → k 14.0, Dwt 0.072, Dm 0.553, C 7.68, K 1.19, τo 120 ksi, Na 16.3, body 1.25 in, Lf 2.21 (→ 2.50 chosen), fo 1.75,
+//   FI 2.25 lb, τI 10 100 psi — reproduced.
+// Verified against: Mott Example 18-2 / 18-3 trial 2 (A231, Fo 12 @ 1.25, Fi 8 @ 1.75, Dw 0.0625) → k 8.0, Lf 2.75, C ≈ 8.6 — the `example`.
 // Mott Table 18-4: G and E (psi, GPa)
 const MOTT_G = {
   A227: ['Hard-drawn steel A227 (Fig. 18-8)', 11.5e6, 79.3, 28.6e6, 197], A228: ['Music wire A228 (Fig. 18-9)', 11.85e6, 81.7, 29.0e6, 200],
@@ -18,7 +27,7 @@ window.TOPIC = {
   sibling: 'springs_shigley.html',
   intro: 'Mott\'s procedure: the allowable stress is read from the <b>design-stress charts</b> (Figs. 18-8 … 18-13) for the material, wire size and service class (light / average / severe) instead of being computed from Sut. '
     + '<b>Design mode</b> (Example 18-2, Method 1): two force–length points → rate k and free length; a trial mean diameter and design stress give a trial wire size (Eq. 18-7); pick a standard wire (Table 18-2), then check stress at the operating load against the average-service curve and at solid length against the light-service curve, find the coils (Eq. 18-8), lengths, buckling (Fig. 18-15), coil clearance and hole size. '
-    + '<b>Analysis mode</b> (Example 18-1): a measured spring (Lf, OD, Dw, N) is checked the same way. Units: US (lb, in, psi) or SI (N, mm, MPa).',
+    + '<b>Analysis mode</b> (Example 18-1): a measured spring (Lf, OD, Dw, N) is checked the same way. <b>Extension mode</b> (Mott 18-7, Example 18-4): same body stress and coil equations, then body length D<sub>w</sub>(N<sub>a</sub> + 1) + end loops, initial force F<sub>I</sub> = F<sub>o</sub> − k f<sub>o</sub>, initial-tension stress vs Figure 18-21 and the end-loop stresses σ<sub>A</sub>, τ<sub>B</sub> (Eqs. 18-13 … 18-16). Units: US (lb, in, psi) or SI (N, mm, MPa). <b>Course note:</b> MECH 325 provides only the Module 5 reading guide for springs (Mott 18-1 … 18-4 and the 18-6 design example required; 18-5, 18-7, 18-8 beneficial) and no worked numbers, so the textbook defaults apply unchanged.',
   example: { units: 'US', mode: 'design', Fo: 12, Lo: 1.25, Fi: 8, Li: 1.75, mat: 'A231', service: 'avg', Dmt: 0.6, tdi: 130000, Dw: 0.0625, td: 145000, tmax: 170000, ends: 'sg', Dhole: 0.75 },
 
   figures: [
@@ -36,6 +45,9 @@ window.TOPIC = {
     { id: 'fig18-12', ref: 'Figure 18-12', title: 'Design shear stresses — ASTM A401 chromium-silicon', src: 'figures/mott/fig18-12.png', page: 683 },
     { id: 'fig18-13', ref: 'Figure 18-13', title: 'Design shear stresses — ASTM A313 stainless (302; ×0.95 for 304, ×0.85 for 316)', src: 'figures/mott/fig18-13.png', page: 683 },
     { id: 'fig18-14', ref: 'Figure 18-14', title: 'Wahl factor K vs spring index C', src: 'figures/mott/fig18-14.png', page: 684 },
+    { id: 'fig18-19', ref: 'Figure 18-19 / 18-20', title: 'Extension spring nomenclature (body Dw(Na + 1), hook and loop lengths) and load–deflection curve with initial force FI', src: 'figures/mott/fig18-19-20.png', page: 696 },
+    { id: 'fig18-21', ref: 'Figure 18-21', title: 'Recommended torsional stress due to initial tension vs spring index C (preferred range)', src: 'figures/mott/fig18-21.png', page: 696, note: 'The auto estimate is Shigley Eq. 10-41 (same Associated Spring data): 33 500/exp(0.105C) ± 1000(4 − (C − 3)/6.5) psi.' },
+    { id: 'fig18-22', ref: 'Figure 18-22', title: 'Stresses in the ends of an extension spring: bending at A (R1), torsion at B (R2)', src: 'figures/mott/fig18-22.png', page: 696 },
     { id: 'fig18-15', ref: 'Figure 18-15', title: 'Buckling criteria: critical fo/Lf vs Lf/Dm for end conditions A, B, C', src: 'figures/mott/fig18-15.png', page: 685, note: 'Curve A: fixed (squared & ground on flat plates); B: one fixed, one pinned; C: both pinned. For Lf/Dm < 5.2 (curve A) buckling will not occur.' },
   ],
 
@@ -46,19 +58,22 @@ window.TOPIC = {
         text: '<b>Design:</b> operating force Fo at length Lo, and a second point (installed force Fi at Li). If only the free length is known, set Fi = 0 and Li = Lf. <b>Analysis:</b> enter the measured spring below and the operating force Fo.',
         vars: [
           { id: 'units', label: 'Unit system', kind: 'choice', type: 'text', options: [{ label: 'US: lb, in, psi', value: 'US' }, { label: 'SI: N, mm, MPa', value: 'SI' }], default: 'US' },
-          { id: 'mode', label: 'Mode', kind: 'choice', type: 'text', options: [{ label: 'Design a spring (Example 18-2)', value: 'design' }, { label: 'Analyse a given spring (Example 18-1)', value: 'analyse' }], default: 'design' },
+          { id: 'mode', label: 'Mode', kind: 'choice', type: 'text', options: [{ label: 'Design a compression spring (Example 18-2)', value: 'design' }, { label: 'Analyse a given compression spring (Example 18-1)', value: 'analyse' }, { label: 'Design an extension spring (18-7, Example 18-4)', value: 'ext' }], default: 'design' },
           { id: 'Fo', symbol: 'F_o', label: 'Operating force (max normal load)', unit: 'lb / N', kind: 'input' },
-          { id: 'Lo', symbol: 'L_o', label: 'Operating length', unit: 'in / mm', kind: 'input', hint: 'design mode' },
+          { id: 'Lo', symbol: 'L_o', label: 'Operating length', unit: 'in / mm', kind: 'input', hint: 'design / extension modes (extension: the longer, pulled length)' },
           { id: 'Fi', symbol: 'F_i', label: 'Installed force (0 if free length known)', unit: 'lb / N', kind: 'input', default: 0 },
-          { id: 'Li', symbol: 'L_i', label: 'Installed length (= Lf if Fi = 0)', unit: 'in / mm', kind: 'input', hint: 'design mode' },
+          { id: 'Li', symbol: 'L_i', label: 'Installed length (= Lf if Fi = 0)', unit: 'in / mm', kind: 'input', hint: 'design / extension modes' },
+        ] },
+      { id: 'ina', title: 'Given spring (analysis mode) or required OD (extension mode)', fig: ['fig18-5'], when: v => v.mode !== 'design',
+        vars: [
           { id: 'Lfg', symbol: 'L_f', label: 'Free length (analysis mode)', unit: 'in / mm', kind: 'input' },
-          { id: 'ODg', symbol: 'OD', label: 'Outside diameter (analysis mode)', unit: 'in / mm', kind: 'input' },
+          { id: 'ODg', symbol: 'OD', label: 'Outside diameter (analysis mode; extension: required OD)', unit: 'in / mm', kind: 'input', hint: 'extension: Dm = OD − Dw replaces the trial Dm once Dw is chosen' },
           { id: 'Ng', symbol: 'N', label: 'Total coils (analysis mode)', kind: 'input' },
         ] },
       { id: 'mat', title: 'Material, service and end type', fig: ['table18-4', 'fig18-3'],
         vars: [
           { id: 'mat', label: 'Wire material', kind: 'choice', type: 'text', options: Object.keys(MOTT_G).map(k => ({ label: MOTT_G[k][0], value: k })), default: 'A231' },
-          { id: 'G', symbol: 'G', label: 'Shear modulus', unit: 'psi / MPa', kind: 'lookup', fig: 'table18-4', auto: v => MOTT_G[v.mat] ? (SIu(v) ? MOTT_G[v.mat][2] * 1000 : MOTT_G[v.mat][1]) : undefined },
+          { id: 'G', symbol: 'G', label: 'Shear modulus', unit: 'psi / MPa', kind: 'lookup', fig: 'table18-4', auto: v => MOTT_G[v.mat] ? (SIu(v) ? MOTT_G[v.mat][2] * 1000 : MOTT_G[v.mat][1]) : undefined, hint: 'Table 18-4 (e.g. A231: 11.2e6 psi / 77.2 GPa)' },
           { id: 'service', label: 'Service class (design-stress curve)', kind: 'choice', type: 'text', options: [{ label: 'Light — static / < 10⁴ cycles', value: 'light' }, { label: 'Average — typical, up to 10⁶ cycles', value: 'avg' }, { label: 'Severe — > 10⁶ cycles or shock', value: 'severe' }], default: 'avg' },
           { id: 'ends', label: 'End type', kind: 'choice', type: 'text', options: [{ label: 'Squared and ground (Na = N − 2)', value: 'sg' }, { label: 'Squared / closed (Na = N − 2)', value: 'sq' }, { label: 'Plain and ground (Na = N − 1)', value: 'pg' }, { label: 'Plain (Na = N)', value: 'plain' }], default: 'sg' },
         ] },
@@ -69,10 +84,11 @@ window.TOPIC = {
         vars: [
           { id: 'k', symbol: 'k', label: 'Spring rate', unit: 'lb/in / N/mm', kind: 'calc', digits: 4, compute: v => {
               if (v.mode === 'analyse') return (H.has(v, 'Fo', 'fo') && v.fo > 0) ? v.Fo / v.fo : undefined;
+              if (v.mode === 'ext') return (H.has(v, 'Fo', 'Fi', 'Li', 'Lo') && v.Lo !== v.Li) ? (v.Fo - v.Fi) / (v.Lo - v.Li) : undefined;
               return (H.has(v, 'Fo', 'Fi', 'Li', 'Lo') && v.Li !== v.Lo) ? (v.Fo - v.Fi) / (v.Li - v.Lo) : undefined; },
-            work: v => (v.mode !== 'analyse' && H.has(v, 'Fo', 'Fi', 'Li', 'Lo')) ? '\\(k = \\dfrac{' + H.fmt(v.Fo) + ' - ' + H.fmt(v.Fi) + '}{' + H.fmt(v.Li) + ' - ' + H.fmt(v.Lo) + '} = ' + H.fmt(v.k, 4) + '\\)' : (v.mode === 'analyse' && H.has(v, 'Fo', 'fo') ? '\\(k = F_o/f_o = ' + H.fmt(v.Fo) + '/' + H.fmt(v.fo, 4) + ' = ' + H.fmt(v.k, 4) + '\\)' : null) },
-          { id: 'Lf', symbol: 'L_f', label: 'Free length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? v.Lfg : (H.has(v, 'Li', 'Fi', 'k') && v.k > 0 ? v.Li + v.Fi / v.k : undefined),
-            work: v => (v.mode !== 'analyse' && H.has(v, 'Li', 'Fi', 'k')) ? '\\(L_f = ' + H.fmt(v.Li) + ' + ' + H.fmt(v.Fi) + '/' + H.fmt(v.k, 4) + ' = ' + H.fmt(v.Lf, 4) + '\\)' : null },
+            work: v => (v.mode !== 'analyse' && H.has(v, 'Fo', 'Fi', 'Li', 'Lo')) ? (v.mode === 'ext' ? '\\(k = \\dfrac{' + H.fmt(v.Fo) + ' - ' + H.fmt(v.Fi) + '}{' + H.fmt(v.Lo) + ' - ' + H.fmt(v.Li) + '} = ' + H.fmt(v.k, 4) + '\\)' : '\\(k = \\dfrac{' + H.fmt(v.Fo) + ' - ' + H.fmt(v.Fi) + '}{' + H.fmt(v.Li) + ' - ' + H.fmt(v.Lo) + '} = ' + H.fmt(v.k, 4) + '\\)') : (v.mode === 'analyse' && H.has(v, 'Fo', 'fo') ? '\\(k = F_o/f_o = ' + H.fmt(v.Fo) + '/' + H.fmt(v.fo, 4) + ' = ' + H.fmt(v.k, 4) + '\\)' : null) },
+          { id: 'Lf', symbol: 'L_f', label: 'Free length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? v.Lfg : (v.mode === 'ext' ? (H.has(v, 'Lfx') ? v.Lfx : v.Lfcalc) : (H.has(v, 'Li', 'Fi', 'k') && v.k > 0 ? v.Li + v.Fi / v.k : undefined)), hint: 'extension: from the body-length step below'
+            , work: v => (v.mode === 'design' && H.has(v, 'Li', 'Fi', 'k')) ? '\\(L_f = ' + H.fmt(v.Li) + ' + ' + H.fmt(v.Fi) + '/' + H.fmt(v.k, 4) + ' = ' + H.fmt(v.Lf, 4) + '\\)' : null },
         ] },
       { id: 'trial', title: 'Trial mean diameter, design stress and trial wire diameter', eq: '18-7', fig: ['fig18-5', 'fig18-8', 'fig18-9', 'fig18-10', 'fig18-11', 'fig18-12', 'fig18-13'],
         formula: 'D_w = \\left[\\frac{8 K F_o D_m}{\\pi\\tau_d}\\right]^{1/3} \\approx \\left[\\frac{3.06\\,F_o D_m}{\\tau_d}\\right]^{1/3}\\ (K \\approx 1.2)',
@@ -91,7 +107,7 @@ window.TOPIC = {
       { id: 'wire', title: 'Standard wire diameter and chart stresses', fig: ['table18-2a', 'table18-2b', 'fig18-8', 'fig18-9', 'fig18-10', 'fig18-11', 'fig18-12', 'fig18-13'],
         text: 'Pick the next larger standard size from Table 18-2 (design) or enter the measured wire (analysis). Then re-read the chart at that diameter: <b>design stress</b> from the service curve, and <b>maximum allowable stress</b> from the <i>light-service</i> curve (used for the solid-height check).',
         vars: [
-          { id: 'Dw', symbol: 'D_w', label: 'Wire diameter (standard)', unit: 'in / mm', kind: 'lookup', fig: 'table18-2a', check: v => (v.mode !== 'analyse' && H.has(v, 'Dw', 'Dwt') && v.Dw < v.Dwt) ? 'Smaller than the trial size — stress will exceed the design stress' : null },
+          { id: 'Dw', symbol: 'D_w', label: 'Wire diameter (standard)', unit: 'in / mm', kind: 'lookup', fig: 'table18-2a', hint: 'Table 18-2: next standard size ≥ trial (Ex. 18-4: 0.072 in = 15 ga U.S. Steel Wire)', check: v => (v.mode !== 'analyse' && H.has(v, 'Dw', 'Dwt') && v.Dw < v.Dwt) ? 'Smaller than the trial size — stress will exceed the design stress' : null },
           { id: 'td', symbol: '\\tau_d', label: 'Design stress at Dw (service curve)', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-11', hint: 'e.g. A231, 0.0625 in: ≈ 145 ksi average' },
           { id: 'tmax', symbol: '\\tau_{max}', label: 'Max allowable stress at Dw (light-service curve)', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-11', hint: 'e.g. A231, 0.0625 in: ≈ 170 ksi' },
         ] },
@@ -101,7 +117,7 @@ window.TOPIC = {
       { id: 'geo', title: 'Diameters, spring index, Wahl factor', eq: '18-5', fig: ['fig18-5', 'fig18-14'],
         formula: 'C = \\frac{D_m}{D_w} \\qquad K = \\frac{4C-1}{4C-4} + \\frac{0.615}{C}',
         vars: [
-          { id: 'Dm', symbol: 'D_m', label: 'Mean diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? (H.has(v, 'ODg', 'Dw') ? v.ODg - v.Dw : undefined) : v.Dmt },
+          { id: 'Dm', symbol: 'D_m', label: 'Mean diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => (v.mode === 'analyse' || (v.mode === 'ext' && H.has(v, 'ODg'))) ? (H.has(v, 'ODg', 'Dw') ? v.ODg - v.Dw : undefined) : v.Dmt },
           { id: 'OD', symbol: 'OD', label: 'Outside diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dm', 'Dw') ? v.Dm + v.Dw : undefined },
           { id: 'ID', symbol: 'ID', label: 'Inside diameter', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dm', 'Dw') ? v.Dm - v.Dw : undefined },
           { id: 'C', symbol: 'C', label: 'Spring index', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dm', 'Dw') && v.Dw > 0 ? v.Dm / v.Dw : undefined, check: v => (v.C !== undefined && v.C < 5) ? 'Mott: C should be ≥ 5 (forming cracks below 5); typical 5–12' : (v.C > 12 ? 'C > 12 — springs tangle; consider a smaller Dm' : null) },
@@ -127,13 +143,14 @@ window.TOPIC = {
             work: v => (v.mode !== 'analyse' && H.has(v, 'Na')) ? '\\(N_a = \\dfrac{' + H.fmt(v.G, 4) + '(' + H.fmt(v.Dw) + ')}{8(' + H.fmt(v.k, 4) + ')(' + H.fmt(v.C, 4) + ')^3} = ' + H.fmt(v.Na, 4) + '\\)' : null,
             check: v => (v.Na !== undefined && v.Na < 3) ? 'Fewer than 3 active coils' : null },
           { id: 'N', symbol: 'N', label: 'Total coils', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? v.Ng : (H.has(v, 'Na') ? v.Na + NE[v.ends] : undefined) },
-          { id: 'fo', symbol: 'f_o', label: 'Operating deflection (from free length)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => {
+          { id: 'fo', symbol: 'f_o', label: 'Operating deflection from free length (extension: Lo − Lf)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => {
               if (v.mode === 'analyse') return H.has(v, 'Fo', 'C', 'Na', 'G', 'Dw') ? 8 * v.Fo * Math.pow(v.C, 3) * v.Na / (v.G * v.Dw) : undefined;
+              if (v.mode === 'ext') return H.has(v, 'Lf', 'Lo') ? v.Lo - v.Lf : undefined;
               return H.has(v, 'Lf', 'Lo') ? v.Lf - v.Lo : undefined; },
             work: v => (v.mode === 'analyse' && H.has(v, 'fo')) ? '\\(f_o = \\dfrac{8(' + H.fmt(v.Fo) + ')(' + H.fmt(v.C, 4) + ')^3(' + H.fmt(v.Na, 4) + ')}{' + H.fmt(v.G, 4) + '(' + H.fmt(v.Dw) + ')} = ' + H.fmt(v.fo, 4) + '\\)' : null },
           { id: 'Loa', symbol: 'L_o', label: 'Operating length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.mode === 'analyse' ? (H.has(v, 'Lf', 'fo') ? v.Lf - v.fo : undefined) : v.Lo },
         ] },
-      { id: 'solid', title: 'Solid length, force and stress at solid height', formula: 'L_s = D_w N \\;(\\text{ground ends}) \\quad\\text{or}\\quad D_w(N+1) \\qquad F_s = k(L_f - L_s) \\qquad \\tau_s = \\tau_o\\frac{F_s}{F_o}',
+      { id: 'solid', title: 'Solid length, force and stress at solid height', when: v => v.mode !== 'ext', formula: 'L_s = D_w N \\;(\\text{ground ends}) \\quad\\text{or}\\quad D_w(N+1) \\qquad F_s = k(L_f - L_s) \\qquad \\tau_s = \\tau_o\\frac{F_s}{F_o}',
         text: 'Mott uses Ls = Dw·N for squared & ground ends (Example 18-1 / 18-2). For un-ground ends Shigley Table 10-1 adds one wire diameter: Ls = Dw(N + 1). The stress at solid height must stay below the light-service (maximum allowable) curve or the spring takes a permanent set.',
         vars: [
           { id: 'Ls', symbol: 'L_s', label: 'Solid length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dw', 'N') ? ((v.ends === 'sg' || v.ends === 'pg') ? v.Dw * v.N : v.Dw * (v.N + 1)) : undefined },
@@ -149,17 +166,17 @@ window.TOPIC = {
     ] },
 
     { title: 'Buckling, clearances, installation', steps: [
-      { id: 'buck', title: 'Buckling check', fig: ['fig18-15'], formula: '\\frac{L_f}{D_m} \\;\\rightarrow\\; \\left(\\frac{f_o}{L_f}\\right)_{cr} \\text{ from Fig. 18-15}',
+      { id: 'buck', title: 'Buckling check', fig: ['fig18-15'], when: v => v.mode !== 'ext', formula: '\\frac{L_f}{D_m} \\;\\rightarrow\\; \\left(\\frac{f_o}{L_f}\\right)_{cr} \\text{ from Fig. 18-15}',
         text: 'Read the critical deflection ratio for the end condition (curve A = squared & ground on flat plates). If Lf/Dm < 5.2 (curve A) buckling cannot occur. The yellow value is pre-filled with an estimate from the same theory (Shigley Eq. 10-10 with steel E, G).',
         vars: [
           { id: 'curve', label: 'End condition (Fig. 18-15 curve)', kind: 'choice', options: [{ label: 'A — fixed ends (squared & ground on flat plates)', value: 0.5 }, { label: 'B — one fixed, one pinned', value: 0.707 }, { label: 'C — both pinned', value: 1 }], default: 0.5 },
           { id: 'LfDm', symbol: 'L_f/D_m', label: 'Slenderness ratio', kind: 'calc', digits: 4, compute: v => H.has(v, 'Lf', 'Dm') && v.Dm > 0 ? v.Lf / v.Dm : undefined },
-          { id: 'rcr', symbol: '(f_o/L_f)_{cr}', label: 'Critical deflection ratio', kind: 'lookup', fig: 'fig18-15', auto: v => { if (!H.has(v, 'LfDm', 'curve')) return undefined;
+          { id: 'rcr', symbol: '(f_o/L_f)_{cr}', label: 'Critical deflection ratio', kind: 'lookup', fig: 'fig18-15', hint: 'Fig. 18-15 curve A/B/C at Lf/Dm (auto = Shigley Eq. 10-10 estimate)', auto: v => { if (!H.has(v, 'LfDm', 'curve')) return undefined;
               const E = 28.5, G = 11.5; const C1 = E / (2 * (E - G)), C2 = 2 * Math.PI * Math.PI * (E - G) / (2 * G + E); const lam = v.curve * v.LfDm; const t = 1 - C2 / (lam * lam); return t < 0 ? 1 : C1 * (1 - Math.sqrt(t)); } },
           { id: 'ract', symbol: 'f_o/L_f', label: 'Actual deflection ratio at Fo', kind: 'calc', digits: 4, compute: v => H.has(v, 'fo', 'Lf') && v.Lf > 0 ? v.fo / v.Lf : undefined },
         ],
         after: v => H.has(v, 'LfDm') ? ((v.curve === 0.5 && v.LfDm < 5.2) ? '<span class="result-ok">Lf/Dm = ' + H.fmt(v.LfDm, 3) + ' &lt; 5.2 — buckling will not occur.</span>' : (H.has(v, 'rcr', 'ract') ? (v.ract < v.rcr ? '<span class="result-ok">fo/Lf = ' + H.fmt(v.ract, 3) + ' &lt; critical ' + H.fmt(v.rcr, 3) + ' — stable.</span>' : '<span class="result-bad">fo/Lf = ' + H.fmt(v.ract, 3) + ' ≥ critical ' + H.fmt(v.rcr, 3) + ' — the spring will buckle; guide it in a hole or over a rod.</span>') : '')) : '' },
-      { id: 'clr', title: 'Coil clearance, pitch, pitch angle, hole size', eq: '18-2', fig: ['fig18-7'],
+      { id: 'clr', title: 'Coil clearance, pitch, pitch angle, hole size', eq: '18-2', fig: ['fig18-7'], when: v => v.mode !== 'ext',
         formula: 'c_c = \\frac{L_o - L_s}{N_a} > \\frac{D_w}{10} \\qquad p = \\frac{L_f - (\\text{end allowance})}{N_a} \\qquad \\lambda = \\tan^{-1}\\frac{p}{\\pi D_m} < 12^\\circ \\qquad D_{hole} > OD + \\frac{D_w}{10}',
         vars: [
           { id: 'cc', symbol: 'c_c', label: 'Coil clearance at Lo', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Loa', 'Ls', 'Na') && v.Na > 0 ? (v.Loa - v.Ls) / v.Na : undefined },
@@ -176,6 +193,71 @@ window.TOPIC = {
             const ok = v.tauo <= v.td && v.taus <= v.tmax && v.Ls < v.Loa && (!H.has(v, 'cc', 'ccmin') || v.cc > v.ccmin) && (!H.has(v, 'Dhole', 'Dhmin') || v.Dhole >= v.Dhmin);
             s += '<div style="margin-top:6px">' + (ok ? '<span class="result-ok"><b>DESIGN OK</b> — ' : '<span class="result-bad"><b>REVISE</b> — ') + MOTT_G[v.mat][0].split(' (')[0] + ', Dw = ' + H.fmt(v.Dw) + ', Dm = ' + H.fmt(v.Dm, 4) + ' (OD ' + H.fmt(v.OD, 4) + ', ID ' + H.fmt(v.ID, 4) + '), Na = ' + H.fmt(v.Na, 4) + ', N = ' + H.fmt(v.N, 4) + ' ' + v.ends + ' ends, Lf = ' + H.fmt(v.Lf, 4) + ', Ls = ' + H.fmt(v.Ls, 4) + ', k = ' + H.fmt(v.k, 4) + '.</span></div>'; }
           return s; } },
+    ] },
+
+    { title: 'Extension springs (Mott 18-7, Example 18-4)', steps: [
+      { id: 'xlen', title: 'Body length, end loops and free length', fig: ['fig18-19'], when: v => v.mode === 'ext',
+        formula: 'L_{body} = D_w(N_a + 1) \\qquad L_f = L_{body} + 2\\,(\\text{end allowance})',
+        text: 'All coils of an extension spring are active. Example 18-4 proposes a full loop at each end, adding one ID per end; if the resulting F<sub>I</sub> below comes out negative the free length is too short — enter a longer chosen L<sub>f</sub> (Mott revised 2.21 → 2.50 in) and redesign the ends.',
+        vars: [
+          { id: 'Lbody', symbol: 'L_{body}', label: 'Body length Dw(Na + 1)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Dw', 'Na') ? v.Dw * (v.Na + 1) : undefined,
+            work: v => H.has(v, 'Lbody') ? '\\(L_{body} = ' + H.fmt(v.Dw) + '(' + H.fmt(v.Na, 4) + ' + 1) = ' + H.fmt(v.Lbody, 4) + '\\)' : null },
+          { id: 'Lend', symbol: 'L_{end}', label: 'Length added per end loop', unit: 'in / mm', kind: 'input', auto: v => H.has(v, 'ID') ? v.ID : undefined, hint: 'auto = ID (full loop, Example 18-4); consult the springmaker for other ends' },
+          { id: 'Lfcalc', symbol: 'L_{f,calc}', label: 'Free length with the proposed ends', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Lbody', 'Lend') ? v.Lbody + 2 * v.Lend : undefined,
+            work: v => H.has(v, 'Lfcalc') ? '\\(L_f = ' + H.fmt(v.Lbody, 4) + ' + 2(' + H.fmt(v.Lend, 4) + ') = ' + H.fmt(v.Lfcalc, 4) + '\\)' : null },
+          { id: 'Lfx', symbol: 'L_{f,chosen}', label: 'Chosen free length (overrides)', unit: 'in / mm', kind: 'input', hint: 'blank = calculated; Example 18-4 chose 2.50 in', check: v => (H.has(v, 'Lfx', 'Lo') && v.Lfx >= v.Lo) ? 'Free length must be shorter than the operating length' : null },
+        ] },
+      { id: 'xinit', title: 'Initial force and initial-tension stress', fig: ['fig18-19', 'fig18-21'], when: v => v.mode === 'ext',
+        formula: 'F_I = F_o - k f_o \\qquad \\tau_I = \\tau_o\\frac{F_I}{F_o} \\quad \\text{vs Fig. 18-21 at } C',
+        text: 'F<sub>I</sub> is the force at which the coils just begin to separate (typically 10–25 % of the maximum design force). Compare τ<sub>I</sub> with the preferred band of Figure 18-21 for the spring index.',
+        vars: [
+          { id: 'FI', symbol: 'F_I', label: 'Initial force', unit: 'lb / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fo', 'k', 'fo') ? v.Fo - v.k * v.fo : undefined,
+            work: v => H.has(v, 'FI') ? '\\(F_I = ' + H.fmt(v.Fo) + ' - ' + H.fmt(v.k, 4) + '(' + H.fmt(v.fo, 4) + ') = ' + H.fmt(v.FI, 4) + '\\)' : null,
+            check: v => (v.FI !== undefined && v.FI < 0) ? 'Negative initial force — the free length is too short for the specified lengths' : null },
+          { id: 'tauI', symbol: '\\tau_I', label: 'Torsional stress due to initial tension', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => (H.has(v, 'tauo', 'FI', 'Fo') && v.Fo > 0) ? v.tauo * v.FI / v.Fo : undefined,
+            work: v => H.has(v, 'tauI') ? '\\(\\tau_I = ' + H.fmt(v.tauo, 5) + '(' + H.fmt(v.FI, 4) + '/' + H.fmt(v.Fo) + ') = ' + H.fmt(v.tauI, 5) + '\\)' : null },
+          { id: 'tIlo', symbol: '\\tau_{I,min}', label: 'Preferred range, lower (Fig. 18-21)', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-21', auto: v => H.has(v, 'C') ? (33500 / Math.exp(0.105 * v.C) - 1000 * (4 - (v.C - 3) / 6.5)) * (SIu(v) ? 0.006895 : 1) : undefined, hint: 'read the lower curve at C (auto = Shigley Eq. 10-41)' },
+          { id: 'tIhi', symbol: '\\tau_{I,max}', label: 'Preferred range, upper (Fig. 18-21)', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-21', auto: v => H.has(v, 'C') ? (33500 / Math.exp(0.105 * v.C) + 1000 * (4 - (v.C - 3) / 6.5)) * (SIu(v) ? 0.006895 : 1) : undefined, hint: 'read the upper curve at C' },
+        ],
+        after: v => H.has(v, 'tauI', 'tIlo', 'tIhi') ? ((v.tauI >= v.tIlo && v.tauI <= v.tIhi) ? '<span class="result-ok">τI = ' + H.fmt(v.tauI, 4) + ' is inside the preferred range ' + H.fmt(v.tIlo, 4) + ' – ' + H.fmt(v.tIhi, 4) + '.</span>' : '<span class="result-bad">τI = ' + H.fmt(v.tauI, 4) + ' is outside the preferred range ' + H.fmt(v.tIlo, 4) + ' – ' + H.fmt(v.tIhi, 4) + ' — adjust Lf or the number of coils (Mott: small adjustments / prototype).</span>') : '' },
+      { id: 'xhookA', title: 'End loop: bending stress at A', eq: '18-13, 18-14', fig: ['fig18-22'], when: v => v.mode === 'ext',
+        formula: '\\sigma_A = \\frac{16 D_m F_o K_1}{\\pi D_w^3} + \\frac{4F_o}{\\pi D_w^2} \\qquad K_1 = \\frac{4C_1^2 - C_1 - 1}{4C_1(C_1 - 1)},\\; C_1 = \\frac{2R_1}{D_w}',
+        text: 'R<sub>1</sub> = mean radius of the loop in the plane of the coil (Figure 18-22a). C<sub>1</sub> should be > 4. Compare σ<sub>A</sub> with the allowable <i>bending</i> stress for torsion springs (Mott 18-8 charts; Shigley Table 10-7 uses 0.75 S<sub>ut</sub>).',
+        vars: [
+          { id: 'R1', symbol: 'R_1', label: 'Loop mean radius (bending)', unit: 'in / mm', kind: 'input', auto: v => H.has(v, 'Dm') ? v.Dm / 2 : undefined, hint: 'auto = Dm/2 (loop of the same diameter as the body)' },
+          { id: 'C1', symbol: 'C_1', label: 'Loop index 2R1/Dw', kind: 'calc', digits: 4, compute: v => H.has(v, 'R1', 'Dw') ? 2 * v.R1 / v.Dw : undefined, check: v => (v.C1 !== undefined && v.C1 < 4) ? 'C1 < 4 — high loop stress; increase R1' : null },
+          { id: 'K1', symbol: 'K_1', label: 'Bending curvature factor', kind: 'calc', digits: 4, compute: v => (H.has(v, 'C1') && v.C1 > 1) ? (4 * v.C1 * v.C1 - v.C1 - 1) / (4 * v.C1 * (v.C1 - 1)) : undefined },
+          { id: 'sigA', symbol: '\\sigma_A', label: 'Bending stress at A', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'Dm', 'Fo', 'K1', 'Dw') ? 16 * v.Dm * v.Fo * v.K1 / (Math.PI * Math.pow(v.Dw, 3)) + 4 * v.Fo / (Math.PI * v.Dw * v.Dw) : undefined,
+            work: v => H.has(v, 'sigA') ? '\\(\\sigma_A = \\dfrac{16(' + H.fmt(v.Dm, 4) + ')(' + H.fmt(v.Fo) + ')(' + H.fmt(v.K1, 4) + ')}{\\pi(' + H.fmt(v.Dw) + ')^3} + \\dfrac{4(' + H.fmt(v.Fo) + ')}{\\pi(' + H.fmt(v.Dw) + ')^2} = ' + H.fmt(v.sigA, 5) + '\\)' : null },
+          { id: 'sbA', symbol: '\\sigma_{d,bend}', label: 'Allowable bending stress for the loop', unit: 'psi / MPa', kind: 'lookup', fig: 'fig18-22', auto: v => H.has(v, 'td') ? v.td / 0.6 : undefined, hint: 'Mott 18-8 torsion-spring design-stress charts; auto ≈ τd/0.6 (Shigley Table 10-7: 0.75 Sut)' },
+        ] },
+      { id: 'xhookB', title: 'End loop: torsional stress at B', eq: '18-15, 18-16', fig: ['fig18-22'], when: v => v.mode === 'ext',
+        formula: '\\tau_B = \\frac{8 D_m F_o K_2}{\\pi D_w^3} \\qquad K_2 = \\frac{4C_2 - 1}{4C_2 - 4},\\; C_2 = \\frac{2R_2}{D_w}',
+        text: 'R<sub>2</sub> = bend radius at right angles to the coil (Figure 18-22b). Mott: compare τ<sub>B</sub> with the design-stress curves (Figs. 18-8 … 18-13), some designers reducing them by about 10 %.',
+        vars: [
+          { id: 'R2', symbol: 'R_2', label: 'Loop bend radius (torsion)', unit: 'in / mm', kind: 'input', auto: v => H.has(v, 'Dw') ? 2.5 * v.Dw : undefined, hint: 'auto = 2.5 Dw (C2 = 5); use the drawing value' },
+          { id: 'C2', symbol: 'C_2', label: 'Bend index 2R2/Dw', kind: 'calc', digits: 4, compute: v => H.has(v, 'R2', 'Dw') ? 2 * v.R2 / v.Dw : undefined, check: v => (v.C2 !== undefined && v.C2 < 4) ? 'C2 < 4 — high loop stress; increase R2' : null },
+          { id: 'K2', symbol: 'K_2', label: 'Torsion curvature factor', kind: 'calc', digits: 4, compute: v => (H.has(v, 'C2') && v.C2 > 1) ? (4 * v.C2 - 1) / (4 * v.C2 - 4) : undefined },
+          { id: 'tauB', symbol: '\\tau_B', label: 'Torsional stress at B', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'Dm', 'Fo', 'K2', 'Dw') ? 8 * v.Dm * v.Fo * v.K2 / (Math.PI * Math.pow(v.Dw, 3)) : undefined,
+            work: v => H.has(v, 'tauB') ? '\\(\\tau_B = \\dfrac{8(' + H.fmt(v.Dm, 4) + ')(' + H.fmt(v.Fo) + ')(' + H.fmt(v.K2, 4) + ')}{\\pi(' + H.fmt(v.Dw) + ')^3} = ' + H.fmt(v.tauB, 5) + '\\)' : null },
+          { id: 'tdB', symbol: '0.9\\tau_d', label: 'Allowable for the loop (design stress − 10 %)', unit: 'psi / MPa', kind: 'calc', digits: 5, compute: v => H.has(v, 'td') ? 0.9 * v.td : undefined },
+        ] },
+    ] },
+
+    { title: 'Result', steps: [
+      { id: 'result', title: 'Overall verdict', vars: [],
+        after: v => {
+          if (v.mode === 'ext') {
+            if (!H.has(v, 'tauo', 'td', 'FI')) return '<span>Complete the extension-spring steps to get the verdict.</span>';
+            const rows = [['τo ≤ τd (±1 %)', v.tauo <= 1.01 * v.td], ['FI > 0', v.FI > 0], ['τI in Fig. 18-21 band', H.has(v, 'tauI', 'tIlo', 'tIhi') && v.tauI >= v.tIlo && v.tauI <= v.tIhi], ['loop σA ≤ allowable', !H.has(v, 'sigA', 'sbA') || v.sigA <= v.sbA], ['loop τB ≤ 0.9 τd', !H.has(v, 'tauB', 'tdB') || v.tauB <= v.tdB]];
+            const ok = rows.every(r => r[1]);
+            return rows.map(r => r[0] + ' ' + (r[1] ? '<span class="result-ok">✓</span>' : '<span class="result-bad">✗</span>')).join(' · ') + '<br>' + (ok ? '<span class="result-ok"><b>PASS</b> — ' : '<span class="result-bad"><b>FAIL</b> — ') + MOTT_G[v.mat][0].split(' (')[0] + ' extension spring: Dw = ' + H.fmt(v.Dw) + ', Dm = ' + H.fmt(v.Dm, 4) + ' (OD ' + H.fmt(v.OD, 4) + '), Na = ' + H.fmt(v.Na, 4) + ', k = ' + H.fmt(v.k, 4) + ', Lf = ' + H.fmt(v.Lf, 4) + ', FI = ' + H.fmt(v.FI, 4) + ', τI = ' + H.fmt(v.tauI, 5) + '.</span>';
+          }
+          if (!H.has(v, 'tauo', 'td', 'taus', 'tmax', 'Ls', 'Loa')) return '<span>Complete the stress and solid-height steps to get the verdict.</span>';
+          const buck = H.has(v, 'LfDm') ? ((v.curve === 0.5 && v.LfDm < 5.2) || (H.has(v, 'rcr', 'ract') && v.ract < v.rcr)) : true;
+          const rows = [['τo ≤ τd (±1 %)', v.tauo <= 1.01 * v.td], ['τs ≤ τmax', v.taus <= v.tmax], ['Ls < Lo', v.Ls < v.Loa], ['no buckling', buck], ['coil clearance > Dw/10', !H.has(v, 'cc', 'ccmin') || v.cc > v.ccmin], ['fits hole', !H.has(v, 'Dhole', 'Dhmin') || v.Dhole >= v.Dhmin]];
+          const ok = rows.every(r => r[1]);
+          return rows.map(r => r[0] + ' ' + (r[1] ? '<span class="result-ok">✓</span>' : '<span class="result-bad">✗</span>')).join(' · ') + '<br>' + (ok ? '<span class="result-ok"><b>PASS</b> — ' : '<span class="result-bad"><b>FAIL</b> — ') + MOTT_G[v.mat][0].split(' (')[0] + ', Dw = ' + H.fmt(v.Dw) + ', Dm = ' + H.fmt(v.Dm, 4) + ' (OD ' + H.fmt(v.OD, 4) + ', ID ' + H.fmt(v.ID, 4) + '), Na = ' + H.fmt(v.Na, 4) + ', N = ' + H.fmt(v.N, 4) + ' ' + v.ends + ' ends, Lf = ' + H.fmt(v.Lf, 4) + ', Ls = ' + H.fmt(v.Ls, 4) + ', k = ' + H.fmt(v.k, 4) + '.</span>'; } },
     ] },
   ],
 };

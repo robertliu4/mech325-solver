@@ -1,5 +1,16 @@
 /* Worm gearsets — Mott 6e (Secs. 8-9/8-10 geometry, 10-10 forces/efficiency, 10-11 stress, 10-12 surface durability).
- * Follows the 21-step Fizz (pp 69-74) / Mech (pp 107-113) procedure in Mott notation. */
+ * Follows the 21-step Fizz (pp 69-74) / Mech (pp 107-113) procedure in Mott notation.
+ * Defaults follow the UBC MECH 325 course conventions (v2/COURSE_CONVENTIONS.md §0, §10: Worm_Gears_2024 slides, Module 2 p28–37,
+ *   which use Shigley 15-6…15-8 with Mott Figs 10-25…10-29 and Table 10-5): μ = 0.103 e^(−0.110 vs^0.45) + 0.012, static μ = 0.15 with
+ *   self-locking when μ_static > cos φn tan λ (λ < 6°), gear load W_tG = 33 000 nd Po Ka/(vtG η) (Shigley 15-58, Ka and nd on the output
+ *   power — Mott's 2To/DG kept as an option), Fe ≤ 0.67 DW, y = 0.125 at 20°, bronze σall = 24 ksi, heat balance per Shigley 15-49…15-52
+ *   with "assume no fan" and a 250 °F lubricant limit.
+ * Verified against: Mott Ex. 10-9/10-10 (52T, triple-thread, DW 2, Pd 6, 1750 rpm, To 4168 lb·in, Fig. 10-25 μ 0.022, chart Cs 740,
+ *   Cm 0.814, Cv 0.265 → λ 14.04°, vs 944, WtG 962, WxG 265, WrG 352, Wf 23.3, PL 0.666 hp, η 90.9 %, WtR 1123 lb) with the Mott load
+ *   basis; and Module 2 p28–37 (1-thread, NG 56, DW 1.5, Pd 8, φn 20°, 1725 rpm, 1 hp out, Ka 1.25, nd 1, F 0.5, sand-cast)
+ *   with the Shigley/course basis: λ 4.764°, vs 679.8, μ 0.0250, η 75.63 %, W_tG 966, W_tW (= W_xG) 106.4, p_n 0.3913, σ 41 360 psi (Mott Kv
+ *   0.955 form; Shigley form 39 500) > 24 ksi FAIL, Cs 786.9, Cm 0.767, Cv 0.312, Fe 0.5 → W_tR 447 < 966 FAIL (the course solution's 1787
+ *   used Fe = 2 in by mistake), Hloss 17 570, hCR 0.396 no fan → ts 96.1 °F (course: Amin 1642 used C = 8.5 by mistake; sheet 505.5 in²). */
 (function () {
   const r = d => d * Math.PI / 180, fmt = (x, d) => H.fmt(x, d);
   const has = (v, ...a) => H.has(v, ...a);
@@ -10,8 +21,8 @@
     title: 'Worm Gearsets — Geometry, Forces, Efficiency & AGMA Rating',
     subtitle: 'Mott Secs. 8-9 … 8-10, 10-10 … 10-12 (AGMA 6034-B92) · the 21-step Fizz / Mech guide procedure',
     sibling: 'worm_shigley.html',
-    intro: 'Steel worm driving a bronze wormgear on 90° shafts. Enter the gear data and output power/torque, then the sheet runs the bible\'s 21 steps in Mott\'s notation: lead and lead angle → center distance → pitch-line and sliding speeds → coefficient of friction μ (Eqs. 10-26/10-27, Fig. 10-25) → forces on the gear and worm with directions (Fig. 10-24) → friction power, input power, efficiency → Lewis bending stress in the gear teeth (Eq. 10-37) → C<sub>s</sub>, C<sub>m</sub>, C<sub>v</sub> and the rated tangential load W<sub>tR</sub> (Eq. 10-42) → pitting PASS/FAIL. Load the example to reproduce Mott Example Problems 8-4, 10-9 and 10-10 (52T gear, triple-thread worm, 1750 rpm, T<sub>o</sub> = 4168 lb·in).',
-    example: { NG: 52, NW: 3, DW: 2.0, Pd: 6, phiGiven: 20, phiType: 'transverse', nW: 1750, To: 4168, F: 1.25, mat: 'sand', mu: 0.022, Cs: 740, Cm: 0.814, Cv: 0.265 },
+    intro: 'Steel worm driving a bronze wormgear on 90° shafts. Enter the gear data and output power/torque, then the sheet runs the bible\'s 21 steps in Mott\'s notation: lead and lead angle → center distance → pitch-line and sliding speeds → coefficient of friction μ (Eqs. 10-26/10-27, Fig. 10-25) → forces on the gear and worm with directions (Fig. 10-24) → friction power, input power, efficiency → Lewis bending stress in the gear teeth (Eq. 10-37) → C<sub>s</sub>, C<sub>m</sub>, C<sub>v</sub> and the rated tangential load W<sub>tR</sub> (Eq. 10-42) → pitting PASS/FAIL → heat balance (Shigley Eqs. 15-49 … 15-52, used by the course). <b>Defaults are the MECH 325 course assumptions</b> (Worm_Gears_2024 slides, Module 2 worked example p28–37): μ from Eq. 10-27 (= Shigley 15-38), static μ = 0.15 for the self-locking test μ<sub>static</sub> &gt; cos φ<sub>n</sub> tan λ (λ &lt; 6°), gear load from the output power with K<sub>a</sub> and n<sub>d</sub> and divided by the efficiency (Shigley Eq. 15-58 — switch to Mott\'s 2T<sub>o</sub>/D<sub>G</sub> if the question gives torque), F<sub>e</sub> ≤ 0.67 D<sub>W</sub>, y = 0.125 at 20°, phosphor-bronze σ<sub>all</sub> = 24 ksi, sand-cast bronze, "better to assume no fan", lubricant limit 250 °F. Load the example to reproduce Mott Example Problems 8-4, 10-9 and 10-10 (52T gear, triple-thread worm, 1750 rpm, T<sub>o</sub> = 4168 lb·in, Mott load basis).',
+    example: { NG: 52, NW: 3, DW: 2.0, Pd: 6, phiGiven: 20, phiType: 'transverse', nW: 1750, To: 4168, F: 1.25, mat: 'sand', basis: 'mott', Ka: 1, nd: 1, mu: 0.022, Cs: 740, Cm: 0.814, Cv: 0.265, fstat: 0.15, fan: 0, ta: 70, tmax: 250 },
 
     figures: [
       { id: 'f8-24', ref: 'Figure 8-24', title: 'Single-enveloping wormgear set — DW, DG, C, L, Px, FG, FW, Dt, root/outside diameters', src: 'figures/mott/fig8-24.png', page: 348 },
@@ -26,6 +37,10 @@
       { id: 'f10-28', ref: 'Figure 10-28', title: 'Ratio correction factor Cm vs gear ratio mG', src: 'figures/mott/fig10-28.png', page: 479, note: 'Eqs. 10-46 … 10-48.' },
       { id: 'f10-29', ref: 'Figure 10-29', title: 'Velocity factor Cv vs sliding velocity', src: 'figures/mott/fig10-29.png', page: 480, note: 'Eqs. 10-49 … 10-51.' },
       { id: 'f13-36', ref: 'Figure 13-36', title: 'Shigley\'s 3-D view of the forces on the worm pitch cylinder (helps with directions)', src: 'figures/shigley/fig13-36.png', page: 740, book: 'shigley' },
+      // ---- course-only slides (Worm_Gears_2024.pdf) ----
+      { id: 'csl', ref: 'Worm Gears s11', book: 'course', title: 'Self-locking wormgear sets: λ < 6°, static μ ≈ 0.15, criterion μ_static > cos φn tan λ (with Mott Fig. 10-26)', src: 'figures/course/worm_self_locking_course.png' },
+      { id: 'cbend', ref: 'Worm Gears s19', book: 'course', title: 'Bending stress in worm-gear teeth: σ = W_tG/(pn Fe y), y = 0.125 at 20° (Table 10-5), σall = 24 ksi phosphor bronze; "Mott uses a modified dynamic load (10-11)"', src: 'figures/course/worm_bending_course.png' },
+      { id: 'cheat', ref: 'Worm Gears s20', book: 'course', title: 'Heat issues (Shigley 15-49 … 15-52): Hloss, ħCR with/without fan, sump temperature, AGMA minimum lateral area', src: 'figures/course/worm_heat_course.png', note: 'Module 2 p36: "better to assume no fan". Not in Mott.' },
     ],
 
     sections: [
@@ -44,7 +59,10 @@
             { id: 'To', symbol: 'T_o', label: 'Output torque (if given)', unit: 'lb·in', kind: 'input' },
             { id: 'PoIn', symbol: 'P_o', label: 'Output power (if given instead)', unit: 'hp', kind: 'input' },
             { id: 'F', symbol: 'F', label: 'Wormgear face width', unit: 'in', kind: 'input', hint: 'blank → see FG rule below' },
-            { id: 'mat', symbol: '', label: 'Bronze type (for Cs)', kind: 'choice', type: 'text', options: [{ label: 'Sand-cast bronze', value: 'sand' }, { label: 'Static-chill-cast or forged bronze', value: 'chill' }, { label: 'Centrifugally cast bronze', value: 'centrifugal' }], default: 'sand' },
+            { id: 'mat', symbol: '', label: 'Bronze type (for Cs)', kind: 'choice', type: 'text', options: [{ label: 'Sand-cast bronze (course: "most common")', value: 'sand' }, { label: 'Static-chill-cast or forged bronze', value: 'chill' }, { label: 'Centrifugally cast bronze', value: 'centrifugal' }], default: 'sand' },
+            { id: 'basis', symbol: '', label: 'Gear load basis', kind: 'choice', type: 'text', options: [{ label: 'Shigley 15-58 / course: W_tG = 33 000 nd Po Ka/(vtG η)', value: 'shigley' }, { label: 'Mott 10-29: W_tG = 2 To/DG (× Ka nd)', value: 'mott' }], default: 'shigley', hint: 'course examples divide the output load by η and apply Ka, nd' },
+            { id: 'Ka', symbol: 'K_a', label: 'Application (service) factor on the output power', kind: 'input', default: 1, hint: 'course example 1.25; Mott examples 1.0' },
+            { id: 'nd', symbol: 'n_d', label: 'Design factor', kind: 'input', default: 1, hint: 'course: 1.0 unless stated' },
           ] },
       ] },
 
@@ -62,7 +80,7 @@
             { id: 'phin', symbol: '\\phi_n', label: 'Normal pressure angle', unit: '°', kind: 'calc', compute: v => has(v, 'phiGiven', 'phiType', 'lam') ? (v.phiType === 'transverse' ? H.deg(Math.atan(tan(r(v.phiGiven)) * cos(r(v.lam)))) : v.phiGiven) : undefined,
               work: v => has(v, 'phiGiven', 'phiType', 'lam') && v.phiType === 'transverse' ? '\\(\\phi_n = \\tan^{-1}(\\tan ' + v.phiGiven + '^\\circ\\cos ' + fmt(v.lam) + '^\\circ) = ' + fmt(H.deg(Math.atan(tan(r(v.phiGiven)) * cos(r(v.lam))))) + '^\\circ\\)' : null },
           ],
-          after: v => has(v, 'lam') ? (v.lam <= 5 ? '<span class="result-ok">λ = ' + fmt(v.lam) + '° ≤ 5° → self-locking (gear cannot back-drive the worm)</span>' : '<span class="muted">λ = ' + fmt(v.lam) + '° &gt; 5° → not self-locking (Mott Sec. 8-10); a brake is needed if back-driving must be prevented.</span>') : '' },
+          after: v => has(v, 'lam') ? (v.lam < 6 ? '<span class="result-ok">λ = ' + fmt(v.lam) + '° &lt; 6° → self-locking by the course rule of thumb (confirm with μ<sub>static</sub> below)</span>' : '<span class="muted">λ = ' + fmt(v.lam) + '° ≥ 6° → probably not self-locking (course: λ &lt; 6° ensures it; Mott Sec. 8-10 says ≤ 5°); check μ<sub>static</sub> below — a brake is needed if back-driving must be prevented.</span>') : '' },
         { id: 'g2', title: 'Step 2 — center distance, worm-diameter check, velocity ratio', eq: '8-25, 8-27',
           formula: 'C = \\frac{D_W + D_G}{2},\\qquad \\frac{C^{0.875}}{3.0} \\le D_W \\le \\frac{C^{0.875}}{1.6},\\qquad VR = m_G = \\frac{n_W}{n_G} = \\frac{N_G}{N_W}',
           vars: [
@@ -97,22 +115,31 @@
             { id: 'vtW', symbol: 'v_{tW}', label: 'Worm pitch-line speed', unit: 'ft/min', kind: 'calc', compute: v => has(v, 'DW', 'nW') ? Math.PI * v.DW * v.nW / 12 : undefined },
             { id: 'vs', symbol: 'v_s', label: 'Sliding velocity', unit: 'ft/min', kind: 'calc', compute: v => has(v, 'vtG', 'lam') ? v.vtG / sin(r(v.lam)) : undefined, work: v => has(v, 'vtG', 'lam') ? '\\(v_s = ' + fmt(v.vtG) + '/\\sin ' + fmt(v.lam) + '^\\circ = ' + fmt(v.vtG / sin(r(v.lam))) + '\\) ft/min' : null },
           ] },
-        { id: 'mu', title: 'Step 5 — coefficient of friction', eq: '10-26, 10-27', fig: ['f10-25'],
+        { id: 'mu', title: 'Step 5 — coefficient of friction and self-locking test', eq: '10-26, 10-27', fig: ['f10-25', 'csl'],
+          text: 'Course: running μ from the Eq. 10-27 fit (= Shigley 15-38); <b>static μ ≈ 0.15</b> for the self-locking test μ<sub>static</sub> &gt; cos φ<sub>n</sub> tan λ (Worm Gears s11).',
           formula: '\\mu = \\begin{cases}0.150 & v_s = 0\\\\ 0.124e^{-0.074v_s^{0.645}} & 0 \\lt  v_s \\lt  10\\\\ 0.103e^{-0.110v_s^{0.450}} + 0.012 & v_s \\ge 10\\ \\text{ft/min}\\end{cases}',
           vars: [
             { id: 'mu', symbol: '\\mu', label: 'Coefficient of friction', kind: 'lookup', fig: 'f10-25', auto: v => has(v, 'vs') ? muFit(v.vs) : undefined, hint: 'auto = Eqs. 10-26/10-27; Mott Ex. 10-9 reads 0.022 from Fig. 10-25',
               work: v => has(v, 'vs') ? '\\(\\mu = ' + (v.vs >= 10 ? '0.103e^{-0.110(' + fmt(v.vs) + ')^{0.450}} + 0.012' : '0.124e^{-0.074(' + fmt(v.vs) + ')^{0.645}}') + ' = ' + fmt(muFit(v.vs), 3) + '\\)' : null },
-          ] },
+            { id: 'fstat', symbol: '\\mu_{static}', label: 'Static coefficient of friction', kind: 'input', default: 0.15, hint: '≈ 0.15 steel/bronze (Fig. 10-25 at vs = 0; course)' },
+            { id: 'lock', symbol: '\\cos\\phi_n\\tan\\lambda', label: 'Self-locking criterion value (compare with μ_static)', kind: 'calc', compute: v => has(v, 'phin', 'lam') ? cos(r(v.phin)) * tan(r(v.lam)) : undefined,
+              work: v => has(v, 'phin', 'lam') ? '\\(\\cos ' + fmt(v.phin) + '^\\circ\\tan ' + fmt(v.lam) + '^\\circ = ' + fmt(cos(r(v.phin)) * tan(r(v.lam)), 3) + '\\)' : null },
+          ],
+          after: v => has(v, 'lock', 'fstat', 'lam') ? (v.fstat > v.lock ? '<span class="result-ok">Self-locking: μ<sub>static</sub> = ' + fmt(v.fstat) + ' &gt; cos φ<sub>n</sub> tan λ = ' + fmt(v.lock, 3) + ' (λ = ' + fmt(v.lam) + '°) — the gear cannot back-drive the worm</span>' : '<span class="result-bad">NOT self-locking: μ<sub>static</sub> = ' + fmt(v.fstat) + ' &lt; cos φ<sub>n</sub> tan λ = ' + fmt(v.lock, 3) + ' (λ = ' + fmt(v.lam) + '°) — the gear can back-drive the worm</span>') : '' },
       ] },
 
       { title: '6-10 · Forces, friction loss, input power, efficiency', steps: [
         { id: 'f6', title: 'Step 6 — forces on the wormgear', eq: '10-28 … 10-31', fig: ['f10-24', 'f13-36'],
-          formula: 'T_o = \\frac{63\\,000P_o}{n_G},\\quad W_{tG} = \\frac{2T_o}{D_G},\\quad W_{xG} = W_{tG}\\frac{\\cos\\phi_n\\sin\\lambda + \\mu\\cos\\lambda}{\\cos\\phi_n\\cos\\lambda - \\mu\\sin\\lambda},\\quad W_{rG} = \\frac{W_{tG}\\sin\\phi_n}{\\cos\\phi_n\\cos\\lambda - \\mu\\sin\\lambda}',
+          formula: 'T_o = \\frac{63\\,000P_o}{n_G},\\quad W_{tG} = \\frac{2T_o K_a n_d}{D_G}\\ (\\text{Mott})\\ \\text{or}\\ \\frac{33\\,000\\,n_d P_o K_a}{v_{tG}\\,\\eta}\\ (\\text{Shigley 15-58, course}),\\quad W_{xG} = W_{tG}\\frac{\\cos\\phi_n\\sin\\lambda + \\mu\\cos\\lambda}{\\cos\\phi_n\\cos\\lambda - \\mu\\sin\\lambda},\\quad W_{rG} = \\frac{W_{tG}\\sin\\phi_n}{\\cos\\phi_n\\cos\\lambda - \\mu\\sin\\lambda}',
           text: '<b>Directions (Fig. 10-24):</b> W<sub>tG</sub> is tangent to the gear pitch circle in its direction of rotation (it is the driven member) and is parallel to the worm axis; W<sub>xG</sub> is along the gear axis (thrust on the gear shaft) and is parallel to the worm\'s tangential direction; W<sub>rG</sub> points from the mesh toward the gear axis. The worm forces are the same three magnitudes swapped and reversed: W<sub>tW</sub> = W<sub>xG</sub>, W<sub>xW</sub> = W<sub>tG</sub>, W<sub>rW</sub> = W<sub>rG</sub> (Eq. 10-23). To find the sense, treat the worm as a screw: a right-hand worm turned clockwise (seen from its end) pushes the gear tooth like a nut moving along the screw.',
           vars: [
             { id: 'ToC', symbol: 'T_o', label: 'Output torque', unit: 'lb·in', kind: 'calc', compute: v => has(v, 'To') ? v.To : (has(v, 'PoIn', 'nG') ? 63000 * v.PoIn / v.nG : undefined) },
             { id: 'Po', symbol: 'P_o', label: 'Output power', unit: 'hp', kind: 'calc', compute: v => has(v, 'PoIn') ? v.PoIn : (has(v, 'To', 'nG') ? v.To * v.nG / 63000 : undefined), work: v => has(v, 'To', 'nG') && !has(v, 'PoIn') ? '\\(P_o = T_o n_G/63\\,000 = ' + fmt(v.To) + '(' + fmt(v.nG) + ')/63\\,000 = ' + fmt(v.To * v.nG / 63000, 3) + '\\) hp' : null },
-            { id: 'WtG', symbol: 'W_{tG}', label: 'Tangential force on gear (= WxW)', unit: 'lb', kind: 'calc', compute: v => has(v, 'ToC', 'DG') ? 2 * v.ToC / v.DG : undefined, work: v => has(v, 'ToC', 'DG') ? '\\(W_{tG} = 2(' + fmt(v.ToC) + ')/' + fmt(v.DG) + ' = ' + fmt(2 * v.ToC / v.DG) + '\\) lb' : null },
+            { id: 'etaF', symbol: '\\eta', label: 'Efficiency from Eq. 10-36 (needed for the Shigley/course load basis)', kind: 'calc', compute: v => has(v, 'phin', 'mu', 'lam') ? (cos(r(v.phin)) - v.mu * tan(r(v.lam))) / (cos(r(v.phin)) + v.mu / tan(r(v.lam))) : undefined,
+              work: v => has(v, 'phin', 'mu', 'lam') ? '\\(\\eta = \\frac{\\cos ' + fmt(v.phin) + '^\\circ - ' + fmt(v.mu, 3) + '\\tan ' + fmt(v.lam) + '^\\circ}{\\cos ' + fmt(v.phin) + '^\\circ + ' + fmt(v.mu, 3) + '/\\tan ' + fmt(v.lam) + '^\\circ} = ' + fmt((cos(r(v.phin)) - v.mu * tan(r(v.lam))) / (cos(r(v.phin)) + v.mu / tan(r(v.lam)))) + '\\)' : null },
+            { id: 'WtG0', symbol: '2T_o K_a n_d/D_G', label: 'Gear tangential force, Mott basis', unit: 'lb', kind: 'calc', compute: v => has(v, 'ToC', 'DG', 'Ka', 'nd') ? 2 * v.ToC * v.Ka * v.nd / v.DG : undefined, work: v => has(v, 'ToC', 'DG', 'Ka', 'nd') ? '\\(2(' + fmt(v.ToC) + ')(' + fmt(v.Ka) + ')(' + fmt(v.nd) + ')/' + fmt(v.DG) + ' = ' + fmt(2 * v.ToC * v.Ka * v.nd / v.DG) + '\\) lb' : null },
+            { id: 'WtG', symbol: 'W_{tG}', label: 'Tangential force on gear used below (= WxW)', unit: 'lb', kind: 'calc', compute: v => has(v, 'WtG0', 'basis') ? (v.basis === 'shigley' ? (has(v, 'etaF') ? v.WtG0 / v.etaF : undefined) : v.WtG0) : undefined,
+              work: v => has(v, 'WtG0', 'basis') ? (v.basis === 'shigley' && has(v, 'etaF') ? '\\(W_{tG} = \\frac{33\\,000\\,n_d P_o K_a}{v_{tG}\\,\\eta} = ' + fmt(v.WtG0) + '/' + fmt(v.etaF) + ' = ' + fmt(v.WtG0 / v.etaF) + '\\) lb (Shigley 15-58 / course)' : '\\(W_{tG} = ' + fmt(v.WtG0) + '\\) lb (Mott 10-29)') : null },
             { id: 'den', symbol: '', label: 'cos φn cos λ − μ sin λ (recurs)', kind: 'calc', compute: v => has(v, 'phin', 'lam', 'mu') ? cos(r(v.phin)) * cos(r(v.lam)) - v.mu * sin(r(v.lam)) : undefined },
             { id: 'WxG', symbol: 'W_{xG}', label: 'Axial force on gear (= WtW)', unit: 'lb', kind: 'calc', compute: v => has(v, 'WtG', 'phin', 'lam', 'mu', 'den') ? v.WtG * (cos(r(v.phin)) * sin(r(v.lam)) + v.mu * cos(r(v.lam))) / v.den : undefined,
               work: v => has(v, 'WtG', 'phin', 'lam', 'mu', 'den') ? '\\(W_{xG} = ' + fmt(v.WtG) + '\\left[\\frac{(' + fmt(cos(r(v.phin)), 3) + ')(' + fmt(sin(r(v.lam)), 3) + ') + (' + fmt(v.mu, 3) + ')(' + fmt(cos(r(v.lam)), 3) + ')}{(' + fmt(cos(r(v.phin)), 3) + ')(' + fmt(cos(r(v.lam)), 3) + ') - (' + fmt(v.mu, 3) + ')(' + fmt(sin(r(v.lam)), 3) + ')}\\right] = ' + fmt(v.WtG * (cos(r(v.phin)) * sin(r(v.lam)) + v.mu * cos(r(v.lam))) / v.den) + '\\) lb' : null },
@@ -126,24 +153,28 @@
           vars: [
             { id: 'Wf', symbol: 'W_f', label: 'Friction force', unit: 'lb', kind: 'calc', compute: v => has(v, 'mu', 'WtG', 'den') ? v.mu * v.WtG / v.den : undefined, work: v => has(v, 'mu', 'WtG', 'den') ? '\\(W_f = ' + fmt(v.mu, 3) + '(' + fmt(v.WtG) + ')/' + fmt(v.den, 4) + ' = ' + fmt(v.mu * v.WtG / v.den) + '\\) lb' : null },
             { id: 'PL', symbol: 'P_L', label: 'Power loss due to friction', unit: 'hp', kind: 'calc', compute: v => has(v, 'vs', 'Wf') ? v.vs * v.Wf / 33000 : undefined, work: v => has(v, 'vs', 'Wf') ? '\\(P_L = ' + fmt(v.vs) + '(' + fmt(v.Wf) + ')/33\\,000 = ' + fmt(v.vs * v.Wf / 33000, 3) + '\\) hp' : null },
-            { id: 'Pi', symbol: 'P_i', label: 'Input power', unit: 'hp', kind: 'calc', compute: v => has(v, 'Po', 'PL') ? v.Po + v.PL : undefined },
-            { id: 'eta', symbol: '\\eta', label: 'Efficiency Po/Pi', unit: '%', kind: 'calc', compute: v => has(v, 'Po', 'Pi') ? 100 * v.Po / v.Pi : undefined, work: v => has(v, 'Po', 'Pi') ? '\\(\\eta = ' + fmt(v.Po, 3) + '/' + fmt(v.Pi, 3) + ' = ' + fmt(100 * v.Po / v.Pi, 3) + '\\%\\)' : null },
+            { id: 'PoG', symbol: 'P_G', label: 'Gear power carried by W_tG  (W_tG v_tG/33 000; = Po on the Mott basis, Po·Ka·nd/η on the course basis)', unit: 'hp', kind: 'calc', compute: v => has(v, 'WtG', 'vtG') ? v.WtG * v.vtG / 33000 : undefined, work: v => has(v, 'WtG', 'vtG') ? '\\(P_G = ' + fmt(v.WtG) + '(' + fmt(v.vtG) + ')/33\\,000 = ' + fmt(v.WtG * v.vtG / 33000, 3) + '\\) hp' : null },
+            { id: 'Pi', symbol: 'P_i', label: 'Input power  P_G + P_L', unit: 'hp', kind: 'calc', compute: v => has(v, 'PoG', 'PL') ? v.PoG + v.PL : undefined, work: v => has(v, 'PoG', 'PL') ? '\\(P_i = ' + fmt(v.PoG, 3) + ' + ' + fmt(v.PL, 3) + ' = ' + fmt(v.PoG + v.PL, 3) + '\\) hp' : null },
+            { id: 'eta', symbol: '\\eta', label: 'Efficiency P_G/P_i', unit: '%', kind: 'calc', compute: v => has(v, 'PoG', 'Pi') ? 100 * v.PoG / v.Pi : undefined, work: v => has(v, 'PoG', 'Pi') ? '\\(\\eta = ' + fmt(v.PoG, 3) + '/' + fmt(v.Pi, 3) + ' = ' + fmt(100 * v.PoG / v.Pi, 3) + '\\%\\)' : null },
             { id: 'eta2', symbol: '\\eta_{(10\\text{-}36)}', label: 'Efficiency from Eq. 10-36 (check)', unit: '%', kind: 'calc', compute: v => has(v, 'phin', 'mu', 'lam') ? 100 * (cos(r(v.phin)) - v.mu * tan(r(v.lam))) / (cos(r(v.phin)) + v.mu / tan(r(v.lam))) : undefined },
           ] },
       ] },
 
       { title: '11-15 · Bending stress in the wormgear teeth (Sec. 10-11)', steps: [
-        { id: 's', title: 'Lewis form factor, normal pitch, dynamic load, stress', eq: '10-37 … 10-41', fig: ['t10-5'],
-          formula: 'p_n = p\\cos\\lambda,\\quad K_v = \\frac{1200}{1200 + v_{tG}},\\quad W_d = \\frac{W_{tG}}{K_v},\\quad \\sigma = \\frac{W_d}{y\\,F\\,p_n}',
-          text: 'Compare σ with the gear material fatigue strength: manganese bronze 17 000 psi, phosphor bronze 24 000 psi, cast iron ≈ 0.35 s<sub>u</sub>. Use the actual face width up to 2/3 D<sub>W</sub>.',
+        { id: 's', title: 'Lewis form factor, normal pitch, dynamic load, stress', eq: '10-37 … 10-41', fig: ['t10-5', 'cbend'],
+          formula: 'p_n = p\\cos\\lambda,\\quad K_v = \\frac{1200}{1200 + v_{tG}},\\quad W_d = \\frac{W_{tG}}{K_v},\\quad \\sigma = \\frac{W_d}{y\\,F_e\\,p_n}\\qquad\\left(\\text{Shigley 15-53: } \\sigma_a = \\frac{W_{tG}}{p_n F_e y}\\right)',
+          text: 'Course (Worm Gears s19): y = 0.125 for φ<sub>n</sub> = 20° (Table 10-5); compare with the fatigue strength of the gear material, <b>σ<sub>all</sub> = 24 000 psi for bronze gears</b> (phosphor bronze, most common; manganese bronze 17 000; cast iron ≈ 0.35 s<sub>u</sub>). "Mott uses a modified dynamic load" — the course shows both the Shigley value (no K<sub>v</sub>) and Mott\'s; Mott\'s is the governing (more conservative) one here. Face width capped at F<sub>e</sub> = 0.67 D<sub>W</sub>.',
           vars: [
-            { id: 'y', symbol: 'y', label: 'Lewis form factor', kind: 'lookup', fig: 't10-5', auto: v => has(v, 'phin') ? (v.phin < 17 ? 0.100 : v.phin < 22.5 ? 0.125 : v.phin < 27.5 ? 0.150 : 0.175) : undefined, hint: 'Table 10-5 by φn (14.5° 0.100, 20° 0.125, 25° 0.150, 30° 0.175)' },
+            { id: 'y', symbol: 'y', label: 'Lewis form factor', kind: 'lookup', fig: 't10-5', auto: v => has(v, 'phin') ? (v.phin < 17 ? 0.100 : v.phin < 22.5 ? 0.125 : v.phin < 27.5 ? 0.150 : 0.175) : undefined, hint: 'Table 10-5 by φn (14.5° 0.100, 20° 0.125 course, 25° 0.150, 30° 0.175)' },
             { id: 'pn', symbol: 'p_n', label: 'Normal circular pitch', unit: 'in', kind: 'calc', compute: v => has(v, 'p', 'lam') ? v.p * cos(r(v.lam)) : undefined, work: v => has(v, 'p', 'lam') ? '\\(p_n = ' + fmt(v.p) + '\\cos ' + fmt(v.lam) + '^\\circ = ' + fmt(v.p * cos(r(v.lam))) + '\\) in' : null },
             { id: 'Kv', symbol: 'K_v', label: 'Dynamic factor', kind: 'calc', compute: v => has(v, 'vtG') ? 1200 / (1200 + v.vtG) : undefined, work: v => has(v, 'vtG') ? '\\(K_v = 1200/(1200 + ' + fmt(v.vtG) + ') = ' + fmt(1200 / (1200 + v.vtG), 3) + '\\)' : null },
             { id: 'Wd', symbol: 'W_d', label: 'Dynamic load', unit: 'lb', kind: 'calc', compute: v => has(v, 'WtG', 'Kv') ? v.WtG / v.Kv : undefined },
-            { id: 'sig', symbol: '\\sigma', label: 'Bending stress in gear teeth', unit: 'psi', kind: 'calc', compute: v => has(v, 'Wd', 'y', 'F', 'pn') ? v.Wd / (v.y * v.F * v.pn) : undefined,
-              work: v => has(v, 'Wd', 'y', 'F', 'pn') ? '\\(\\sigma = \\frac{' + fmt(v.Wd) + '}{(' + fmt(v.y, 3) + ')(' + fmt(v.F) + ')(' + fmt(v.pn) + ')} = ' + fmt(v.Wd / (v.y * v.F * v.pn), 5) + '\\) psi' : null },
-            { id: 'sall', symbol: '\\sigma_{all}', label: 'Fatigue strength of gear material', unit: 'psi', kind: 'input', default: 24000, hint: '24 000 phosphor bronze; 17 000 manganese bronze' },
+            { id: 'FeB', symbol: 'F_e', label: 'Effective face width min(F, 0.67 DW)', unit: 'in', kind: 'calc', compute: v => has(v, 'F', 'DW') ? Math.min(v.F, 0.67 * v.DW) : undefined },
+            { id: 'sig', symbol: '\\sigma', label: 'Bending stress in gear teeth (Mott, dynamic load)', unit: 'psi', kind: 'calc', compute: v => has(v, 'Wd', 'y', 'FeB', 'pn') ? v.Wd / (v.y * v.FeB * v.pn) : undefined,
+              work: v => has(v, 'Wd', 'y', 'FeB', 'pn') ? '\\(\\sigma = \\frac{' + fmt(v.Wd) + '}{(' + fmt(v.y, 3) + ')(' + fmt(v.FeB) + ')(' + fmt(v.pn) + ')} = ' + fmt(v.Wd / (v.y * v.FeB * v.pn), 5) + '\\) psi' : null },
+            { id: 'sigS', symbol: '\\sigma_a', label: 'Bending stress, Shigley Eq. 15-53 form (no Kv)', unit: 'psi', kind: 'calc', compute: v => has(v, 'WtG', 'y', 'FeB', 'pn') ? v.WtG / (v.y * v.FeB * v.pn) : undefined,
+              work: v => has(v, 'WtG', 'y', 'FeB', 'pn') ? '\\(\\sigma_a = \\frac{' + fmt(v.WtG) + '}{' + fmt(v.pn) + '(' + fmt(v.FeB) + ')(' + fmt(v.y, 3) + ')} = ' + fmt(v.WtG / (v.y * v.FeB * v.pn), 5) + '\\) psi' : null },
+            { id: 'sall', symbol: '\\sigma_{all}', label: 'Fatigue strength of gear material', unit: 'psi', kind: 'input', default: 24000, hint: '24 000 phosphor bronze (course default); 17 000 manganese bronze' },
             { id: 'FSb', symbol: 'FS', label: 'Bending safety factor σall/σ', kind: 'calc', compute: v => has(v, 'sall', 'sig') ? v.sall / v.sig : undefined },
           ],
           after: v => has(v, 'FSb') ? (v.FSb >= 1 ? '<span class="result-ok">Bending OK — σ = ' + fmt(v.sig, 4) + ' psi ≤ ' + fmt(v.sall, 4) + ' psi (FS = ' + fmt(v.FSb, 3) + ')</span>' : '<span class="result-bad">Bending FAIL — σ = ' + fmt(v.sig, 4) + ' psi &gt; ' + fmt(v.sall, 4) + ' psi</span>') : '' },
@@ -178,7 +209,34 @@
               : '<b><span class="result-bad">DESIGN NOT SATISFACTORY for pitting</span></b> — W<sub>tR</sub> = ' + fmt(v.WtR) + ' lb ≤ W<sub>tG</sub> = ' + fmt(v.WtG) + ' lb: use a larger gear, wider face (up to 0.67 D<sub>W</sub>) or a better bronze';
             if (has(v, 'FSb')) s += '; bending ' + (v.FSb >= 1 ? 'OK' : 'FAIL') + ' (σ = ' + fmt(v.sig, 4) + ' psi)';
             if (has(v, 'eta')) s += '; efficiency ' + fmt(v.eta, 3) + ' %, input ' + fmt(v.Pi, 3) + ' hp for ' + fmt(v.Po, 3) + ' hp out';
+            if (has(v, 'ts', 'tmax')) s += '; thermal ' + (v.ts <= v.tmax ? 'OK' : 'FAIL') + ' (t_s = ' + fmt(v.ts) + ' °F)';
             return s + '.';
+          } },
+      ] },
+
+      { title: 'Heat dissipation (course add-on from Shigley Eqs. 15-49 … 15-52; not in Mott)', steps: [
+        { id: 'heat', title: 'Heat loss, case area and oil-sump temperature', fig: ['cheat'],
+          formula: 'H_{loss} = 33\\,000(1-\\eta)P_i,\\quad \\hbar_{CR} = \\begin{cases}n_W/6494 + 0.13 & \\text{no fan}\\\\ n_W/3939 + 0.13 & \\text{fan on worm shaft}\\end{cases},\\quad t_s = t_a + \\frac{H_{loss}}{\\hbar_{CR}A},\\quad A_{min} = 43.20C^{1.7}',
+          text: 'P<sub>i</sub> is the input power from steps 7-10. A is the <b>total</b> lateral case area in in² (course example: 850 in² per side → 1700). Course: "better to assume no fan"; lubricant limit 250 °F (120 °C).',
+          vars: [
+            { id: 'fan', symbol: '', label: 'Cooling', kind: 'choice', options: [{ label: 'No fan on worm shaft (course default)', value: 0 }, { label: 'Fan on worm shaft', value: 1 }], default: 0 },
+            { id: 'A', symbol: 'A', label: 'Case lateral area (total)', unit: 'in²', kind: 'input', hint: 'blank → use Amin' },
+            { id: 'ta', symbol: 't_a', label: 'Ambient temperature', unit: '°F', kind: 'input', default: 70 },
+            { id: 'tmax', symbol: 't_{max}', label: 'Oil temperature limit', unit: '°F', kind: 'input', default: 250, hint: 'course: 250 °F (120 °C); 200 °F conservative' },
+            { id: 'Hloss', symbol: 'H_{loss}', label: 'Heat loss rate', unit: 'ft·lb/min', kind: 'calc', compute: v => has(v, 'eta', 'Pi') ? 33000 * (1 - v.eta / 100) * v.Pi : undefined,
+              work: v => has(v, 'eta', 'Pi') ? '\\(H_{loss} = 33\\,000(1 - ' + fmt(v.eta / 100, 3) + ')(' + fmt(v.Pi, 3) + ') = ' + fmt(33000 * (1 - v.eta / 100) * v.Pi, 5) + '\\) ft·lb/min' : null },
+            { id: 'hcr', symbol: '\\hbar_{CR}', label: 'Combined heat-transfer coefficient', unit: 'ft·lb/(min·in²·°F)', kind: 'calc', compute: v => has(v, 'nW', 'fan') ? v.nW / (v.fan ? 3939 : 6494) + 0.13 : undefined,
+              work: v => has(v, 'nW', 'fan') ? '\\(\\hbar_{CR} = ' + fmt(v.nW) + '/' + (v.fan ? 3939 : 6494) + ' + 0.13 = ' + fmt(v.nW / (v.fan ? 3939 : 6494) + 0.13, 3) + '\\)' : null },
+            { id: 'Amin', symbol: 'A_{min}', label: 'AGMA minimum lateral area', unit: 'in²', kind: 'calc', compute: v => has(v, 'C') ? 43.2 * Math.pow(v.C, 1.7) : undefined, work: v => has(v, 'C') ? '\\(A_{min} = 43.2(' + fmt(v.C) + ')^{1.7} = ' + fmt(43.2 * Math.pow(v.C, 1.7)) + '\\) in²' : null },
+            { id: 'Ause', symbol: 'A_{used}', label: 'Area used in the balance', unit: 'in²', kind: 'calc', compute: v => has(v, 'A') ? v.A : (has(v, 'Amin') ? v.Amin : undefined) },
+            { id: 'ts', symbol: 't_s', label: 'Oil sump temperature', unit: '°F', kind: 'calc', compute: v => has(v, 'ta', 'Hloss', 'hcr', 'Ause') ? v.ta + v.Hloss / (v.hcr * v.Ause) : undefined,
+              work: v => has(v, 'ta', 'Hloss', 'hcr', 'Ause') ? '\\(t_s = ' + fmt(v.ta) + ' + \\frac{' + fmt(v.Hloss, 5) + '}{' + fmt(v.hcr, 3) + '(' + fmt(v.Ause) + ')} = ' + fmt(v.ta + v.Hloss / (v.hcr * v.Ause)) + '^\\circ\\)F' : null },
+          ],
+          after: v => {
+            if (!has(v, 'ts', 'tmax')) return '';
+            let s = v.ts <= v.tmax ? '<span class="result-ok">Thermal OK — t<sub>s</sub> = ' + fmt(v.ts) + ' °F ≤ ' + fmt(v.tmax) + ' °F</span>' : '<span class="result-bad">Thermal problem — t<sub>s</sub> = ' + fmt(v.ts) + ' °F &gt; ' + fmt(v.tmax) + ' °F: add a fan, more case area or external cooling</span>';
+            if (has(v, 'A', 'Amin') && v.A < v.Amin) s += ' <span class="result-bad">(case area ' + fmt(v.A) + ' in² is below AGMA A<sub>min</sub> = ' + fmt(v.Amin) + ' in²)</span>';
+            return s;
           } },
       ] },
     ],

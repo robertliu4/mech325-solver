@@ -1,3 +1,7 @@
+// Power screws — Shigley Ch. 8-1 / 8-2 (Fizz §5.1 sizing procedure from Mott Table 17-1; Example 8-1)
+// Course alignment (v2/COURSE_CONVENTIONS.md §14): the Module 5 reading guide requires Shigley 8-1, 8-2 (power-screw torque, efficiency,
+// body and thread stresses) "or Mott 17-2". No course worked numbers exist, so textbook defaults apply (f ≈ 0.10–0.15, fc = 0 for a rolling
+// thrust bearing, first-thread load share 0.38 F). The `example` is Shigley Example 8-1 (32 × 4 mm double-start square thread, 6.4 kN).
 const TB = v => (v.Tbody !== undefined ? v.Tbody : v.TRt);
 window.TOPIC = {
   id: 'power_screws', book: 'shigley',
@@ -6,7 +10,7 @@ window.TOPIC = {
   sibling: 'power_screws_mott.html',
   intro: 'Sizes a power screw (square / Acme / trapezoidal) and then finds the raising &amp; lowering torque, collar torque, self-locking, efficiency, speed/power and the Shigley thread-root stresses (Eqs. 8-1 … 8-12). '
     + 'Steps 1–3 are the Fizz guide sizing procedure (pick a screw from the Acme table so that \\(A_t\\) is enough, then the nut length from the shear area). '
-    + 'Work in <b>one consistent unit system</b>: lbf-in-psi <i>or</i> N-mm-MPa. Torques come out in lbf·in or N·mm. Leave the sizing inputs blank if the screw is already specified.',
+    + 'Work in <b>one consistent unit system</b>: lbf-in-psi <i>or</i> N-mm-MPa. Torques come out in lbf·in or N·mm. Leave the sizing inputs blank if the screw is already specified. <b>Course note:</b> MECH 325 provides only the Module 5 reading guide (Shigley 8-1, 8-2 or Mott 17-2) and no worked numbers for power screws, so the textbook defaults apply unchanged.',
   example: { F: 6400, thread: 0, d: 32, p: 4, ns: 2, f: 0.08, fc: 0.08, dc: 40, nt: 1, share: 0.38, units: 'SI' },
 
   figures: [

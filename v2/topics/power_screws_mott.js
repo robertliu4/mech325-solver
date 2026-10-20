@@ -1,10 +1,14 @@
+// Power screws — Mott Ch. 17-2 (Fizz §5.1 seven-step procedure; Example Problems 17-1 / 17-2)
+// Course alignment (v2/COURSE_CONVENTIONS.md §14): the Module 5 reading guide lists Mott 17-2 as the alternative to Shigley 8-1/8-2 for
+// power-screw torque, efficiency and power. No course worked numbers exist, so textbook defaults apply (f = 0.15 lubricated steel/steel,
+// fc = 0 with a rolling thrust bearing, nut length rounded up to ¼ in). The `example` is Mott Example 17-1/17-2 (12 500 lb, 1½-4 Acme).
 window.TOPIC = {
   id: 'power_screws', book: 'mott',
   title: 'Power Screws — Selection, Torque & Efficiency',
   subtitle: 'Mott Ch. 17-2 · Fizz guide §5.1 procedure (Example Problems 17-1 / 17-2)',
   sibling: 'power_screws_shigley.html',
   intro: 'The Fizz-guide 7-step power-screw procedure, which is Mott Example Problems 17-1 and 17-2: size the screw from the tensile-stress area (Table 17-1 / 17-1M), size the nut from the thread shear area, then lead angle (Eq. 17-3), raising / lowering torque (Eqs. 17-8 … 17-11, plus the Fizz collar term), self-locking (Eq. 17-5), efficiency (Eq. 17-7) and the speed / power relation \\(P = Tn/63\\,000\\). '
-    + 'US units (lbf, in, psi, lbf·in, hp) as in Mott; for metric trapezoidal screws use N, mm, MPa and the SI power option. Mott does not give thread-root stresses — see the Shigley version for those.',
+    + 'US units (lbf, in, psi, lbf·in, hp) as in Mott; for metric trapezoidal screws use N, mm, MPa and the SI power option. Mott does not give thread-root stresses — see the Shigley version for those. <b>Course note:</b> MECH 325 provides only the Module 5 reading guide (Mott 17-2 or Shigley 8-1/8-2) and no worked numbers for power screws, so the textbook defaults apply unchanged.',
   example: { F: 12500, sigd: 10000, taud: 5000, thread: 14.5, f: 0.15, Atsel: 1.266, Asr: 2.341, D: 1.5, tpi: 4, Dp: 1.3429, Dr: 1.1965, ns: 1, fc: 0, units: 'US', Vreq: 1.25 },
 
   figures: [
@@ -35,14 +39,14 @@ window.TOPIC = {
         vars: [
           { id: 'Atreq', symbol: 'A_{t,req}', label: 'Required tensile-stress area', unit: 'in² (mm²)', kind: 'calc', compute: v => H.has(v, 'F', 'sigd') ? v.F / v.sigd : undefined,
             work: v => H.has(v, 'F', 'sigd') ? '\\(A_{t,req} = \\dfrac{' + H.fmt(v.F) + '}{' + H.fmt(v.sigd) + '} = ' + H.fmt(v.F / v.sigd) + '\\)' : null },
-          { id: 'D', symbol: 'D', label: 'Nominal major diameter', unit: 'in (mm)', kind: 'lookup', fig: 'table17-1' },
+          { id: 'D', symbol: 'D', label: 'Nominal major diameter', unit: 'in (mm)', kind: 'lookup', fig: 'table17-1', hint: 'first Table 17-1 / 17-1M row with At ≥ required' },
           { id: 'tpi', symbol: 'n', label: 'Threads per inch', unit: 'tpi', kind: 'lookup', fig: 'table17-1', hint: 'US only; metric: enter pitch directly below' },
           { id: 'p', symbol: 'p', label: 'Pitch', unit: 'in (mm)', kind: 'lookup', fig: 'table17-1', hint: 'auto = 1/n', auto: v => H.has(v, 'tpi') && v.tpi > 0 ? 1 / v.tpi : undefined },
-          { id: 'Dr', symbol: 'D_r', label: 'Minimum minor diameter', unit: 'in (mm)', kind: 'lookup', fig: 'table17-1' },
-          { id: 'Dp', symbol: 'D_p', label: 'Minimum pitch diameter', unit: 'in (mm)', kind: 'lookup', fig: 'table17-1' },
+          { id: 'Dr', symbol: 'D_r', label: 'Minimum minor diameter', unit: 'in (mm)', kind: 'lookup', fig: 'table17-1', hint: 'same table row (1½-4 Acme: 1.1965 in)' },
+          { id: 'Dp', symbol: 'D_p', label: 'Minimum pitch diameter', unit: 'in (mm)', kind: 'lookup', fig: 'table17-1', hint: 'same table row (1½-4 Acme: 1.3429 in)' },
           { id: 'Atsel', symbol: 'A_t', label: 'Tensile-stress area (table)', unit: 'in² (mm²)', kind: 'lookup', fig: 'table17-1', hint: 'auto = Eq. 17-1 from Dr, Dp', auto: v => H.has(v, 'Dr', 'Dp') ? Math.PI / 4 * Math.pow((v.Dr + v.Dp) / 2, 2) : undefined,
             check: v => (H.has(v, 'Atsel', 'Atreq') && v.Atsel < v.Atreq) ? 'At < required — choose the next larger screw' : null },
-          { id: 'Asr', symbol: 'A_s', label: 'Shear-stress area per inch of nut', unit: 'in²/in', kind: 'lookup', fig: 'table17-1' },
+          { id: 'Asr', symbol: 'A_s', label: 'Shear-stress area per inch of nut', unit: 'in²/in', kind: 'lookup', fig: 'table17-1', hint: 'last column of Table 17-1 (US only; 1½-4: 2.341)' },
         ],
         after: v => H.has(v, 'Atsel', 'Atreq') ? (v.Atsel >= v.Atreq ? '<span class="result-ok">Screw OK in tension: A<sub>t</sub> = ' + H.fmt(v.Atsel) + ' ≥ ' + H.fmt(v.Atreq) + '.</span>' : '<span class="result-bad">Too small in tension.</span>') : '' },
       { id: 'nut', title: 'Nut / yoke length from thread shear', formula: 'A_{s,req} = \\frac{F}{\\tau_d} \\qquad h = A_{s,req}\\left[\\frac{1.0\\ \\text{in}}{A_s}\\right]', fig: ['table17-1'],
@@ -118,8 +122,12 @@ window.TOPIC = {
         ],
         after: v => {
           if (v.Tu === undefined) return '';
-          let s = '<b>Result:</b> ' + (H.has(v, 'D') ? H.fmt(v.D) + '-in screw, ' : '') + 'T<sub>u</sub> = ' + H.fmt(v.Tut) + ', T<sub>d</sub> = ' + H.fmt(v.Tdt) + (v.e !== undefined ? ', e = ' + H.fmt(100 * v.e, 3) + ' %' : '') + (v.P !== undefined ? ', P = ' + H.fmt(v.P) + (v.units === 'SI' ? ' kW' : ' hp') + ' at ' + H.fmt(v.n) + ' rpm' : '') + '.';
-          if (H.has(v, 'Pin', 'P') && v.P > v.Pin) s += ' <span class="result-bad">Required power exceeds the available ' + H.fmt(v.Pin) + '.</span>';
+          const okA = !H.has(v, 'Atsel', 'Atreq') || v.Atsel >= v.Atreq; const okSL = !H.has(v, 'f', 'tanlam') || v.f > v.tanlam; const okP = !H.has(v, 'Pin', 'P') || v.P <= v.Pin; const okN = !H.has(v, 'h', 'hr') || v.hr >= v.h;
+          const ok = okA && okSL && okP && okN;
+          let s = (ok ? '<span class="result-ok"><b>PASS</b></span> — ' : '<span class="result-bad"><b>FAIL</b></span> — ') + (H.has(v, 'D') ? H.fmt(v.D) + '-in screw' + (H.has(v, 'tpi') ? ', ' + H.fmt(v.tpi) + ' tpi' : '') + (H.has(v, 'hr') ? ', nut ' + H.fmt(v.hr) + ' in' : '') + ': ' : '') + 'T<sub>u</sub> = ' + H.fmt(v.Tut) + ', T<sub>d</sub> = ' + H.fmt(v.Tdt) + (v.e !== undefined ? ', e = ' + H.fmt(100 * v.e, 3) + ' %' : '') + (v.P !== undefined ? ', P = ' + H.fmt(v.P) + (v.units === 'SI' ? ' kW' : ' hp') + ' at ' + H.fmt(v.n) + ' rpm' : '') + '.';
+          if (!okA) s += ' <span class="result-bad">Tensile-stress area too small — larger screw.</span>';
+          if (!okSL) s += ' <span class="result-bad">Not self-locking (f ≤ tan λ).</span>';
+          if (!okP) s += ' <span class="result-bad">Required power exceeds the available ' + H.fmt(v.Pin) + '.</span>';
           return s; } },
     ] },
   ],

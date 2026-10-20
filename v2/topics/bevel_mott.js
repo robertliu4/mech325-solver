@@ -1,5 +1,14 @@
 /* Straight bevel gears — Mott 6e (Sec. 8-8 geometry Table 8-8, Sec. 10-6/10-7 forces, Sec. 10-9 AGMA 2003 stresses).
- * Merged Fizz bible pp 59-68 + Mech bible pp 68-72, 98-106 procedure, in Mott notation. */
+ * Merged Fizz bible pp 59-68 + Mech bible pp 68-72, 98-106 procedure, in Mott notation.
+ * Defaults follow the UBC MECH 325 course conventions (v2/COURSE_CONVENTIONS.md §0, §6, §9 — Helical_Bevel_…_2025 slides s14–s30, which
+ *   quote Mott Fig 10-8/10-9/10-15 and Eq 10-17/10-21 beside Shigley Ch 15): forces at r_m, strength Wt = 2T/d at the large end,
+ *   Ks = 0.4867 + 0.2133/Pd, Km = Kmb + 0.0036F², Kx = 1 (absent in Mott), Cs = 0.125F + 0.4375, Cxc = 1.5 commercial, Cp = 2300,
+ *   KT = 1, KR = 1 at 99 % with CR = √KR (Table 10-3), KL/CL on the commercial lines of Fig 10-16/10-20, no KB, SF = SH = 1 to rate power.
+ * Verified against: Gear Trains Tutorial 4 Q2 / Tutorial 5 (S 15-1/15-2: uncrowned 20/60 T, Pd 6, Qv 6 → Av 11, 300 HB, F 1.25,
+ *   900 rpm, 10^9 pinion rev, R 0.999, pinion outboard + gear straddle, Ko = SF = 1; no numeric course answer — same numbers as the
+ *   Shigley sheet): d 3.333, vt 785.4, Kv 1.374, Ks 0.5222, Km 1.106, KLP 0.9376, KLG 0.9561, KR 1.25, CR 1.12, sat 15 300 psi;
+ *   JP 0.235 / JG 0.215 → bending rating 16.9 / 15.7 hp; Cs 0.5938, Cxc 2, I 0.083, CL 1.000, sac 125 920 → wear rating 10.9 hp
+ *   (CR = 1.12 from Table 10-3 vs √1.25 = 1.118) → gearset rated ≈ 11 hp, wear-limited. */
 (function () {
   const r = d => d * Math.PI / 180, fmt = (x, d) => H.fmt(x, d);
   const has = (v, ...a) => H.has(v, ...a);
@@ -10,7 +19,7 @@
     title: 'Straight Bevel Gears — Geometry, Forces & AGMA Stress',
     subtitle: 'Mott Ch. 8 (Table 8-8 geometry) & Ch. 10 (Secs. 10-6 … 10-9, AGMA 2003-C10) · merged Fizz + Mech guide procedure',
     sibling: 'bevel_shigley.html',
-    intro: 'Straight bevel gears on 90° shafts, Mott\'s way. Enter the drive data, then: full Table 8-8 geometry (cone angles, cone distance, face width range, mean addenda/dedenda, outside diameters) → forces at the mean radius r<sub>m</sub> with directions (Fig. 10-8) → bending stress number s<sub>t</sub> (Eq. 10-14) and contact stress number s<sub>c</sub> (Eq. 10-19) → required allowable stresses s<sub>at</sub>, s<sub>ac</sub> (Eqs. 10-18, 10-22) → required Brinell hardness (Figs. 10-17, 10-21) and, if a material is given, the actual safety factors. Yellow cells are chart/table lookups with an auto-estimate from the textbook equations; confirm by reading the figure. Load the example to reproduce Mott Example Problems 8-3 and 10-4 … 10-8 (16T/48T, P<sub>d</sub> = 8, 2.5 hp at 600 rpm).',
+    intro: 'Straight bevel gears on 90° shafts, Mott\'s way. Enter the drive data, then: full Table 8-8 geometry (cone angles, cone distance, face width range, mean addenda/dedenda, outside diameters) → forces at the mean radius r<sub>m</sub> with directions (Fig. 10-8) → bending stress number s<sub>t</sub> (Eq. 10-14) and contact stress number s<sub>c</sub> (Eq. 10-19) → required allowable stresses s<sub>at</sub>, s<sub>ac</sub> (Eqs. 10-18, 10-22) → required Brinell hardness (Figs. 10-17, 10-21) and, if a material is given, the actual safety factors. Yellow cells are chart/table lookups with an auto-estimate from the textbook equations; confirm by reading the figure. <b>Defaults are the MECH 325 course assumptions</b> (Helical_Bevel_and_Plastic_Gears_2025 slides s14–s30, Gear Trains Tutorials 4/5, which use Shigley Ch. 15 with Mott\'s charts accepted): forces at the mean radius, strength with W<sub>t</sub> = 2T/d at the large end, K<sub>s</sub> = 0.4867 + 0.2133/P<sub>d</sub>, K<sub>m</sub> = K<sub>mb</sub> + 0.0036F², K<sub>x</sub> = 1, no K<sub>B</sub>, C<sub>s</sub> = 0.125F + 0.4375, C<sub>xc</sub> = 1.5 for commercial (crowned) gears, C<sub>p</sub> = 2300 √psi, K<sub>T</sub> = 1, K<sub>R</sub> = 1 at 99 % with C<sub>R</sub> = √K<sub>R</sub>, K<sub>L</sub>/C<sub>L</sub> on the "commercial gears" lines of Figs. 10-16/10-20, C<sub>H</sub> = 1, and SF = 1 to find the <b>power rating</b> (last section). Load the example to reproduce Mott Example Problems 8-3 and 10-4 … 10-8 (16T/48T, P<sub>d</sub> = 8, 2.5 hp at 600 rpm); the Tutorial 5 case (20T/60T, P<sub>d</sub> = 6, A<sub>v</sub> = 11, 300 HB, 10<sup>9</sup> rev, R = 0.999) is in the header comment of the topic file.',
     example: { P: 2.5, nP: 600, NP: 16, NG: 48, Pd: 8, F: 1.0, phi: 20, Ko: 1.5, Av: 11, Kmb: 1.0, Cxc: 1.5, SF: 1, R: 0.99, Lh: 15000, Cp: 2300, JP: 0.230, I: 0.077, Cs: 0.56, grade: 1, HB: 269 },
 
     figures: [
@@ -35,6 +44,12 @@
       { id: 'f10-19', ref: 'Figure 10-19', title: 'Pitting geometry factor I for straight bevel gears', src: 'figures/mott/fig10-19.png', page: 468, note: 'Ordinate = pinion teeth, curves = gear teeth, read I on the abscissa.' },
       { id: 'f10-20', ref: 'Figure 10-20', title: 'Contact stress-cycle factor CL (bevel — differs from spur ZN)', src: 'figures/mott/fig10-20.png', page: 470, note: 'CL = 3.4822 NL^-0.0602 for NL ≥ 1e4; 2.0 below.' },
       { id: 'f10-21', ref: 'Figure 10-21', title: 'Allowable contact stress number sac vs HB (through-hardened, bevel)', src: 'figures/mott/fig10-21.png', page: 470, note: 'Grade 1: sac = 0.341 HB + 23.62 ksi → HB = (sac − 23.62)/0.341. Grade 2: 0.3636 HB + 29.56 ksi. NOT the spur chart (Fig. 9-19).' },
+      // ---- course-only slides (Helical_Bevel_and_Plastic_Gears_with_Materials_Review_2025.pdf) ----
+      { id: 'cwt', ref: 'Helical/Bevel s18', book: 'course', title: 'Bevel bending road map and Ko table, with the course note: forces at the average diameter, strength with Wt = 2T/d at the large end', src: 'figures/course/bevel_ko_wt_large_end.png', note: 'Course Ko table (Shigley Table 15-2) is "slightly higher than spur gears"; Mott Table 9-1 is accepted too. Tutorials use Ko = 1.0.' },
+      { id: 'cks', ref: 'Helical/Bevel s21', book: 'course', title: 'Bevel size, load-distribution and curvature factors Ks, Km, Kx (course slide reproducing Mott Figs. 10-13/10-14)', src: 'figures/course/bevel_ks_km_kx_course.png', note: 'Ks = 0.4867 + 0.2133/Pd, Km = Kmb + 0.0036F² with Kmb = 1.00 / 1.10 / 1.25, Kx = 1.0 for straight bevel.' },
+      { id: 'ckl', ref: 'Helical/Bevel s23', book: 'course', title: 'Bevel stress-cycle factor KL — "use this line for commercial gears"; KT = 1, KR = 1 at 99 %; no KB', src: 'figures/course/bevel_kl_course.png', note: 'KL = 6.1514 NL^-0.1192 up to ~3×10^6, then 1.3558 NL^-0.0178 (commercial); 1.683 NL^-0.0323 is for critical applications only.' },
+      { id: 'ccs', ref: 'Helical/Bevel s26', book: 'course', title: 'Bevel pitting size factor Cs and crowning factor Cxc — "use Cxc = 1.5 for commercial gears"', src: 'figures/course/bevel_cs_cxc_course.png', note: 'Cs = 0.5 (F < 0.5 in), 0.125F + 0.4375 (0.5 ≤ F ≤ 4.5 in); the Mott chart (mm) caps at 0.83 above 80 mm. Cxc = 1.5 crowned, 2.0 uncrowned.' },
+      { id: 'ccr', ref: 'Helical/Bevel s29', book: 'course', title: 'Bevel contact-stress reliability factor CR = √KR (Table 10-3 / Shigley 15-3), KT = 1 below 250 °F', src: 'figures/course/bevel_cr_course.png' },
     ],
 
     sections: [
@@ -108,8 +123,8 @@
           ] },
       ] },
 
-      { title: '3 · Forces on straight bevel gears (Sec. 10-6, Eqs. 10-10 … 10-13)', text: 'For shaft and bearing analysis the forces act at the <b>mid-face</b> (mean radius r<sub>m</sub>, R<sub>m</sub>). The stress analysis in section 4 uses W<sub>t</sub> at the outer pitch radius instead (33 000P/v<sub>t</sub>); the difference is absorbed by J and I. Both bibles note the two W<sub>t</sub> formulas differ — use r<sub>m</sub> for forces, pitch diameter for stress.', steps: [
-        { id: 'fp', title: 'Pinion forces', eq: '10-10 … 10-13', fig: ['f10-8'],
+      { title: '3 · Forces on straight bevel gears (Sec. 10-6, Eqs. 10-10 … 10-13)', text: 'For shaft and bearing analysis the forces act at the <b>mid-face</b> (mean radius r<sub>m</sub>, R<sub>m</sub>) — the course rule "forces at the average radius" (Gear Kinematics s33–34). The stress analysis in section 4 uses W<sub>t</sub> = 2T/d at the outer pitch radius instead (Helical/Bevel s18); the difference is absorbed by J and I. Both bibles note the two W<sub>t</sub> formulas differ — use r<sub>m</sub> for forces, pitch diameter for stress.', steps: [
+        { id: 'fp', title: 'Pinion forces', eq: '10-10 … 10-13', fig: ['f10-8', 'cwt'],
           formula: 'T_P = \\frac{63\\,000P}{n_P},\\quad r_m = \\frac{d}{2} - \\frac{F}{2}\\sin\\gamma,\\quad W_{tP} = \\frac{T_P}{r_m},\\quad W_{rP} = W_t\\tan\\phi\\cos\\gamma,\\quad W_{xP} = W_t\\tan\\phi\\sin\\gamma',
           text: '<b>Directions:</b> W<sub>t</sub> on the driven gear is in its direction of motion at the mesh (on the driving pinion it opposes motion). W<sub>r</sub> points toward the gear\'s own axis (causes shaft bending). W<sub>x</sub> is parallel to the axis and pushes the gear <i>away from its mate / away from the cone apex</i> — a thrust load for one bearing, and it also produces a moment W<sub>x</sub>·r<sub>m</sub> on the shaft. Pinion and gear forces are action-reaction pairs: W<sub>rP</sub> = W<sub>xG</sub>, W<sub>xP</sub> = W<sub>rG</sub>.',
           vars: [
@@ -137,17 +152,19 @@
       ] },
 
       { title: '4 · Bending stress number s_t (Sec. 10-9, Eq. 10-14) — Mech bible steps 1-10', steps: [
-        { id: 's1', title: 'Transmitted load and pitch-line speed (at the outer pitch diameter)', fig: ['t9-1'],
+        { id: 's1', title: 'Transmitted load and pitch-line speed (at the outer pitch diameter)', fig: ['t9-1', 'cwt'],
           formula: 'v_t = \\frac{\\pi d\\, n_P}{12},\\qquad W_t = \\frac{33\\,000P}{v_t} = \\frac{T_P}{d/2}',
+          text: 'Course convention (Helical/Bevel s18): the AGMA stress numbers use W<sub>t</sub> = 2T/d at the <b>large end</b>, not the mid-face force of section 3. K<sub>o</sub>: Mott Table 9-1 or the course/Shigley bevel table (slightly higher); tutorials use 1.0.',
           vars: [
             { id: 'vt', symbol: 'v_t', label: 'Pitch-line speed', unit: 'ft/min', kind: 'calc', compute: v => has(v, 'd', 'nP') ? Math.PI * v.d * v.nP / 12 : undefined,
               work: v => has(v, 'd', 'nP') ? '\\(v_t = \\pi(' + fmt(v.d) + ')(' + fmt(v.nP) + ')/12 = ' + fmt(Math.PI * v.d * v.nP / 12) + '\\) ft/min' : null },
             { id: 'Wt', symbol: 'W_t', label: 'Transmitted load for stress', unit: 'lb', kind: 'calc', compute: v => has(v, 'P', 'vt') ? 33000 * v.P / v.vt : undefined,
               work: v => has(v, 'P', 'vt') ? '\\(W_t = 33\\,000(' + fmt(v.P) + ')/' + fmt(v.vt) + ' = ' + fmt(33000 * v.P / v.vt) + '\\) lb' : null },
-            { id: 'Ko', symbol: 'K_o', label: 'Overload factor', kind: 'lookup', fig: 't9-1', default: 1.0, hint: 'Table 9-1 (power source vs driven machine)' },
+            { id: 'Ko', symbol: 'K_o', label: 'Overload factor', kind: 'lookup', fig: 't9-1', default: 1.0, hint: 'Table 9-1 or course bevel table; tutorials use 1.0' },
           ] },
-        { id: 's2', title: 'Size and load-distribution factors (bevel-specific)', eq: '10-15, 10-16', fig: ['f10-13', 'f10-14'],
-          formula: 'K_s = \\begin{cases}0.4867 + 0.2133/P_d & P_d \\lt  16\\\\ 0.50 & P_d \\ge 16\\end{cases}\\qquad K_m = K_{mb} + 0.0036F^2',
+        { id: 's2', title: 'Size and load-distribution factors (bevel-specific)', eq: '10-15, 10-16', fig: ['f10-13', 'f10-14', 'cks'],
+          formula: 'K_s = \\begin{cases}0.4867 + 0.2133/P_d & P_d \\lt  16\\\\ 0.50 & P_d \\ge 16\\end{cases}\\qquad K_m = K_{mb} + 0.0036F^2\\qquad (K_x = 1,\\ K_B = 1)',
+          text: 'Course (Helical/Bevel s21): K<sub>s</sub> is a formula, K<sub>m</sub> depends only on face width and mounting; K<sub>x</sub> = 1 for straight bevel and there is no rim-thickness factor. Tutorial 5: pinion outboard (cantilevered) + gear straddle → one member straddle-mounted, K<sub>mb</sub> = 1.10.',
           vars: [
             { id: 'Ks', symbol: 'K_s', label: 'Size factor', kind: 'calc', compute: v => has(v, 'Pd') ? (v.Pd >= 16 ? 0.5 : 0.4867 + 0.2133 / v.Pd) : undefined,
               work: v => has(v, 'Pd') ? (v.Pd >= 16 ? '\\(K_s = 0.50\\) (P_d ≥ 16)' : '\\(K_s = 0.4867 + 0.2133/' + fmt(v.Pd) + ' = ' + fmt(0.4867 + 0.2133 / v.Pd) + '\\)') : null },
@@ -159,7 +176,7 @@
           formula: 'B = 0.25(A_v - 5.0)^{0.667},\\quad C = 50 + 56(1.0 - B),\\quad K_v = \\left[\\frac{C}{C + \\sqrt{v_t}}\\right]^{-B}',
           text: 'Use A<sub>v</sub> if given; otherwise pick from Table 9-5 by application or pitch-line speed (Fizz: "just guess what looks right" — A10/A11 for general commercial, A6-A8 for precision).',
           vars: [
-            { id: 'Av', symbol: 'A_v', label: 'AGMA quality number', kind: 'choice', options: [6, 7, 8, 9, 10, 11, 12], default: 10, hint: 'Table 9-5' },
+            { id: 'Av', symbol: 'A_v', label: 'AGMA quality number', kind: 'choice', options: [6, 7, 8, 9, 10, 11, 12], default: 11, hint: 'Table 9-5; Shigley Qv ↔ Av = 17 − Qv (Tutorial 5: Qv 6 → Av 11)' },
             { id: 'Kv', symbol: 'K_v', label: 'Dynamic factor', kind: 'lookup', fig: 'f9-16', hint: 'auto = Table 9-6 equations; confirm on Fig. 9-16',
               auto: v => has(v, 'Av', 'vt') ? kvFit(v.Av, v.vt) : undefined,
               work: v => has(v, 'Av', 'vt') ? (function () { const B = 0.25 * Math.pow(v.Av - 5, 0.667), C = 50 + 56 * (1 - B); return '\\(B = ' + fmt(B, 3) + ',\\ C = ' + fmt(C) + ',\\ K_v = [' + fmt(C) + '/(' + fmt(C) + ' + \\sqrt{' + fmt(v.vt) + '})]^{-' + fmt(B, 3) + '} = ' + fmt(kvFit(v.Av, v.vt)) + '\\)'; })() : null },
@@ -179,16 +196,18 @@
       ] },
 
       { title: '5 · Required bending strength s_at (Eq. 10-18) — steps 11-16', steps: [
-        { id: 'b1', title: 'Service factor, reliability, life and stress-cycle factor', fig: ['t10-3', 't9-12', 'f10-16'],
-          formula: 'N_{LP} = 60\\,L_h\\,n_P,\\quad N_{LG} = 60\\,L_h\\,n_G,\\qquad K_L = \\begin{cases}6.1514N_L^{-0.1192} & 10^3 \\le N_L \\lt  3\\times10^6\\\\ 1.3558N_L^{-0.0178} & N_L \\ge 3\\times10^6\\end{cases}',
+        { id: 'b1', title: 'Service factor, reliability, life and stress-cycle factor', fig: ['t10-3', 'ccr', 't9-12', 'f10-16', 'ckl'],
+          formula: 'N_{LP} = 60\\,L_h\\,n_P,\\quad N_{LG} = N_{LP}/m_G,\\qquad K_L = \\begin{cases}6.1514N_L^{-0.1192} & 10^3 \\le N_L \\lt  3\\times10^6\\\\ 1.3558N_L^{-0.0178} & N_L \\ge 3\\times10^6\\end{cases}',
+          text: 'Course: life in hours or directly in pinion revolutions (Tutorial 5: 10<sup>9</sup>); K<sub>L</sub> from the "commercial gears" line; K<sub>R</sub> = 1 at 99 % "normally", C<sub>R</sub> = √K<sub>R</sub> (Table 10-3); K<sub>T</sub> = 1 below 250 °F; SF = 1 when rating power (AGMA suggests 1–1.5 for design).',
           vars: [
-            { id: 'SF', symbol: 'SF', label: 'Service (safety) factor', kind: 'input', default: 1, hint: '1.00 usual; up to 1.50 for uncertainty' },
+            { id: 'SF', symbol: 'SF', label: 'Service (safety) factor', kind: 'input', default: 1, hint: '1.0 to rate power (tutorials); 1.0-1.5 for design' },
             { id: 'R', symbol: 'R', label: 'Reliability', kind: 'choice', options: [{ label: '0.90', value: 0.9 }, { label: '0.99 (usual)', value: 0.99 }, { label: '0.999', value: 0.999 }, { label: '0.9999', value: 0.9999 }], default: 0.99 },
             { id: 'KR', symbol: 'K_R', label: 'Reliability factor, bending', kind: 'lookup', fig: 't10-3', auto: v => has(v, 'R') ? ({ 0.9: 0.85, 0.99: 1.0, 0.999: 1.25, 0.9999: 1.5 })[v.R] : undefined },
             { id: 'CR', symbol: 'C_R', label: 'Reliability factor, contact', kind: 'lookup', fig: 't10-3', auto: v => has(v, 'R') ? ({ 0.9: 0.92, 0.99: 1.0, 0.999: 1.12, 0.9999: 1.22 })[v.R] : undefined },
-            { id: 'Lh', symbol: 'L_h', label: 'Design life', unit: 'h', kind: 'lookup', fig: 't9-12', hint: 'given, or Table 9-12 (e.g. 15 000 h general industrial)' },
-            { id: 'NLP', symbol: 'N_{LP}', label: 'Pinion load cycles', kind: 'calc', compute: v => has(v, 'Lh', 'nP') ? 60 * v.Lh * v.nP : undefined, work: v => has(v, 'Lh', 'nP') ? '\\(N_{LP} = 60(' + fmt(v.Lh) + ')(' + fmt(v.nP) + ') = ' + fmt(60 * v.Lh * v.nP, 3) + '\\)' : null },
-            { id: 'NLG', symbol: 'N_{LG}', label: 'Gear load cycles', kind: 'calc', compute: v => has(v, 'Lh', 'nG') ? 60 * v.Lh * v.nG : undefined },
+            { id: 'NLin', symbol: 'N_{L,given}', label: 'Pinion life in revolutions (if given directly)', kind: 'input', hint: 'e.g. 1e9 (Tutorial 5); blank → use hours' },
+            { id: 'Lh', symbol: 'L_h', label: 'Design life in hours (if given instead)', unit: 'h', kind: 'lookup', fig: 't9-12', hint: 'given, or Table 9-12 (e.g. 15 000 h general industrial)' },
+            { id: 'NLP', symbol: 'N_{LP}', label: 'Pinion load cycles', kind: 'calc', compute: v => has(v, 'NLin') ? v.NLin : (has(v, 'Lh', 'nP') ? 60 * v.Lh * v.nP : undefined), work: v => !has(v, 'NLin') && has(v, 'Lh', 'nP') ? '\\(N_{LP} = 60(' + fmt(v.Lh) + ')(' + fmt(v.nP) + ') = ' + fmt(60 * v.Lh * v.nP, 3) + '\\)' : null },
+            { id: 'NLG', symbol: 'N_{LG}', label: 'Gear load cycles  N_LP / m_G', kind: 'calc', compute: v => has(v, 'NLP', 'mG') ? v.NLP / v.mG : undefined },
             { id: 'KLP', symbol: 'K_{LP}', label: 'Stress-cycle factor (bending), pinion', kind: 'lookup', fig: 'f10-16', auto: v => has(v, 'NLP') ? KLfit(v.NLP) : undefined, hint: 'auto = Fig. 10-16 equation',
               work: v => has(v, 'NLP') ? '\\(K_{LP} = ' + (v.NLP >= 3e6 ? '1.3558' : '6.1514') + '(' + fmt(v.NLP, 3) + ')^{' + (v.NLP >= 3e6 ? '-0.0178' : '-0.1192') + '} = ' + fmt(KLfit(v.NLP)) + '\\)' : null },
             { id: 'KLG', symbol: 'K_{LG}', label: 'Stress-cycle factor (bending), gear', kind: 'lookup', fig: 'f10-16', auto: v => has(v, 'NLG') ? KLfit(v.NLG) : undefined },
@@ -206,10 +225,11 @@
       ] },
 
       { title: '6 · Contact stress number s_c (Eq. 10-19) and required s_ac (Eq. 10-22) — steps 17-25', steps: [
-        { id: 'c1', title: 'Pitting factors Cp, Cs, Cxc, I', eq: '10-20', fig: ['t9-7', 'f10-18', 'f10-19'],
+        { id: 'c1', title: 'Pitting factors Cp, Cs, Cxc, I', eq: '10-20', fig: ['t9-7', 'f10-18', 'ccs', 'f10-19'],
           formula: 'C_s = 0.125F + 0.4375\\ (0.5\\le F\\le 3.14\\text{ in}),\\qquad C_{xc} = 1.5\\ (\\text{crowned}),\\ 2.0\\ (\\text{uncrowned})',
+          text: 'Course (Helical/Bevel s26): "use C<sub>xc</sub> = 1.5 for commercial gears" — 2.0 only when the problem says <i>uncrowned</i> (Tutorial 5). C<sub>p</sub> = 2300 √psi steel on steel.',
           vars: [
-            { id: 'Cp', symbol: 'C_p', label: 'Elastic coefficient', unit: '√psi', kind: 'lookup', fig: 't9-7', default: 2300, hint: '2300 steel/steel' },
+            { id: 'Cp', symbol: 'C_p', label: 'Elastic coefficient', unit: '√psi', kind: 'lookup', fig: 't9-7', default: 2300, hint: '2300 steel/steel (course default)' },
             { id: 'Cs', symbol: 'C_s', label: 'Pitting size factor', kind: 'lookup', fig: 'f10-18', auto: v => has(v, 'F') ? (v.F <= 0.5 ? 0.5 : v.F >= 3.14 ? 0.83 : 0.125 * v.F + 0.4375) : undefined, hint: 'auto = Eq. 10-20',
               work: v => has(v, 'F') ? '\\(C_s = 0.125(' + fmt(v.F) + ') + 0.4375 = ' + fmt(0.125 * v.F + 0.4375) + '\\)' : null },
             { id: 'Cxc', symbol: 'C_{xc}', label: 'Crowning factor', kind: 'choice', options: [{ label: '1.5 — properly crowned (usual assumption)', value: 1.5 }, { label: '2.0 — non-crowned', value: 2.0 }], default: 1.5 },
@@ -254,10 +274,35 @@
             let s = '<b>Required: grade ' + v.grade + ' through-hardened steel ≥ ' + fmt(Math.ceil(v.HBreq), 3) + ' HB</b> (bending needs ' + fmt(Math.max(v.HBbP, v.HBbG), 3) + ' HB, pitting needs ' + fmt(v.HBc, 3) + ' HB — ' + gov + ' governs).';
             if (v.HBreq > 400) s += ' <span class="result-bad">Above 400 HB: use case-hardened steel (Table 10-4) or a larger gearset.</span>';
             if (has(v, 'SFb', 'SFc', 'SF')) {
-              const ok = v.SFb >= v.SF && v.SFc >= v.SF;
+              const ok = v.SFb >= v.SF * 0.999 && v.SFc >= v.SF * 0.999;
               s += ok ? ' <span class="result-ok">Selected ' + v.HB + ' HB: PASS — SF<sub>bend</sub> = ' + fmt(v.SFb, 3) + ', SF<sub>contact</sub> = ' + fmt(v.SFc, 3) + ' ≥ ' + fmt(v.SF) + '</span>'
                 : ' <span class="result-bad">Selected ' + v.HB + ' HB: FAIL — SF<sub>bend</sub> = ' + fmt(v.SFb, 3) + ', SF<sub>contact</sub> = ' + fmt(v.SFc, 3) + ' (need ≥ ' + fmt(v.SF) + ')</span>';
             }
+            return s;
+          } },
+      ] },
+
+      { title: '8 · Power rating of the gearset (Tutorial 5 question) — s_t = s_wt, s_c = s_wc', text: 'For the <i>selected</i> hardness HB (section 7) and SF = 1, solve Eqs. 10-14 and 10-19 for the load the teeth can carry and convert to power with v<sub>t</sub>. Independent of the P typed in section 1. Course order: bending rating of pinion and gear, then wear rating, then the overall (smallest).', steps: [
+        { id: 'rate', title: 'Allowable Wt and power in bending (pinion, gear) and in pitting', eq: '10-14, 10-19',
+          formula: 'W_{t,bend} = \\frac{s_{at,actual}K_L}{(SF)K_R}\\cdot\\frac{F\\,J}{P_d K_o K_s K_m K_v},\\qquad W_{t,wear} = \\left(\\frac{s_{ac,actual}C_L}{(SF)\\,C_R\\,C_p}\\right)^2\\frac{F\\,d\\,I}{K_o K_m K_v C_s C_{xc}},\\qquad P = \\frac{W_t v_t}{33\\,000}',
+          vars: [
+            { id: 'WtbP', symbol: 'W_{t,bend,P}', label: 'Allowable load, pinion bending', unit: 'lb', kind: 'calc', compute: v => has(v, 'satAct', 'KLP', 'SF', 'KR', 'F', 'JP', 'Pd', 'Ko', 'Ks', 'Km', 'Kv') ? v.satAct * v.KLP / (v.SF * v.KR) * v.F * v.JP / (v.Pd * v.Ko * v.Ks * v.Km * v.Kv) : undefined,
+              work: v => has(v, 'satAct', 'KLP', 'SF', 'KR', 'F', 'JP', 'Pd', 'Ko', 'Ks', 'Km', 'Kv') ? '\\(W_{t,bend,P} = \\frac{' + fmt(v.satAct, 5) + '(' + fmt(v.KLP) + ')}{' + fmt(v.SF) + '(' + fmt(v.KR) + ')}\\cdot\\frac{' + fmt(v.F) + '(' + fmt(v.JP) + ')}{' + fmt(v.Pd) + '(' + fmt(v.Ko) + ')(' + fmt(v.Ks) + ')(' + fmt(v.Km) + ')(' + fmt(v.Kv) + ')} = ' + fmt(v.satAct * v.KLP / (v.SF * v.KR) * v.F * v.JP / (v.Pd * v.Ko * v.Ks * v.Km * v.Kv)) + '\\) lb' : null },
+            { id: 'PbP', symbol: 'P_{bend,P}', label: 'Power rating, pinion bending', unit: 'hp', kind: 'calc', compute: v => has(v, 'WtbP', 'vt') ? v.WtbP * v.vt / 33000 : undefined,
+              work: v => has(v, 'WtbP', 'vt') ? '\\(P_{bend,P} = ' + fmt(v.WtbP) + '(' + fmt(v.vt) + ')/33\\,000 = ' + fmt(v.WtbP * v.vt / 33000, 3) + '\\) hp' : null },
+            { id: 'WtbG', symbol: 'W_{t,bend,G}', label: 'Allowable load, gear bending', unit: 'lb', kind: 'calc', compute: v => has(v, 'satAct', 'KLG', 'SF', 'KR', 'F', 'JG', 'Pd', 'Ko', 'Ks', 'Km', 'Kv') ? v.satAct * v.KLG / (v.SF * v.KR) * v.F * v.JG / (v.Pd * v.Ko * v.Ks * v.Km * v.Kv) : undefined },
+            { id: 'PbG', symbol: 'P_{bend,G}', label: 'Power rating, gear bending', unit: 'hp', kind: 'calc', compute: v => has(v, 'WtbG', 'vt') ? v.WtbG * v.vt / 33000 : undefined },
+            { id: 'Wtw', symbol: 'W_{t,wear}', label: 'Allowable load, pitting', unit: 'lb', kind: 'calc', compute: v => has(v, 'sacAct', 'CL', 'SF', 'CR', 'Cp', 'F', 'd', 'I', 'Ko', 'Km', 'Kv', 'Cs', 'Cxc') ? Math.pow(v.sacAct * v.CL / (v.SF * v.CR * v.Cp), 2) * v.F * v.d * v.I / (v.Ko * v.Km * v.Kv * v.Cs * v.Cxc) : undefined,
+              work: v => has(v, 'sacAct', 'CL', 'SF', 'CR', 'Cp', 'F', 'd', 'I', 'Ko', 'Km', 'Kv', 'Cs', 'Cxc') ? '\\(W_{t,wear} = \\left(\\frac{' + fmt(v.sacAct, 6) + '(' + fmt(v.CL) + ')}{' + fmt(v.SF) + '(' + fmt(v.CR) + ')(' + fmt(v.Cp) + ')}\\right)^2\\frac{' + fmt(v.F) + '(' + fmt(v.d) + ')(' + fmt(v.I) + ')}{(' + fmt(v.Ko) + ')(' + fmt(v.Km) + ')(' + fmt(v.Kv) + ')(' + fmt(v.Cs) + ')(' + fmt(v.Cxc) + ')} = ' + fmt(Math.pow(v.sacAct * v.CL / (v.SF * v.CR * v.Cp), 2) * v.F * v.d * v.I / (v.Ko * v.Km * v.Kv * v.Cs * v.Cxc)) + '\\) lb' : null },
+            { id: 'Pw', symbol: 'P_{wear}', label: 'Power rating, pitting', unit: 'hp', kind: 'calc', compute: v => has(v, 'Wtw', 'vt') ? v.Wtw * v.vt / 33000 : undefined,
+              work: v => has(v, 'Wtw', 'vt') ? '\\(P_{wear} = ' + fmt(v.Wtw) + '(' + fmt(v.vt) + ')/33\\,000 = ' + fmt(v.Wtw * v.vt / 33000, 3) + '\\) hp' : null },
+            { id: 'Prate', symbol: 'P_{rated}', label: 'Power rating of the gearset (minimum)', unit: 'hp', kind: 'calc', compute: v => has(v, 'PbP', 'PbG', 'Pw') ? Math.min(v.PbP, v.PbG, v.Pw) : undefined },
+          ],
+          after: v => {
+            if (!has(v, 'Prate')) return '';
+            const gov = v.Pw <= Math.min(v.PbP, v.PbG) ? 'pitting' : (v.PbP <= v.PbG ? 'pinion bending' : 'gear bending');
+            let s = '<b>Power rating = ' + fmt(v.Prate, 3) + ' hp</b> (bending: pinion ' + fmt(v.PbP, 3) + ' hp, gear ' + fmt(v.PbG, 3) + ' hp; pitting ' + fmt(v.Pw, 3) + ' hp) — limited by ' + gov + ' with SF = ' + fmt(v.SF) + ' and ' + v.HB + ' HB.';
+            if (has(v, 'P')) s += v.P <= v.Prate * 1.001 ? ' <span class="result-ok">P = ' + fmt(v.P) + ' hp ≤ rating.</span>' : ' <span class="result-bad">P = ' + fmt(v.P) + ' hp exceeds the rating.</span>';
             return s;
           } },
       ] },
