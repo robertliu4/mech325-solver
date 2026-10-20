@@ -23,7 +23,7 @@
       'Radial-only loads go straight to Eq. (11-9); a thrust component needs the equivalent load <i>F<sub>e</sub> = X<sub>i</sub>VF<sub>r</sub> + Y<sub>i</sub>F<sub>a</sub></i> (Eq. 11-12) with ' +
       '<i>Y<sub>2</sub></i> from Table 11-1 — which depends on the <i>C<sub>0</sub></i> of the bearing you have not chosen yet, so the Fizz bible iterates: assume <i>Y<sub>2</sub></i> = 1.63, size, pick, read <i>C<sub>0</sub></i>, re-interpolate, repeat until the same bearing comes up twice. ' +
       'Two iteration rounds are laid out below (Shigley Ex. 11-7 converges in two).',
-    example: { mode: 'radial + thrust', unit: 'lbf', H: 25, T: 2404, Fx: 356.6, Fy: 297.5, Fa: 344, Rtot: 0.96, nb: 4, LDh: 10000, mfr: 2, af: 1.2, btype: 'angular-contact ball (a = 3)', ring: 'inner ring rotates (V = 1)', relEq: 'Eq. 11-10 (1 − R_D)', X2: 0.56, Y2a: 1.63, C10sel1: 55.9, C0sel1: 35.5, C10sel2: 63.7, C0sel2: 41.5, C10sel3: 63.7 },
+    example: { mode: 'radial + thrust', unit: 'lbf', H: 25, T: 2404, Fx: 356.6, Fy: 297.5, Fa: 344, Rtot: 0.96, nb: 4, LDh: 10000, mfr: 2, af: 1.2, btype: 'angular-contact ball (a = 3)', ring: 'inner ring rotates (V = 1)', relEq: 'Eq. 11-10 (1 − R_D)', X2: 0.56, Y2a: 1.63, bore1: 'angular-contact 02-60 mm', C10sel1: 55.9, C0sel1: 35.5, bore2: 'angular-contact 02-65 mm', C10sel2: 63.7, C0sel2: 41.5, bore3: 'angular-contact 02-65 mm', C10sel3: 63.7 },
 
     assumptions: [
       { text: 'Speed from n_D = 63 025 H/T when it is not given directly', src: 'Fizz p.96', var: 'nD' },
@@ -195,7 +195,7 @@
             { id: 'bore3', label: 'Bearing selected now', kind: 'input', type: 'text' },
             { id: 'C10sel3', symbol: 'C_{10,cat}', label: 'Catalogue C10', unit: 'kN', kind: 'lookup', fig: 't11-2' },
           ],
-          after: v => !H.has(v, 'C10sel2', 'C10sel3', 'C10t3kN') ? '' : (v.C10sel2 === v.C10sel3 && v.C10sel3 >= v.C10t3kN) ? '<span class="result-ok">Same bearing again → converged. Final: ' + (v.bore3 || v.bore2 || '') + ', C10 = ' + H.fmt(v.C10sel3) + ' kN ≥ ' + H.fmt(v.C10t3kN) + ' kN ✔</span>' : '<span class="result-bad">Not yet converged — copy the new C0 into "Catalogue C0" of iteration 1 and repeat (Fizz Step 14).</span>' },
+          after: v => !H.has(v, 'C10sel2', 'C10sel3', 'C10t3kN') ? '' : (v.C10sel2 === v.C10sel3 && v.C10sel3 >= v.C10t3kN) ? '<span class="result-ok">Same bearing again → converged. Final: ' + (v.bore3 || v.bore2 || 'selected bearing') + ', C10 = ' + H.fmt(v.C10sel3) + ' kN ≥ ' + H.fmt(v.C10t3kN) + ' kN ✔</span>' : '<span class="result-bad">Not yet converged — copy the new C0 into "Catalogue C0" of iteration 1 and repeat (Fizz Step 14).</span>' },
       ] },
 
       { title: 'Result', steps: [
