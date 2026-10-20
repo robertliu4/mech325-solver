@@ -66,7 +66,7 @@
       { text: 'If an equivalent load comes out below the radial load, use the radial load', src: 'Shigley Sec. 11-9', step: 'fe1' },
       { text: 'Design life from Table 11-4 if not given', src: 'Fizz p.102', var: 'LDh' },
       { text: 'Timken (manufacturer 1) Weibull set: \\(L_{10} = 90\\times10^6\\) rev, x_0 = 0, θ = 4.48, b = 1.5; a = 10/3', src: 'Fizz p.102 · Fizz p.103', var: 'L10' },
-      { text: '\\(R_D = R_{tot}^{1/n}\\) only when the reliability of the pair is given; otherwise 0.90 each', src: 'Fizz p.103', var: 'Rtot' },
+      { text: '\\(R_D = R_{\\mathrm{tot}}^{1/n}\\) only when the reliability of the pair is given; otherwise 0.90 each', src: 'Fizz p.103', var: 'Rtot' },
       { text: 'Application factor a_f = 1 unless given (Shigley Ex. 11-8)', src: 'Shigley Ex. 11-8', var: 'af' },
       { text: 'Reliability term \\([\\ln(1/R_D)]^{1/b}\\) (Eq. 11-9); Ex. 11-8 uses \\((1 - R_D)\\) (Eq. 11-10)', src: 'Fizz p.103', var: 'relEq' },
       { text: 'Select on the one-row radial rating; repeat with the new K until the same bearings come up twice', src: 'Fizz p.103 · Fizz p.105', step: 'tr2' },
@@ -106,7 +106,7 @@
             { id: 'dB', symbol: 'd_B', label: 'Shaft diameter at B', unit: 'in', kind: 'input', hint: 'optional — bore filter' },
           ] },
         { id: 'life', title: 'Steps 4–6 — life, Weibull parameters, reliability, application factor', eq: '11-3', fig: ['t11-4', 't11-6', 't11-5'],
-          formula: 'x_D = \\frac{60\\,\\mathcal{L}_D\\, n_D}{L_{10}} \\qquad R_D = \\sqrt[n]{R_{tot}}',
+          formula: 'x_D = \\frac{60\\,\\mathcal{L}_D\\, n_D}{L_{10}} \\qquad R_D = \\sqrt[n]{R_{\\mathrm{tot}}}',
           text: 'Ex. 11-8: 5000 h at 800 rev/min → \\(x_D\\) = 2.67; pair reliability 0.99 (n = 2) → \\(R_D = \\sqrt{0.99}\\) each.',
           vars: [
             { id: 'nD', symbol: 'n_D', label: 'Shaft speed', unit: 'rev/min', kind: 'input' },
@@ -117,7 +117,7 @@
             { id: 'b', symbol: 'b', label: 'Weibull shape parameter', unit: '', kind: 'lookup', fig: 't11-6', default: 1.5 },
             { id: 'xD', symbol: 'x_D', label: 'Multiple of rating life', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'LDh', 'nD', 'L10') && v.L10 > 0 ? 60 * v.LDh * v.nD / v.L10 : undefined,
               work: v => v.xD !== undefined ? '\\(x_D = \\dfrac{60(' + H.fmt(v.LDh) + ')(' + H.fmt(v.nD) + ')}{' + H.fmt(v.L10) + '} = ' + H.fmt(v.xD) + '\\)' : null },
-            { id: 'Rtot', symbol: 'R_{tot}', label: 'Reliability goal (of the pair when n = 2)', unit: '', kind: 'input', default: 0.90 },
+            { id: 'Rtot', symbol: 'R_{\\mathrm{tot}}', label: 'Reliability goal (of the pair when n = 2)', unit: '', kind: 'input', default: 0.90 },
             { id: 'nb', symbol: 'n', label: 'Number of bearings sharing that goal', unit: '', kind: 'input', default: 1 },
             { id: 'RD', symbol: 'R_D', label: 'Design reliability per bearing', unit: '', kind: 'calc', digits: 5, compute: v => H.has(v, 'Rtot', 'nb') && v.nb > 0 ? Math.pow(v.Rtot, 1 / v.nb) : undefined },
             { id: 'af', symbol: 'a_f', label: 'Application factor', unit: '', kind: 'lookup', fig: 't11-5', default: 1 },
@@ -153,12 +153,12 @@
             { id: 'C10A1', symbol: 'C_{10,A}', label: 'Required rating, bearing A', kind: 'calc', digits: 5, compute: v => c10(v, v.FeA1),
               work: v => v.C10A1 !== undefined ? '\\(C_{10,A} = ' + H.fmt(v.af) + '(' + H.fmt(v.FeA1) + ')(' + H.fmt(v.brk) + ') = ' + H.fmt(v.C10A1, 5) + '\\ \\text{' + v.unit + '}\\)' : null },
             { id: 'coneA1', label: 'Bearing A: cone / cup', kind: 'input', type: 'text', hint: 'e.g. 15100 / 15245' },
-            { id: 'C10Acat1', symbol: 'C_{10,cat}', label: 'Catalogue rating, A', kind: 'lookup', fig: 'fig11-15a', check: v => (H.has(v, 'C10Acat1', 'C10A1') && v.C10Acat1 < v.C10A1) ? 'Below required C_10' : null },
+            { id: 'C10Acat1', symbol: 'C_{10,\\mathrm{cat}}', label: 'Catalogue rating, A', kind: 'lookup', fig: 'fig11-15a', check: v => (H.has(v, 'C10Acat1', 'C10A1') && v.C10Acat1 < v.C10A1) ? 'Below required C_10' : null },
             { id: 'KA2', symbol: 'K_A', label: 'K of bearing A', unit: '', kind: 'lookup', fig: 'fig11-15a' },
             { id: 'C10B1', symbol: 'C_{10,B}', label: 'Required rating, bearing B', kind: 'calc', digits: 5, compute: v => c10(v, v.FeB1),
               work: v => v.C10B1 !== undefined ? '\\(C_{10,B} = ' + H.fmt(v.af) + '(' + H.fmt(v.FeB1) + ')(' + H.fmt(v.brk) + ') = ' + H.fmt(v.C10B1, 5) + '\\ \\text{' + v.unit + '}\\)' : null },
             { id: 'coneB1', label: 'Bearing B: cone / cup', kind: 'input', type: 'text' },
-            { id: 'C10Bcat1', symbol: 'C_{10,cat}', label: 'Catalogue rating, B', kind: 'lookup', fig: 'fig11-15a', check: v => (H.has(v, 'C10Bcat1', 'C10B1') && v.C10Bcat1 < v.C10B1) ? 'Below required C_10' : null },
+            { id: 'C10Bcat1', symbol: 'C_{10,\\mathrm{cat}}', label: 'Catalogue rating, B', kind: 'lookup', fig: 'fig11-15a', check: v => (H.has(v, 'C10Bcat1', 'C10B1') && v.C10Bcat1 < v.C10B1) ? 'Below required C_10' : null },
             { id: 'KB2', symbol: 'K_B', label: 'K of bearing B', unit: '', kind: 'lookup', fig: 'fig11-15a' },
           ],
           after: v => selTab(v, v.C10A1, v.dA, ['coneA1', 'C10Acat1', 'KA2'], 'A') + selTab(v, v.C10B1, v.dB, ['coneB1', 'C10Bcat1', 'KB2'], 'B') +
@@ -167,7 +167,7 @@
 
       { title: 'Trial 2 (K from the selected bearings)', steps: [
         { id: 'tr2', title: 'Step 9 — repeat with the catalogue K values', eq: '11-18 .. 11-20', fig: ['fig11-15a'], when: v => H.has(v, 'KA2', 'KB2'),
-          formula: 'C_{10,new} = \\frac{F_{e,new}}{F_{e,old}}\\,C_{10,old}',
+          formula: 'C_{10,\\mathrm{new}} = \\frac{F_{e,new}}{F_{e,old}}\\,C_{10,\\mathrm{old}}',
           vars: [
             { id: 'FiA2', symbol: 'F_{iA}', label: 'Induced thrust at A', kind: 'calc', digits: 4, compute: v => { const r = eq(v, v.KA2, v.KB2); return r && r.FiA; } },
             { id: 'FiB2', symbol: 'F_{iB}', label: 'Induced thrust at B', kind: 'calc', digits: 4, compute: v => { const r = eq(v, v.KA2, v.KB2); return r && r.FiB; } },
@@ -179,10 +179,10 @@
               work: v => H.has(v, 'FeA2', 'FeA1', 'C10A1') && v.FeA1 > 0 ? '\\(C_{10,A} = \\dfrac{' + H.fmt(v.FeA2) + '}{' + H.fmt(v.FeA1) + '}(' + H.fmt(v.C10A1, 5) + ') = ' + H.fmt(v.C10A2, 5) + '\\)' : null },
             { id: 'C10B2', symbol: 'C_{10,B}', label: 'Required rating, B', kind: 'calc', digits: 5, compute: v => c10(v, v.FeB2) },
             { id: 'coneA2', label: 'Bearing A selected now', kind: 'input', type: 'text' },
-            { id: 'C10Acat2', symbol: 'C_{10,cat}', label: 'Catalogue rating, A', kind: 'lookup', fig: 'fig11-15a' },
+            { id: 'C10Acat2', symbol: 'C_{10,\\mathrm{cat}}', label: 'Catalogue rating, A', kind: 'lookup', fig: 'fig11-15a' },
             { id: 'KA3', symbol: 'K_A', label: 'Its K', unit: '', kind: 'lookup', fig: 'fig11-15a' },
             { id: 'coneB2', label: 'Bearing B selected now', kind: 'input', type: 'text' },
-            { id: 'C10Bcat2', symbol: 'C_{10,cat}', label: 'Catalogue rating, B', kind: 'lookup', fig: 'fig11-15a' },
+            { id: 'C10Bcat2', symbol: 'C_{10,\\mathrm{cat}}', label: 'Catalogue rating, B', kind: 'lookup', fig: 'fig11-15a' },
             { id: 'KB3', symbol: 'K_B', label: 'Its K', unit: '', kind: 'lookup', fig: 'fig11-15a' },
           ],
           after: v => {
@@ -198,13 +198,13 @@
 
       { title: 'Result', steps: [
         { id: 'res', title: 'Reliability check of the pair (Sec. 11-10)', eq: '11-23', fig: ['fig11-13', 'skf-tap'],
-          formula: 'R = \\exp\\left\\{-\\left[\\frac{x_D}{4.48\\,[C_{10}/(a_f F_D)]^{10/3}}\\right]^{3/2}\\right\\} \\qquad R_{pair} = R_A R_B',
+          formula: 'R = \\exp\\left\\{-\\left[\\frac{x_D}{4.48\\,[C_{10}/(a_f F_D)]^{10/3}}\\right]^{3/2}\\right\\} \\qquad R_{\\mathrm{pair}} = R_A R_B',
           text: 'Also note each bearing\'s effective-centre offset <i>a</i>: shoulder-to-shoulder = \\(a_e - 2a\\) (Ex. 11-8: 150 − 2(5.8) = 138.4 mm).',
           vars: [
             { id: 'RA', symbol: 'R_A', label: 'Reliability of bearing A', unit: '', kind: 'calc', digits: 6, compute: v => R24(v, v.C10Acat2 !== undefined ? v.C10Acat2 : v.C10Acat1, v.FeA2 !== undefined ? v.FeA2 : v.FeA1) },
             { id: 'RB', symbol: 'R_B', label: 'Reliability of bearing B', unit: '', kind: 'calc', digits: 6, compute: v => R24(v, v.C10Bcat2 !== undefined ? v.C10Bcat2 : v.C10Bcat1, v.FeB2 !== undefined ? v.FeB2 : v.FeB1) },
             { id: 'Rp', symbol: 'R', label: 'Reliability of the pair', unit: '', kind: 'calc', digits: 6, compute: v => H.has(v, 'RA', 'RB') ? v.RA * v.RB : undefined },
-            { id: 'Rgoal', symbol: 'R_{goal}', label: 'Pair goal R_D^2', unit: '', kind: 'calc', digits: 6, compute: v => v.RD !== undefined ? v.RD * v.RD : undefined },
+            { id: 'Rgoal', symbol: 'R_{\\mathrm{goal}}', label: 'Pair goal R_D^2', unit: '', kind: 'calc', digits: 6, compute: v => v.RD !== undefined ? v.RD * v.RD : undefined },
           ],
           after: v => !H.has(v, 'Rp', 'Rgoal') ? '' : v.Rp >= v.Rgoal - 1e-9 ? '<span class="result-ok">R = ' + H.fmt(v.Rp, 6) + ' ≥ goal ' + H.fmt(v.Rgoal, 4) + ' ✔ — A: ' + (v.coneA2 || v.coneA1 || '') + ', B: ' + (v.coneB2 || v.coneB1 || '') + '</span>' : '<span class="result-bad">R = ' + H.fmt(v.Rp, 6) + ' &lt; goal ' + H.fmt(v.Rgoal, 4) + ' — next larger bearing on the heavily loaded side.</span>' },
       ] },

@@ -448,3 +448,27 @@ the textbook crops in `v2/figures/shigley` and `v2/figures/mott`.
 - Midterm 2024 P1 (chains): lengths rounded to odd 129 / 147 pitches "so odd links mesh with even teeth" — contradicts the course rule (even pitches, odd teeth); calculators give 128 / 148.
 - Midterm 2022 P1 (timing): 22 T @ 1160 rpm quoted as 8.86 hp (Table 7-9: 8.06); the solution skips the Gates Table No. 4 minimum (6 hp @ 1160 → 3.4 in > 28 T PD 2.807 in).
 - Trial CD practice for V-belts: 32 in (midterms 2023/2025), HW1 24–36 in; calculators default to 32 in inside D2 < CD < 3(D1 + D2).
+
+### Added during the m5 polish (power screws, ball screws, springs, fasteners, fluid power — see `v2/notes/past_exam_m5.md`)
+- HW5 P4 2024: the posted solution is the 2023 one (30 000 lb, τ 6000 psi → 2½-3 Acme, 1.25-in nut); the 2024 numbers (27 000 lb, 5000 psi) give 2¼-3 Acme (At 2.982) and a 1.50-in nut.
+- HW5 P4: dm = (D + Dr)/2 = 2.303 in is used in Eq. 8-5 instead of Mott's tabulated Dp = 2.2939 in (Fizz/Mott) — 0.3 % on the torque; both pages accept either.
+- HW5 P4 / P5 use 63 025 for hp (course §0); Mott and the Fizz guide round to 63 000 — the pages now use 63 025.
+- HW3 P5 d: the cylinder speed 13.8 ft/min divides the vertical speed of C by sin 75°; projecting C's velocity (normal to the boom) on the cylinder axis gives 8·2.5·sin 30°/(7.5·cos 45°) = 1.89 in/s = 9.43 ft/min. The same line also mis-scales Table b-5: 6.53 × 13.804/10 = 9.01 gpm, not 8.77. Corrected: 6.16 gpm, ⅜-in pipe, 4.2 hp → 5 hp (solution: ½-in pipe, 6.18 → 7.5 hp).
+- HW3 P5 c: "Pivoted + rigidly guided: k = 2" — Table b-4 gives 0.70 for that class; k = 2.0 belongs to trunnion / clevis on the cap (class VI), which is how the crane cylinder is mounted, so the value is right and only the label is wrong.
+- HW5 P5 e: 53 in / 1850 rpm are chart readings; the Thomson p.142 formulas (S = 0.8, dr 0.63 in) give 56 in and 1900 rpm at 53 in — reading tolerance, not an error.
+- HW5 P3: Ssy = 242.3 "KPa" should read MPa.
+- STQ 2022 (Shigley 8-34): the text quotes E = 14.5 Mpsi for the CI flange (Table 8-8) but computes kf with 16.0 Mpsi (the problem statement's value).
+- Mott Table 17-1M: the 32-mm row is misprinted (Dr 33.0, At 754.8 = the 36-mm row); the pages use Dr 25.0, At 572.6 mm².
+- fluids pages (pre-existing bug, fixed): the pipe auto-pick iterated a JS object whose integer keys ('1', '2', '3') sort first, so flows needing 1¼ in picked 2 in.
+
+### Added during the bearings & shafts polish (bushings, ball/cyl./tapered bearings, shafts & keys — see `v2/notes/past_exam_bearings.md`)
+- Course rule for Mott bushings (HW4 P1 2023/24): "include the design factor n_d = 2" means Mott's 2·pV design value — the solutions do not also multiply F by 2. Selections: porous bronze / BU (Table 16-1).
+- HW4 2024 P1(b): the Shigley comparison reuses the 2023 problem (0.5 in, 75 lb, 600 rpm, L 0.5) with the 2024 f_s = 0.05 and without n_d (T_f = 1612 °F); for the 2024 data (3 in, 800 lb, 350 rpm, L 4.5, n_d 2) T_f ≈ 2200 °F.
+- HW4 2023 P3 (Shigley 11-23) and 2024 P3 (11-22) say "angular contact" but read the deep-groove columns of Table 11-2 (30 mm: 19.5 / 10.0; 65 mm: 55.9 / 34.0 kN). The calculators follow the bearing type chosen; type the solution's C_10 / C_0 to reproduce it.
+- HW4 2024 P4(d): "a_1 = 0.25 for R = 0.9" — 0.25 is the SKF a_1 for 99 % (the per-bearing R was 0.9899); for 90 % a_1 = 1.
+- HW4 2023/24 P5 (Shigley 11-50): F_eA = 1030 lbf mixes the trial K_A = 1.5 with the catalogue K_B = 1.45 (half-way into trial 2); a clean trial 1 gives 1019 lbf (C_10A 1970 lbf), trial 2 1115 lbf (2156) — same bearings.
+- HW4 2023 P8: the typed C-point solution uses N = 4 and K_t = 2.4 (D 3.59 in) while the problem says N = 3 and the spreadsheet uses 3 / 2.5 (D 3.26 in); key lengths use N = 4.
+- HW4 2024 P8: C = 2453 lb for the 373-lb bearing is not reproducible from the stated life (480 rpm, 8 h/day, 20 days/month, 5 yr → 2.765e8 rev → 2430 lb); 6302 (2563 lb) is chosen either way.
+- Tutorial 2022 Q4 (Mott 12-23): "SAE 1170 CD … s_y = 51 ksi" with the solver's own note that it should be 57 ksi; D = 2.75 in either way.
+- Final review Q1(e): coupling key length uses D = 0.5 in and W = 0.125 in (1/8 key, Table 11-1 row 0.4375–0.5625) → 0.966 in.
+- New crops from this pass: `figures/course/pin_double_shear_failure_loads.png` (class-notes pin table, HW4 2023 p.17), `skf_table3_a1_reliability_p90.png`, `skf_diagram8_askf_p95.png`, `skf_table6_eta_c_contamination_p105.png` (SKF catalogue, HW4 2024 P4d); `figures/shigley/table7-4.png` (setscrews); `figures/mott/table11-5.png`, `table11-6.png` (splines).

@@ -69,12 +69,12 @@
           vars: [
             { id: 'F', symbol: 'F', label: 'Radial load', unit: 'lb', kind: 'input' },
             { id: 'n', symbol: 'n', label: 'Rotational speed', unit: 'rpm', kind: 'input' },
-            { id: 'Dmin', symbol: 'D_{min}', label: 'Minimum journal diameter', unit: 'in', kind: 'input', hint: 'optional' },
+            { id: 'Dmin', symbol: 'D_{\\mathrm{min}}', label: 'Minimum journal diameter', unit: 'in', kind: 'input', hint: 'optional' },
             { id: 'nd', symbol: 'n_d', label: 'Design factor on the load (Fizz / Shigley)', unit: '', kind: 'input', default: 1 },
           ] },
         { id: 'thermal', title: 'Fizz Step 2 — minimum length from temperature rise (Shigley Eq. 12-49)', fig: ['t12-10', 't12-8'],
           formula: 'L_T = \\frac{720\\, f_s\\, n_d F n}{J\\, \\hbar_{CR}\\,(T_f - T_\\infty)}',
-          text: 'Mott has no equivalent; leave <i>T<sub>f</sub></i> blank on the Mott route to skip it.',
+          text: 'Mott has no equivalent; leave \\(T_{f}\\) blank on the Mott route to skip it.',
           vars: [
             { id: 'fs', symbol: 'f_s', label: 'Coefficient of friction', unit: '', kind: 'lookup', fig: 't12-10', default: 0.03 },
             { id: 'Tf', symbol: 'T_f', label: 'Max. bearing temperature', unit: '°F', kind: 'input', auto: v => fizz(v) ? 300 : undefined, hint: 'Fizz route: blank → 300 °F' },
@@ -89,13 +89,13 @@
 
       { title: 'Geometry (Mott Steps 1–4)', steps: [
         { id: 'geo', title: 'Trial diameter, L/D and length', fig: ['t12-12', 'oiles-spb'],
-          text: 'Try <i>D = D<sub>min</sub></i>, pick <i>L/D</i> in 0.5–2.0 (1 for porous / dry bearings, 1.5 for carbon-graphite) and round <i>L</i> to a convenient size.',
+          text: 'Try <i>D = D_min</i>, pick <i>L/D</i> in 0.5–2.0 (1 for porous / dry bearings, 1.5 for carbon-graphite) and round <i>L</i> to a convenient size.',
           vars: [
             { id: 'D', symbol: 'D', label: 'Trial bearing (journal) diameter', unit: 'in', kind: 'input',
               check: v => (H.has(v, 'D', 'Dmin') && v.D < v.Dmin) ? 'D is below the minimum shaft diameter' : null },
             { id: 'LD', symbol: 'L/D', label: 'Target length-to-diameter ratio', unit: '', kind: 'input', default: 1,
               check: v => (v.LD !== undefined && (v.LD < 0.5 || v.LD > 2)) ? 'Mott recommends 0.5 ≤ L/D ≤ 2.0' : null },
-            { id: 'Lnom', symbol: 'L_{nom}', label: 'Nominal length D·(L/D)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'D', 'LD') ? v.D * v.LD : undefined },
+            { id: 'Lnom', symbol: 'L_{\\mathrm{nom}}', label: 'Nominal length D·(L/D)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'D', 'LD') ? v.D * v.LD : undefined },
             { id: 'L', symbol: 'L', label: 'Specified bearing length', unit: 'in', kind: 'input', hint: 'blank → L_nom', auto: v => v.Lnom,
               check: v => (H.has(v, 'L', 'Lmin') && v.L < v.Lmin) ? 'L < L_T from the thermal equation' : null },
             { id: 'LDact', symbol: 'L/D', label: 'Actual L/D', unit: '', kind: 'calc', digits: 3, compute: v => H.has(v, 'L', 'D') && v.D > 0 ? v.L / v.D : undefined,
@@ -104,12 +104,12 @@
       ] },
 
       { title: 'pV analysis (Mott Steps 5–9)', steps: [
-        { id: 'p', title: 'Bearing pressure', eq: '16-1', formula: 'p = \\frac{n_d F}{L D} \\qquad p_{max} = \\frac{4}{\\pi}\\,p',
+        { id: 'p', title: 'Bearing pressure', eq: '16-1', formula: 'p = \\frac{n_d F}{L D} \\qquad p_{\\mathrm{max}} = \\frac{4}{\\pi}\\,p',
           vars: [
             { id: 'p', symbol: 'p', label: 'Bearing pressure', unit: 'psi', kind: 'calc', digits: 4,
               compute: v => H.has(v, 'nd', 'F', 'L', 'D') && v.L * v.D > 0 ? v.nd * v.F / (v.L * v.D) : undefined,
               work: v => v.p !== undefined ? '\\(p = \\dfrac{' + H.fmt(v.nd) + '(' + H.fmt(v.F) + ')}{' + H.fmt(v.L) + '(' + H.fmt(v.D) + ')} = ' + H.fmt(v.p) + '\\text{ psi}\\)' : null },
-            { id: 'pmax', symbol: 'p_{max}', label: 'Peak pressure (Shigley Eq. 12-42, Oiles check)', unit: 'psi', kind: 'calc', digits: 4, compute: v => v.p !== undefined ? 4 / Math.PI * v.p : undefined },
+            { id: 'pmax', symbol: 'p_{\\mathrm{max}}', label: 'Peak pressure (Shigley Eq. 12-42, Oiles check)', unit: 'psi', kind: 'calc', digits: 4, compute: v => v.p !== undefined ? 4 / Math.PI * v.p : undefined },
           ] },
         { id: 'V', title: 'Linear speed of the journal surface', formula: 'V = \\frac{\\pi D n}{12}\\ \\text{ft/min}',
           vars: [
@@ -117,23 +117,23 @@
               compute: v => H.has(v, 'D', 'n') ? Math.PI * v.D * v.n / 12 : undefined,
               work: v => v.V !== undefined ? '\\(V = \\dfrac{\\pi(' + H.fmt(v.D) + ')(' + H.fmt(v.n) + ')}{12} = ' + H.fmt(v.V) + '\\text{ ft/min}\\)' : null },
           ] },
-        { id: 'pV', title: 'pV factor and design value', formula: 'pV = p\\,V \\qquad (pV)_{design} = 2\\,(pV)',
+        { id: 'pV', title: 'pV factor and design value', formula: 'pV = p\\,V \\qquad (pV)_{\\mathrm{design}} = 2\\,(pV)',
           text: 'Mott Step 8: design at half the rated pV, i.e. the material must be rated ≥ 2·(pV).',
           vars: [
             { id: 'pV', symbol: 'pV', label: 'pV factor', unit: 'psi·fpm', kind: 'calc', digits: 5,
               compute: v => H.has(v, 'p', 'V') ? v.p * v.V : undefined,
               work: v => v.pV !== undefined ? '\\(pV = ' + H.fmt(v.p) + '(' + H.fmt(v.V) + ') = ' + H.fmt(v.pV, 5) + '\\text{ psi·fpm}\\)' : null },
-            { id: 'pVdes', symbol: '(pV)_{design}', label: 'Design value 2·pV', unit: 'psi·fpm', kind: 'calc', digits: 5, compute: v => v.pV !== undefined ? 2 * v.pV : undefined },
-            { id: 'pVSI', symbol: '(pV)_{design}', label: 'Design value in SI', unit: 'MPa·m/s', kind: 'calc', digits: 4, compute: v => v.pVdes !== undefined ? v.pVdes * 3.5e-5 : undefined },
+            { id: 'pVdes', symbol: '(pV)_{\\mathrm{design}}', label: 'Design value 2·pV', unit: 'psi·fpm', kind: 'calc', digits: 5, compute: v => v.pV !== undefined ? 2 * v.pV : undefined },
+            { id: 'pVSI', symbol: '(pV)_{\\mathrm{design}}', label: 'Design value in SI', unit: 'MPa·m/s', kind: 'calc', digits: 4, compute: v => v.pVdes !== undefined ? v.pVdes * 3.5e-5 : undefined },
           ] },
         { id: 'mat', title: 'Specify a material (Mott Step 9)', fig: ['t16-1', 't12-9', 't12-11', 'oiles-sp', 'oiles-pv'],
-          text: 'Pick from the table (★) or read Table 16-1. Fizz/Oiles rule: plain pV against the Oiles limit (46 700 for Oiles 500) plus \\(p_{max}\\) and <i>V</i> limits.',
+          text: 'Pick from the table (★) or read Table 16-1. Fizz/Oiles rule: plain pV against the Oiles limit (46 700 for Oiles 500) plus \\(p_{\\mathrm{max}}\\) and <i>V</i> limits.',
           vars: [
             { id: 'rule', label: 'Acceptance rule', kind: 'choice', type: 'text', default: 'Mott: rated ≥ 2·pV', options: ['Mott: rated ≥ 2·pV', 'Fizz/Oiles: limit > pV'] },
             { id: 'matName', label: 'Material chosen', kind: 'input', type: 'text', hint: 'e.g. Porous bronze, Oiles 500' },
-            { id: 'pVrated', symbol: '(pV)_{rated}', label: 'Rated / limiting pV of the material', unit: 'psi·fpm', kind: 'lookup', fig: 't16-1', auto: v => fizz(v) ? 46700 : undefined, hint: 'Fizz/Oiles rule → 46 700 (Oiles 500)' },
-            { id: 'Plim', symbol: 'p_{max,lim}', label: 'Max. pressure limit (Oiles route)', unit: 'psi', kind: 'lookup', fig: 't12-11', default: 3560 },
-            { id: 'Vlim', symbol: 'V_{max}', label: 'Max. velocity limit (Oiles route)', unit: 'ft/min', kind: 'lookup', fig: 't12-11', default: 100 },
+            { id: 'pVrated', symbol: '(pV)_{\\mathrm{rated}}', label: 'Rated / limiting pV of the material', unit: 'psi·fpm', kind: 'lookup', fig: 't16-1', auto: v => fizz(v) ? 46700 : undefined, hint: 'Fizz/Oiles rule → 46 700 (Oiles 500)' },
+            { id: 'Plim', symbol: 'p_{\\mathrm{max},lim}', label: 'Max. pressure limit (Oiles route)', unit: 'psi', kind: 'lookup', fig: 't12-11', default: 3560 },
+            { id: 'Vlim', symbol: 'V_{\\mathrm{max}}', label: 'Max. velocity limit (Oiles route)', unit: 'ft/min', kind: 'lookup', fig: 't12-11', default: 100 },
           ],
           after: v => {
             const tab = matTable(v);
@@ -144,9 +144,9 @@
           } },
         { id: 'temp', title: 'Temperature at the chosen length (Shigley Eq. 12-49)', fig: ['t12-8', 't12-10'],
           formula: 'T = T_\\infty + \\frac{720\\, f_s\\, n_d F n}{J\\, \\hbar_{CR}\\, L}',
-          text: 'Course comparison (HW4 P1b): Mott ignores heat — this shows whether the bushing survives (e.g. porous bronze \\(T_{max}\\) = 150 °F, Shigley Table 12-8).',
+          text: 'Course comparison (HW4 P1b): Mott ignores heat — this shows whether the bushing survives (e.g. porous bronze \\(T_{\\mathrm{max}}\\) = 150 °F, Shigley Table 12-8).',
           vars: [
-            { id: 'Tmax', symbol: 'T_{max}', label: 'Material temperature limit', unit: '°F', kind: 'lookup', fig: 't12-8', hint: 'optional — Table 12-8 or Oiles 300 °F' },
+            { id: 'Tmax', symbol: 'T_{\\mathrm{max}}', label: 'Material temperature limit', unit: '°F', kind: 'lookup', fig: 't12-8', hint: 'optional — Table 12-8 or Oiles 300 °F' },
             { id: 'Tact', symbol: 'T', label: 'Steady bearing temperature', unit: '°F', kind: 'calc', digits: 4,
               compute: v => H.has(v, 'Tinf', 'fs', 'nd', 'F', 'n', 'J', 'hCR', 'L') && v.L > 0 ? v.Tinf + 720 * v.fs * v.nd * v.F * v.n / (v.J * v.hCR * v.L) : undefined,
               work: v => v.Tact !== undefined ? '\\(T = ' + H.fmt(v.Tinf) + ' + \\dfrac{720(' + H.fmt(v.fs) + ')(' + H.fmt(v.nd) + ')(' + H.fmt(v.F) + ')(' + H.fmt(v.n) + ')}{' + H.fmt(v.J) + '(' + H.fmt(v.hCR) + ')(' + H.fmt(v.L) + ')} = ' + H.fmt(v.Tact) + '\\ ^\\circ\\text{F}\\)' : null },
@@ -160,7 +160,7 @@
           vars: [
             { id: 'K', symbol: 'K', label: 'Wear factor', unit: 'in^3·min/(lbf·ft·h)', kind: 'lookup', fig: 't12-9', default: 0.6e-10, hint: 'Oiles 500 (Shigley Table 12-9)' },
             { id: 't', symbol: 't', label: 'Operating time', unit: 'h', kind: 'input' },
-            { id: 'wmax', symbol: 'w_{max}', label: 'Allowable wear', unit: 'in', kind: 'input' },
+            { id: 'wmax', symbol: 'w_{\\mathrm{max}}', label: 'Allowable wear', unit: 'in', kind: 'input' },
             { id: 'w', symbol: 'w', label: 'Radial wear', unit: 'in', kind: 'calc', digits: 4,
               compute: v => H.has(v, 'K', 'nd', 'F', 'n', 't', 'L') && v.L > 0 ? v.K * v.nd * v.F * v.n * v.t / (3 * v.L) : undefined,
               work: v => v.w !== undefined ? '\\(w = \\dfrac{' + H.fmt(v.K) + '(' + H.fmt(v.nd) + ')(' + H.fmt(v.F) + ')(' + H.fmt(v.n) + ')(' + H.fmt(v.t) + ')}{3(' + H.fmt(v.L) + ')} = ' + H.fmt(v.w) + '\\text{ in}\\)' : null },

@@ -9,7 +9,8 @@
  *   HW4 2024 P3 (11-22: 65 mm, Fr 7, Fa 3 kN, outer ring, 500 rpm, 10 kh, R 0.95, C0 34.0): Y2 = 1.53, Fe = 9.29 kN, C10 = 73.4 kN > 55.9 -> FAIL;
  *   HW4 2024 P4d (SKF 6201-2Z, C 7.28 kN, P 0.196 kN, a1 0.25, aSKF 0.3): L_nm = 3843 x 10^6 rev < 5400;
  *   Tutorial 2022 Q2 (Shigley 11-6 8e: Fr 8, Fa 5 kN, outer ring 1000 rpm, 5 kh, R 0.95, angular contact): 90 mm (C0 73.5) -> Y2 1.64, Fe 13.58, C10 106.6 kN;
- *   95 mm (C0 85.0) -> Y2 1.694, Fe 13.87, C10 108.9 kN < 121 -> 02-95 mm. */
+ *   95 mm (C0 85.0) -> Y2 1.694, Fe 13.87, C10 108.9 kN < 121 -> 02-95 mm;
+ *   Midterm 2014 Q24 (xD 20, af 1.2, FD 1600 N, R 0.995, Eq. 11-10): C10 = 9.93 kN -> 02-20 mm (table pick). */
 (function () {
   // Table 11-1 data for auto-interpolation
   const FaC0 = [0.014, 0.021, 0.028, 0.042, 0.056, 0.070, 0.084, 0.110, 0.17, 0.28, 0.42, 0.56];
@@ -59,14 +60,14 @@
     title: 'Ball & Cylindrical Roller Bearings',
     subtitle: 'Shigley Ch. 11 Secs 11-3 to 11-8 · Fizz pp. 96-101 · Weibull C10 method',
     sibling: 'ball_cyl_bearings_mott.html',
-    intro: 'Find the catalogue rating <i>C<sub>10</sub></i> a ball or cylindrical roller bearing needs and pick it from Table 11-2 / 11-3. ' +
-      'A thrust load needs \\(F_e = X_i V F_r + Y_i F_a\\) with <i>Y<sub>2</sub></i> depending on the <i>C<sub>0</sub></i> of the bearing — so assume <i>Y<sub>2</sub></i>, pick, re-read and repeat until the same bearing comes up twice (Shigley Ex. 11-7 is loaded). ' +
+    intro: 'Find the catalogue rating \\(C_{10}\\) a ball or cylindrical roller bearing needs and pick it from Table 11-2 / 11-3. ' +
+      'A thrust load needs \\(F_e = X_i V F_r + Y_i F_a\\) with \\(Y_{2}\\) depending on the \\(C_{0}\\) of the bearing — so assume \\(Y_{2}\\), pick, re-read and repeat until the same bearing comes up twice (Shigley Ex. 11-7 is loaded). ' +
       'The last section checks the life / reliability of a given bearing.',
     example: { mode: 'radial + thrust', unit: 'lbf', H: 25, T: 2404, Fx: 356.6, Fy: 297.5, Fa: 344, Rtot: 0.96, nb: 4, LDh: 10000, mfr: 2, af: 1.2, btype: 'angular-contact ball (a = 3)', ring: 'inner ring rotates (V = 1)', relEq: 'Eq. 11-10 (1 − R_D)', X2: 0.56, Y2a: 1.63, bore1: '02-60 mm angular-contact', C10sel1: 55.9, C0sel1: 35.5, bore2: '02-65 mm angular-contact', C10sel2: 63.7, C0sel2: 41.5, bore3: '02-65 mm angular-contact', C10sel3: 63.7 },
 
     assumptions: [
       { text: 'Speed from \\(n_D = 63\\,025\\,H/T\\) when not given directly', src: 'Fizz p.96', var: 'nD' },
-      { text: 'Reliability per bearing \\(R_D = R_{tot}^{1/n}\\) only when the reliability of the whole set is given; otherwise R_D = 0.90 (catalogue L_10)', src: 'Fizz p.96 · Fizz p.113', var: 'Rtot' },
+      { text: 'Reliability per bearing \\(R_D = R_{\\mathrm{tot}}^{1/n}\\) only when the reliability of the whole set is given; otherwise R_D = 0.90 (catalogue L_10)', src: 'Fizz p.96 · Fizz p.113', var: 'Rtot' },
       { text: 'Design life from Table 11-4 for the type of machine if not given', src: 'Fizz p.97', var: 'LDh' },
       { text: 'Manufacturer 2 (SKF) Weibull set: \\(L_{10} = 10^6\\) rev, x_0 = 0.02, θ = 4.459, b = 1.483 — the basis of Tables 11-2/11-3', src: 'Fizz p.97', var: 'mfr' },
       { text: 'Application factor a_f from Table 11-5 if not given (1.2 pre-filled, Ex. 11-7)', src: 'Fizz p.97 · Shigley Ex. 11-7', var: 'af' },
@@ -75,7 +76,7 @@
       { text: 'Rotation factor V = 1 (inner ring rotates); 1.2 if the outer ring rotates', src: 'Fizz p.99', var: 'ring' },
       { text: 'Thrust case: assume \\(F_a/(VF_r) > e\\) and first-pass X_2 = 0.56, Y_2 = 1.63 (middle of Table 11-1)', src: 'Fizz p.99 · Fizz p.100', var: 'Y2a' },
       { text: 'Use F_a/C_0 = 0.014 when it is smaller (Table 11-1 footnote); interpolate e and Y_2 linearly', src: 'Fizz p.100 · Fizz p.101', step: 'y2a' },
-      { text: 'Re-size with \\(C_{10,new} = (F_{e,new}/F_{e,old})\\,C_{10,old}\\); stop when the same bearing is selected twice', src: 'Fizz p.101 · Fizz p.106', step: 'c10t2' },
+      { text: 'Re-size with \\(C_{10,\\mathrm{new}} = (F_{e,new}/F_{e,old})\\,C_{10,\\mathrm{old}}\\); stop when the same bearing is selected twice', src: 'Fizz p.101 · Fizz p.106', step: 'c10t2' },
     ],
 
     figures: [
@@ -110,7 +111,7 @@
             { id: 'a', symbol: 'a', label: 'Load-life exponent', unit: '', kind: 'calc', digits: 4, compute: v => v.btype ? (/roller/.test(v.btype) ? 10 / 3 : 3) : undefined },
           ] },
         { id: 'speed', title: 'Step 1 — angular speed', eq: '3-42', formula: 'n_D = \\frac{63\\,025\\,H}{T}',
-          text: 'Type <i>n<sub>D</sub></i> if given, else torque from the FBD and power (Ex. 11-7: 2404 lbf·in, 25 hp → 655.4 rev/min).',
+          text: 'Type \\(n_{D}\\) if given, else torque from the FBD and power (Ex. 11-7: 2404 lbf·in, 25 hp → 655.4 rev/min).',
           vars: [
             { id: 'H', symbol: 'H', label: 'Power', unit: 'hp', kind: 'input', hint: 'optional' },
             { id: 'T', symbol: 'T', label: 'Torque', unit: 'lbf·in', kind: 'input', hint: 'optional' },
@@ -123,12 +124,12 @@
             { id: 'Fr', symbol: 'F_r', label: 'Radial load', kind: 'input', auto: v => H.has(v, 'Fx', 'Fy') ? Math.hypot(v.Fx, v.Fy) : undefined, hint: 'blank → from F_x, F_y',
               work: v => H.has(v, 'Fx', 'Fy') ? '\\(F_r = \\sqrt{' + H.fmt(v.Fx) + '^2 + ' + H.fmt(v.Fy) + '^2} = ' + H.fmt(Math.hypot(v.Fx, v.Fy)) + '\\)' : null },
             { id: 'Fa', symbol: 'F_a', label: 'Axial (thrust) load', kind: 'input', hint: 'radial + thrust case only' },
-            { id: 'dsh', symbol: 'd_{min}', label: 'Minimum bore (shaft diameter at the seat)', unit: 'mm', kind: 'input', hint: 'optional — filters the selection tables' },
+            { id: 'dsh', symbol: 'd_{\\mathrm{min}}', label: 'Minimum bore (shaft diameter at the seat)', unit: 'mm', kind: 'input', hint: 'optional — filters the selection tables' },
           ] },
-        { id: 'rel', title: 'Step 3 — reliability of each bearing', formula: 'R_D = \\sqrt[n]{R_{tot}}',
+        { id: 'rel', title: 'Step 3 — reliability of each bearing', formula: 'R_D = \\sqrt[n]{R_{\\mathrm{tot}}}',
           text: 'Only when the reliability is given for the whole set of <i>n</i> bearings (Ex. 11-7: \\(\\sqrt[4]{0.96} = 0.99\\)).',
           vars: [
-            { id: 'Rtot', symbol: 'R_{tot}', label: 'Reliability goal of the set', unit: '', kind: 'input', default: 0.90 },
+            { id: 'Rtot', symbol: 'R_{\\mathrm{tot}}', label: 'Reliability goal of the set', unit: '', kind: 'input', default: 0.90 },
             { id: 'nb', symbol: 'n', label: 'Number of bearings sharing the goal', unit: '', kind: 'input', default: 1 },
             { id: 'RD', symbol: 'R_D', label: 'Design reliability per bearing', unit: '', kind: 'calc', digits: 5, compute: v => H.has(v, 'Rtot', 'nb') && v.nb > 0 ? Math.pow(v.Rtot, 1 / v.nb) : undefined,
               work: v => v.RD !== undefined ? '\\(R_D = ' + H.fmt(v.Rtot) + '^{1/' + H.fmt(v.nb) + '} = ' + H.fmt(v.RD, 5) + '\\)' : null },
@@ -168,7 +169,7 @@
           text: 'Pick from the table (★) or read Table 11-2 (ball) / 11-3 (cylindrical roller): first bore with \\(C_{10}\\) ≥ required that fits the shaft.',
           vars: [
             { id: 'boreR', label: 'Selected bearing', kind: 'input', type: 'text', hint: 'e.g. 02-25 mm' },
-            { id: 'C10selR', symbol: 'C_{10,cat}', label: 'Catalogue C_10 of the selection', unit: 'kN', kind: 'lookup', fig: 't11-2',
+            { id: 'C10selR', symbol: 'C_{10,\\mathrm{cat}}', label: 'Catalogue C_10 of the selection', unit: 'kN', kind: 'lookup', fig: 't11-2',
               check: v => (H.has(v, 'C10selR', 'C10rkN') && v.C10selR < v.C10rkN) ? 'Catalogue C_10 is below the required value' : null },
           ],
           after: v => selTab(v, v.C10rkN, ['boreR', 'C10selR']) + (!H.has(v, 'C10selR', 'C10rkN') ? '' : v.C10selR >= v.C10rkN ? '<span class="result-ok">' + (v.boreR || 'Selected bearing') + ': C_10 = ' + H.fmt(v.C10selR) + ' kN ≥ ' + H.fmt(v.C10rkN) + ' kN ✔</span>' : '<span class="result-bad">Pick a larger bearing — C_10 must be ≥ ' + H.fmt(v.C10rkN) + ' kN</span>') },
@@ -194,13 +195,13 @@
               work: v => v.C10t1 !== undefined ? '\\(C_{10} = ' + H.fmt(v.af) + '(' + H.fmt(v.Fe1) + ')\\left[' + H.fmt(v.brk2) + '\\right]^{1/' + H.fmt(v.a) + '} = ' + H.fmt(v.C10t1) + '\\ \\text{' + v.unit + '} = ' + H.fmt(v.C10t1 * toKN(v)) + '\\text{ kN}\\)' : null },
             { id: 'C10t1kN', symbol: 'C_{10}', label: 'Required rating (1st) in kN', unit: 'kN', kind: 'calc', digits: 4, compute: v => v.C10t1 !== undefined ? v.C10t1 * toKN(v) : undefined },
             { id: 'bore1', label: 'Tentative bearing', kind: 'input', type: 'text', hint: 'e.g. 02-60 mm angular-contact' },
-            { id: 'C10sel1', symbol: 'C_{10,cat}', label: 'Its catalogue C_10', unit: 'kN', kind: 'lookup', fig: 't11-2' },
+            { id: 'C10sel1', symbol: 'C_{10,\\mathrm{cat}}', label: 'Its catalogue C_10', unit: 'kN', kind: 'lookup', fig: 't11-2' },
             { id: 'C0sel1', symbol: 'C_0', label: 'Its catalogue C_0', unit: 'kN', kind: 'lookup', fig: 't11-2' },
           ],
           after: v => selTab(v, v.C10t1kN, ['bore1', 'C10sel1', 'C0sel1']) },
         { id: 'y2a', title: 'Steps 7–11 — F_a/C_0, e, interpolate Y_2, recompute F_e', fig: ['t11-1'], when: thrust,
           formula: 'Y_2 = Y_{2,1} + \\frac{Y_{2,2}-Y_{2,1}}{x_2 - x_1}\\left(\\frac{F_a}{C_0} - x_1\\right)',
-          text: 'If \\(F_a/(VF_r) \\le e\\) the thrust is small: \\(F_e = VF_r\\). Otherwise interpolate <i>Y<sub>2</sub></i> at the actual \\(F_a/C_0\\) (auto; override with your reading).',
+          text: 'If \\(F_a/(VF_r) \\le e\\) the thrust is small: \\(F_e = VF_r\\). Otherwise interpolate \\(Y_{2}\\) at the actual \\(F_a/C_0\\) (auto; override with your reading).',
           vars: [
             { id: 'FaC01', symbol: 'F_a/C_0', label: 'Thrust ratio', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fa', 'C0sel1') && v.C0sel1 > 0 ? v.Fa * toKN(v) / v.C0sel1 : undefined,
               work: v => v.FaC01 !== undefined ? '\\(F_a/C_0 = ' + H.fmt(v.Fa * toKN(v)) + '/' + H.fmt(v.C0sel1) + ' = ' + H.fmt(v.FaC01) + '\\)' : null },
@@ -212,12 +213,12 @@
               work: v => v.Fe2 === undefined ? null : v.ratio1 > v.e1 ? '\\(F_a/(VF_r) = ' + H.fmt(v.ratio1) + ' > e = ' + H.fmt(v.e1) + ':\\ F_e = ' + H.fmt(v.X2) + '(' + H.fmt(v.V) + ')(' + H.fmt(v.Fr) + ') + ' + H.fmt(v.Y2b) + '(' + H.fmt(v.Fa) + ') = ' + H.fmt(v.Fe2) + '\\)' : '\\(F_a/(VF_r) = ' + H.fmt(v.ratio1) + ' \\le e:\\ F_e = VF_r = ' + H.fmt(v.Fe2) + '\\)' },
           ] },
         { id: 'c10t2', title: 'Steps 12–13 — new C_10 and re-select', fig: ['t11-2'], when: thrust,
-          formula: 'C_{10,new} = \\frac{F_{e,new}}{F_{e,old}}\\, C_{10,old}',
+          formula: 'C_{10,\\mathrm{new}} = \\frac{F_{e,new}}{F_{e,old}}\\, C_{10,\\mathrm{old}}',
           vars: [
             { id: 'C10t2kN', symbol: 'C_{10}', label: 'Required rating (2nd)', unit: 'kN', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fe2', 'Fe1', 'C10t1kN') && v.Fe1 > 0 ? v.Fe2 / v.Fe1 * v.C10t1kN : undefined,
               work: v => v.C10t2kN !== undefined ? '\\(C_{10} = \\dfrac{' + H.fmt(v.Fe2) + '}{' + H.fmt(v.Fe1) + '}(' + H.fmt(v.C10t1kN) + ') = ' + H.fmt(v.C10t2kN) + '\\text{ kN}\\)' : null },
             { id: 'bore2', label: 'Bearing selected now', kind: 'input', type: 'text' },
-            { id: 'C10sel2', symbol: 'C_{10,cat}', label: 'Its catalogue C_10', unit: 'kN', kind: 'lookup', fig: 't11-2' },
+            { id: 'C10sel2', symbol: 'C_{10,\\mathrm{cat}}', label: 'Its catalogue C_10', unit: 'kN', kind: 'lookup', fig: 't11-2' },
             { id: 'C0sel2', symbol: 'C_0', label: 'Its catalogue C_0', unit: 'kN', kind: 'lookup', fig: 't11-2' },
           ],
           after: v => selTab(v, v.C10t2kN, ['bore2', 'C10sel2', 'C0sel2']) + (!H.has(v, 'C10sel1', 'C10sel2') ? '' : (v.C10sel1 === v.C10sel2 && v.C10sel2 >= v.C10t2kN) ? '<span class="result-ok">Same bearing twice → converged.</span>' : '<span class="result-ok">Different bearing — iteration 2 below with the new C_0.</span>') },
@@ -235,7 +236,7 @@
             { id: 'C10t3kN', symbol: 'C_{10}', label: 'Required rating (3rd)', unit: 'kN', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fe3', 'Fe1', 'C10t1kN') && v.Fe1 > 0 ? v.Fe3 / v.Fe1 * v.C10t1kN : undefined,
               work: v => v.C10t3kN !== undefined ? '\\(C_{10} = \\dfrac{' + H.fmt(v.Fe3) + '}{' + H.fmt(v.Fe1) + '}(' + H.fmt(v.C10t1kN) + ') = ' + H.fmt(v.C10t3kN) + '\\text{ kN}\\)' : null },
             { id: 'bore3', label: 'Bearing selected now', kind: 'input', type: 'text' },
-            { id: 'C10sel3', symbol: 'C_{10,cat}', label: 'Its catalogue C_10', unit: 'kN', kind: 'lookup', fig: 't11-2' },
+            { id: 'C10sel3', symbol: 'C_{10,\\mathrm{cat}}', label: 'Its catalogue C_10', unit: 'kN', kind: 'lookup', fig: 't11-2' },
           ],
           after: v => selTab(v, v.C10t3kN, ['bore3', 'C10sel3']) + (!H.has(v, 'C10sel2', 'C10sel3', 'C10t3kN') ? '' : (v.C10sel2 === v.C10sel3 && v.C10sel3 >= v.C10t3kN) ? '<span class="result-ok">Same bearing again → converged: ' + (v.bore3 || v.bore2 || '') + ', C_10 = ' + H.fmt(v.C10sel3) + ' kN ≥ ' + H.fmt(v.C10t3kN) + ' kN ✔</span>' : '<span class="result-bad">Not converged — put the latest C_0 into iteration 1 and repeat.</span>') },
       ] },

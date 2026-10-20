@@ -301,7 +301,8 @@
       const changed = assumed !== undefined
         ? (cur !== undefined && String(cur) !== String(assumed) && !(typeof cur === 'number' && Math.abs(cur - Number(assumed)) < 1e-9))
         : (!!vr.auto && typed);   // assumption carried by an auto-fill: overriding it by typing counts as a change
-      a._val.textContent = (changed ? 'you set ' : (vr.auto && !typed ? 'auto ' : 'using ')) + show(cur) + (vr.unit ? ' ' + plain(vr.unit) : '');
+      const html = (changed ? 'you set ' : (vr.auto && !typed ? 'auto ' : 'using ')) + rich(show(cur)) + (vr.unit ? ' ' + rich(vr.unit) : '');
+      if (a._valHtml !== html) { a._val.innerHTML = html; a._valHtml = html; if (a._val.isConnected && /\\\(/.test(html)) typeset([a._val]); }
       a._li.classList.toggle('changed', changed);
     });
   }
@@ -527,8 +528,8 @@
     });
     let arows = '';
     if (T.assumptions && T.assumptions.length) {
-      text = text.replace('\n', '\n\nAssumptions:\n' + T.assumptions.map(a => '- ' + plain(a.text, true) + (a._val ? ' [' + a._val.textContent + ']' : '') + (a.src ? ' (' + plain(a.src, true) + ')' : '')).join('\n') + '\n');
-      arows = '<h3 style="margin:6px 0">Assumptions</h3><ul style="margin:0 0 12px 18px;font-size:.88rem">' + T.assumptions.map(a => '<li>' + rich(a.text) + (a._val ? ' <b>[' + a._val.textContent + ']</b>' : '') + (a.src ? ' <small style="color:#6b7280">(' + rich(a.src) + ')</small>' : '') + '</li>').join('') + '</ul>';
+      text = text.replace('\n', '\n\nAssumptions:\n' + T.assumptions.map(a => '- ' + plain(a.text, true) + (a._val ? ' [' + plain(a._valHtml || '', true) + ']' : '') + (a.src ? ' (' + plain(a.src, true) + ')' : '')).join('\n') + '\n');
+      arows = '<h3 style="margin:6px 0">Assumptions</h3><ul style="margin:0 0 12px 18px;font-size:.88rem">' + T.assumptions.map(a => '<li>' + rich(a.text) + (a._val ? ' <b>[' + (a._valHtml || '') + ']</b>' : '') + (a.src ? ' <small style="color:#6b7280">(' + rich(a.src) + ')</small>' : '') + '</li>').join('') + '</ul>';
     }
     box.innerHTML = '<h2>Summary of values</h2>' + arows + '<table>' + rows + '</table><div class="actions"><button id="copy-sum">Copy as text</button><button id="close-sum">Close</button></div>';
     box.querySelector('#copy-sum').onclick = () => { navigator.clipboard.writeText(text).then(() => toast('Copied')); };

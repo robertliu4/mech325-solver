@@ -38,6 +38,7 @@
   function keyTable(v) {
     if (!(v.dkey > 0)) return '';
     const k = T111.findIndex(r => v.dkey > r[0] + 1e-9 && v.dkey <= r[1] + 1e-9);
+    if (k < 0) return '<div class="seltab-note">D = ' + H.fmt(v.dkey) + ' in is outside Table 11-1.</div>';
     const L = (W, Hh) => H.has(v, 'Tkey', 'Nk', 'syk', 'syw') ? Math.max(2 * v.Tkey / ((0.5 * v.syk * 1000 / v.Nk) * v.dkey * W), 4 * v.Tkey / ((v.syw * 1000 / v.Nk) * v.dkey * Hh)) : undefined;
     const rows = T111.map((r, i) => ({ r, i })).filter(o => Math.abs(o.i - k) <= 1).map(({ r, i }) => ({ cells: [r[0] + ' – ' + r[1], fr(r[2]) + ' × ' + fr(r[3]), L(r[2], r[3]) !== undefined ? H.fmt(L(r[2], r[3]), 3) : '—'], ok: i === k, pick: i === k, set: { W: r[2], Hk: r[3] } }));
     return H.table(['shaft D over – to (in)', 'key W × H (in)', 'L_min (in)'], rows, { caption: 'Table 11-1 key for D = ' + H.fmt(v.dkey) + ' in', note: 'Pick = the row containing D (sizes up to 6.5 in are square).' });
@@ -51,7 +52,7 @@
   function altTables(v) {
     let out = '';
     if (v.Kreq > 0) {
-      const fits = T116.filter(r => r[1] === (v.fit || 'B')); const k = fits.findIndex(r => r[2] >= v.Kreq);
+      const fits = T116.filter(r => r[1] === (v.fit || 'B')); let k = -1; fits.forEach((r, i) => { if (r[2] >= v.Kreq && (k < 0 || r[2] < fits[k][2])) k = i; });
       out += H.table(['Splines', 'fit', 'K (T = K D^2 per in)', 'capacity at D, L (lb·in)', 'vs T'], fits.map((r, i) => ({ cells: [r[0], r[1], r[2], H.fmt(r[2] * v.dkey * v.dkey * v.Lsp, 5), H.fmt(r[2] / v.Kreq, 3)], ok: r[2] >= v.Kreq, pick: i === k })),
         { caption: 'Table 11-6 straight splines, fit ' + (v.fit || 'B') + ': need K ≥ T/(D^2 L) = ' + H.fmt(v.Kreq, 4), note: 'HW4 P6: K = 201 → 6 splines B (208) or 4 B (219); with a design factor 3 the course went to 16 splines.' });
     }
@@ -78,7 +79,7 @@
     assumptions: [
       { text: 'Torque \\(T = 63\\,000\\,P/n\\) (P in hp); torques along the shaft sum to zero', src: 'Fizz p.106', step: 'tq' },
       { text: 'Pressure angle φ = 20° unless the problem states otherwise', src: 'Fizz p.42', var: 'phi' },
-      { text: 'Belt tension ratio \\(F_1/F_2\\) = 5 (V-belt) or 3 (flat) if not given → \\(F_{shaft} = 1.5\\) or \\(2.0 \\times 2T/D\\)', src: 'Fizz p.107', var: 'kb_' },
+      { text: 'Belt tension ratio \\(F_1/F_2\\) = 5 (V-belt) or 3 (flat) if not given → \\(F_{\\mathrm{shaft}} = 1.5\\) or \\(2.0 \\times 2T/D\\)', src: 'Fizz p.107', var: 'kb_' },
       { text: 'Keyseats are profile (K_t = 2.0) unless told otherwise; sled-runner 1.6', src: 'Fizz p.108 · Fizz p.109', var: 'feat' },
       { text: 'Gears / sheaves on well-rounded fillets (1.5); bearing seats press fit (1.0) with a sharp fillet (2.5) on the large side; ring grooves 3.0 and the diameter ×1.06', src: 'Fizz p.109 · Fizz p.112', step: 'kt' },
       { text: 'Wrought steel, C_m = 1.00, if the material type is not specified', src: 'Fizz p.109', var: 'steel' },
@@ -131,7 +132,7 @@
               work: v => v.T1 !== undefined ? '\\(T = \\dfrac{63\\,000(' + H.fmt(v.P) + ')}{' + H.fmt(v.n) + '} = ' + H.fmt(v.T1, 5) + '\\text{ lb·in}\\)' : null },
           ] },
         { id: 'forces', title: 'Step 2 — forces from the component', eq: '12-2 / 12-3 / 12-12 / 12-13', fig: ['fig12-4', 'fig12-6'],
-          formula: 'W_t = \\frac{2T}{D} \\qquad W_r = W_t\\tan\\phi\\ \\text{(spur)},\\ W_t\\frac{\\tan\\phi_n}{\\cos\\psi}\\ \\text{(helical)},\\ W_t\\tan\\phi\\cos\\gamma\\ \\text{(bevel)} \\qquad W_x = W_t\\tan\\psi\\ \\text{(helical)},\\ W_t\\tan\\phi\\sin\\gamma\\ \\text{(bevel)} \\qquad F_{shaft} = \\frac{2T}{D}\\frac{k+1}{k-1}\\ \\text{(belts)}',
+          formula: 'W_t = \\frac{2T}{D} \\qquad W_r = W_t\\tan\\phi\\ \\text{(spur)},\\ W_t\\frac{\\tan\\phi_n}{\\cos\\psi}\\ \\text{(helical)},\\ W_t\\tan\\phi\\cos\\gamma\\ \\text{(bevel)} \\qquad W_x = W_t\\tan\\psi\\ \\text{(helical)},\\ W_t\\tan\\phi\\sin\\gamma\\ \\text{(bevel)} \\qquad F_{\\mathrm{shaft}} = \\frac{2T}{D}\\frac{k+1}{k-1}\\ \\text{(belts)}',
           text: 'Chain: \\(F = 2T/D\\) (Eq. 12-5). V-belt: \\(F_B = 1.5(2T/D)\\) (Eq. 12-12). Flat belt: \\(2.0(2T/D)\\) (Eq. 12-13). Resolve into x and y.',
           vars: [
             { id: 'ctype', label: 'Component', kind: 'choice', type: 'text', default: 'spur gear', options: ['spur gear', 'helical gear', 'bevel gear', 'chain sprocket', 'V-belt sheave', 'flat-belt pulley'] },
@@ -154,7 +155,7 @@
               if (c === 'helical gear') return H.has(v, 'psi') ? v.Wt * Math.tan(H.rad(v.psi)) : undefined;
               if (c === 'bevel gear') return H.has(v, 'phi', 'gam') ? v.Wt * Math.tan(H.rad(v.phi)) * Math.sin(H.rad(v.gam)) : undefined;
               return undefined; } },
-            { id: 'Fsh', symbol: 'F_{shaft}', label: 'Bending force on shaft (chain / belt)', unit: 'lb', kind: 'calc', digits: 4, compute: v => {
+            { id: 'Fsh', symbol: 'F_{\\mathrm{shaft}}', label: 'Bending force on shaft (chain / belt)', unit: 'lb', kind: 'calc', digits: 4, compute: v => {
               if (v.Wt === undefined) return undefined; const c = comp(v);
               if (c === 'chain sprocket') return v.Wt;
               if (/belt/.test(c)) return H.has(v, 'kb_') && v.kb_ > 1 ? v.Wt * (v.kb_ + 1) / (v.kb_ - 1) : undefined;
@@ -198,7 +199,7 @@
             { id: 'sn', symbol: 's_n', label: 'Endurance limit from Fig. 5-11', unit: 'ksi', kind: 'lookup', fig: 'fig5-11a', auto: v => H.has(v, 'su') && SN[v.surf] ? SN[v.surf][0] * Math.pow(v.su, SN[v.surf][1]) * 0.5 * Math.min(v.su, 200) : undefined, hint: 'auto is a curve-fit estimate — read the graph' },
             { id: 'rel', label: 'Desired reliability', kind: 'choice', default: 0.99, options: [0.5, 0.9, 0.99, 0.999] },
             { id: 'CRf', symbol: 'C_R', label: 'Reliability factor', unit: '', kind: 'lookup', fig: 't5-3', auto: v => CR[v.rel] },
-            { id: 'Dguess', symbol: 'D_{guess}', label: 'Trial diameter for Cs', unit: 'in', kind: 'input', hint: 'blank → Cs = 0.8 (Fizz Step 15)' },
+            { id: 'Dguess', symbol: 'D_{\\mathrm{guess}}', label: 'Trial diameter for Cs', unit: 'in', kind: 'input', hint: 'blank → Cs = 0.8 (Fizz Step 15)' },
             { id: 'Cs', symbol: 'C_s', label: 'Size factor', unit: '', kind: 'lookup', fig: 'fig5-12', auto: v => v.Dguess !== undefined ? Cs(v.Dguess) : 0.8,
               work: v => v.Dguess !== undefined && Cs(v.Dguess) !== undefined ? '\\(C_s = ' + (v.Dguess <= 2 ? '(' + H.fmt(v.Dguess) + '/0.3)^{-0.11}' : '0.859 - 0.02125(' + H.fmt(v.Dguess) + ')') + ' = ' + H.fmt(Cs(v.Dguess)) + '\\)' : null },
             { id: 'snp', symbol: "s'_n", label: 'Modified endurance strength', unit: 'ksi', kind: 'calc', digits: 4, compute: v => H.has(v, 'sn', 'Cm', 'Cst', 'CRf', 'Cs') ? v.sn * v.Cm * v.Cst * v.CRf * v.Cs : undefined,
@@ -217,17 +218,17 @@
             { id: 'D16', symbol: 'D_{12\\text{-}16}', label: 'Diameter from Eq. 12-16 (shear only)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'Kt', 'V', 'N', 'snp') && v.V > 0 ? Math.sqrt(2.94 * v.Kt * v.V * v.N / (v.snp * 1000)) : undefined,
               work: v => v.D16 !== undefined ? '\\(D = \\sqrt{\\dfrac{2.94(' + H.fmt(v.Kt) + ')(' + H.fmt(v.V) + ')(' + H.fmt(v.N) + ')}{' + H.fmt(v.snp * 1000, 5) + '}} = ' + H.fmt(v.D16) + '\\text{ in}\\)' : null },
             { id: 'ring', label: 'Retaining-ring groove at this point?', kind: 'choice', type: 'text', default: 'no', options: ['no', 'yes (×1.06)'] },
-            { id: 'Dmin', symbol: 'D_{min}', label: 'Governing minimum diameter', unit: 'in', kind: 'calc', digits: 4, compute: v => { let d = v.D24; if (d === undefined && v.D16 !== undefined) d = v.D16; if (d === undefined) return undefined; if (v.D16 !== undefined && v.D16 > d) d = v.D16; if (/yes/.test(v.ring || '')) d *= 1.06; return d; },
-              work: v => v.Dmin !== undefined && /yes/.test(v.ring || '') ? '\\(D_{ring} = 1.06 D = ' + H.fmt(v.Dmin) + '\\text{ in}\\)' : null },
+            { id: 'Dmin', symbol: 'D_{\\mathrm{min}}', label: 'Governing minimum diameter', unit: 'in', kind: 'calc', digits: 4, compute: v => { let d = v.D24; if (d === undefined && v.D16 !== undefined) d = v.D16; if (d === undefined) return undefined; if (v.D16 !== undefined && v.D16 > d) d = v.D16; if (/yes/.test(v.ring || '')) d *= 1.06; return d; },
+              work: v => v.Dmin !== undefined && /yes/.test(v.ring || '') ? '\\(D_{\\mathrm{ring}} = 1.06 D = ' + H.fmt(v.Dmin) + '\\text{ in}\\)' : null },
             { id: 'Cs2', symbol: 'C_s', label: 'Cs at the computed diameter (Step 20 check)', unit: '', kind: 'calc', digits: 4, compute: v => Cs(v.Dmin) },
           ],
           after: v => {
             if (v.Dmin === undefined) return '';
-            const re = (v.Cs2 !== undefined && v.Cs !== undefined && Math.abs(v.Cs2 - v.Cs) > 0.05) ? ' <span class="result-bad">C<sub>s</sub> at this size is ' + H.fmt(v.Cs2, 3) + ' vs assumed ' + H.fmt(v.Cs, 3) + ' — do a 2nd iteration (Step 20): enter D<sub>guess</sub> = ' + H.fmt(v.Dmin, 3) + '.</span>' : ' <span class="result-ok">C<sub>s</sub> consistent with the assumed value ✔</span>';
-            return '<span class="result-ok">D<sub>min</sub> = ' + H.fmt(v.Dmin) + ' in at this point.</span>' + re;
+            const re = (v.Cs2 !== undefined && v.Cs !== undefined && Math.abs(v.Cs2 - v.Cs) > 0.05) ? ' <span class="result-bad">C_s at this size is ' + H.fmt(v.Cs2, 3) + ' vs assumed ' + H.fmt(v.Cs, 3) + ' — do a 2nd iteration (Step 20): enter D_guess = ' + H.fmt(v.Dmin, 3) + '.</span>' : ' <span class="result-ok">C_s consistent with the assumed value ✔</span>';
+            return '<span class="result-ok">D_min = ' + H.fmt(v.Dmin) + ' in at this point.</span>' + re;
           } },
         { id: 'round', title: 'Steps 19–25 — most restrictive diameter, bearing bore, preferred size', fig: ['ta2-1', 't14-3a'],
-          text: 'Largest \\(D_{min}\\) of the points on a section; at bearing seats use the bearing bore (ball-bearing calculator), shoulders ≥ its S. Elsewhere round <i>up</i> to Table A2-1 (pick below).',
+          text: 'Largest \\(D_{\\mathrm{min}}\\) of the points on a section; at bearing seats use the bearing bore (ball-bearing calculator), shoulders ≥ its S. Elsewhere round <i>up</i> to Table A2-1 (pick below).',
           vars: [
             { id: 'Dsel', symbol: 'D', label: 'Specified diameter at this point', unit: 'in', kind: 'lookup', fig: 'ta2-1', check: v => (H.has(v, 'Dsel', 'Dmin') && v.Dsel < v.Dmin) ? 'Smaller than Dmin' : null },
             { id: 'Nact', symbol: 'N', label: 'Actual design factor at D (Eq. 12-23 solved for N)', unit: '', kind: 'calc', digits: 3, compute: v => H.has(v, 'Dsel', 'Kt', 'M', 'T', 'snp', 'sy') && v.Dsel > 0 ? (() => { const s = Math.sqrt(Math.pow(v.Kt * v.M / (v.snp * 1000), 2) + 0.75 * Math.pow(v.T / (v.sy * 1000), 2)); return s > 0 ? Math.PI * Math.pow(v.Dsel, 3) / (32 * s) : undefined; })() : undefined },
@@ -247,22 +248,22 @@
             { id: 'syk', symbol: 's_y', label: 'Yield strength of the key', unit: 'ksi', kind: 'lookup', fig: 't11-4', default: 54 },
             { id: 'syw', symbol: 's_{y,min}', label: 'Lowest yield strength of key / shaft / hub (for bearing)', unit: 'ksi', kind: 'input', auto: v => v.syk, hint: 'defaults to the key' },
             { id: 'Nk', symbol: 'N', label: 'Design factor', unit: '', kind: 'input', default: 3 },
-            { id: 'Lhub', symbol: 'L_{hub}', label: 'Hub length (if known)', unit: 'in', kind: 'input' },
+            { id: 'Lhub', symbol: 'L_{\\mathrm{hub}}', label: 'Hub length (if known)', unit: 'in', kind: 'input' },
           ],
           after: keyTable },
         { id: 'klen', title: 'Step 28 — minimum key length', eq: '11-2 / 11-4 / 11-5', fig: ['fig11-4'],
-          formula: 'L_{min} = \\frac{4TN}{D\\,W\\,s_y}\\ \\text{(square key, key weakest)} \\qquad L_{shear} = \\frac{2T}{\\tau_d D W},\\ \\tau_d = \\frac{0.5 s_y}{N} \\qquad L_{bear} = \\frac{4T}{\\sigma_d D H},\\ \\sigma_d = \\frac{s_{y,min}}{N}',
+          formula: 'L_{\\mathrm{min}} = \\frac{4TN}{D\\,W\\,s_y}\\ \\text{(square key, key weakest)} \\qquad L_{\\mathrm{shear}} = \\frac{2T}{\\tau_d D W},\\ \\tau_d = \\frac{0.5 s_y}{N} \\qquad L_{\\mathrm{bear}} = \\frac{4T}{\\sigma_d D H},\\ \\sigma_d = \\frac{s_{y,min}}{N}',
           text: 'Square key, key weakest: Eq. 11-5. Otherwise the larger of shear (11-2) and bearing (11-4). Over 2 in → bigger shaft, two keys or stronger key.',
           vars: [
-            { id: 'L5', symbol: 'L_{min}', label: 'Eq. 11-5 (square key, key weakest)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tkey', 'Nk', 'dkey', 'W', 'syk') && v.dkey * v.W * v.syk > 0 ? 4 * v.Tkey * v.Nk / (v.dkey * v.W * v.syk * 1000) : undefined,
+            { id: 'L5', symbol: 'L_{\\mathrm{min}}', label: 'Eq. 11-5 (square key, key weakest)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tkey', 'Nk', 'dkey', 'W', 'syk') && v.dkey * v.W * v.syk > 0 ? 4 * v.Tkey * v.Nk / (v.dkey * v.W * v.syk * 1000) : undefined,
               work: v => v.L5 !== undefined ? '\\(L = \\dfrac{4(' + H.fmt(v.Tkey, 5) + ')(' + H.fmt(v.Nk) + ')}{(' + H.fmt(v.dkey) + ')(' + H.fmt(v.W) + ')(' + H.fmt(v.syk * 1000, 5) + ')} = ' + H.fmt(v.L5) + '\\text{ in}\\)' : null },
-            { id: 'Lsh', symbol: 'L_{shear}', label: 'Eq. 11-2 (shear of key)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tkey', 'Nk', 'dkey', 'W', 'syk') && v.dkey * v.W * v.syk > 0 ? 2 * v.Tkey / ((0.5 * v.syk * 1000 / v.Nk) * v.dkey * v.W) : undefined },
-            { id: 'Lbr', symbol: 'L_{bear}', label: 'Eq. 11-4 (bearing / compression on weakest)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tkey', 'Nk', 'dkey', 'Hk', 'syw') && v.dkey * v.Hk * v.syw > 0 ? 4 * v.Tkey / ((v.syw * 1000 / v.Nk) * v.dkey * v.Hk) : undefined },
-            { id: 'Lmin', symbol: 'L_{min}', label: 'Required key length (governing)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'Lsh', 'Lbr') ? Math.max(v.Lsh, v.Lbr) : undefined },
+            { id: 'Lsh', symbol: 'L_{\\mathrm{shear}}', label: 'Eq. 11-2 (shear of key)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tkey', 'Nk', 'dkey', 'W', 'syk') && v.dkey * v.W * v.syk > 0 ? 2 * v.Tkey / ((0.5 * v.syk * 1000 / v.Nk) * v.dkey * v.W) : undefined },
+            { id: 'Lbr', symbol: 'L_{\\mathrm{bear}}', label: 'Eq. 11-4 (bearing / compression on weakest)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tkey', 'Nk', 'dkey', 'Hk', 'syw') && v.dkey * v.Hk * v.syw > 0 ? 4 * v.Tkey / ((v.syw * 1000 / v.Nk) * v.dkey * v.Hk) : undefined },
+            { id: 'Lmin', symbol: 'L_{\\mathrm{min}}', label: 'Required key length (governing)', unit: 'in', kind: 'calc', digits: 4, compute: v => H.has(v, 'Lsh', 'Lbr') ? Math.max(v.Lsh, v.Lbr) : undefined },
             { id: 'Lsel', symbol: 'L', label: 'Specified key length (Step 30, preferred size)', unit: 'in', kind: 'lookup', fig: 'ta2-1', hint: 'round up; ≤ hub length; keep clear of ring grooves / fillets',
               check: v => (H.has(v, 'Lsel', 'Lmin') && v.Lsel < v.Lmin) ? 'Shorter than required' : (H.has(v, 'Lsel', 'Lhub') && v.Lsel > v.Lhub) ? 'Longer than the hub — stronger key material or two keys' : null },
           ],
-          after: v => v.Lmin === undefined ? '' : v.Lmin > 2 ? '<span class="result-bad">L<sub>min</sub> = ' + H.fmt(v.Lmin) + ' in &gt; 2 in — increase the shaft diameter or key strength (Fizz Step 29).</span>' : '<span class="result-ok">Key ' + H.fmt(v.W) + ' × ' + H.fmt(v.Hk) + ' in, L<sub>min</sub> = ' + H.fmt(v.Lmin) + ' in (' + (v.Lbr >= v.Lsh ? 'bearing' : 'shear') + ' governs)' + (v.Lsel !== undefined ? ' → specify ' + H.fmt(v.W) + ' × ' + H.fmt(v.Hk) + ' × ' + H.fmt(v.Lsel) + ' in' : '') + ' ✔</span>' },
+          after: v => v.Lmin === undefined ? '' : v.Lmin > 2 ? '<span class="result-bad">L_min = ' + H.fmt(v.Lmin) + ' in &gt; 2 in — increase the shaft diameter or key strength (Fizz Step 29).</span>' : '<span class="result-ok">Key ' + H.fmt(v.W) + ' × ' + H.fmt(v.Hk) + ' in, L_min = ' + H.fmt(v.Lmin) + ' in (' + (v.Lbr >= v.Lsh ? 'bearing' : 'shear') + ' governs)' + (v.Lsel !== undefined ? ' → specify ' + H.fmt(v.W) + ' × ' + H.fmt(v.Hk) + ' × ' + H.fmt(v.Lsel) + ' in' : '') + ' ✔</span>' },
         { id: 'kseat', title: 'Step 31 — keyseat and keyway dimensions', fig: ['fig11-2', 't11-2'],
           formula: 'Y = \\frac{D - \\sqrt{D^2 - W^2}}{2} \\qquad S = D - Y - \\frac{H}{2} = \\frac{D - H + \\sqrt{D^2 - W^2}}{2} \\qquad T = D - Y + \\frac{H}{2} + C = \\frac{D + H + \\sqrt{D^2 - W^2}}{2} + C',
           text: 'C = +0.005 in (parallel keys) or −0.020 in (taper keys). Mott Ex. 11-1: D = 2.000, ½ × ½ key → S = 1.718 in, T = 2.223 in.',
@@ -276,16 +277,16 @@
           ],
           after: v => v.Sk !== undefined ? '<span class="result-ok">Keyseat: S = ' + H.fmt(v.Sk) + ' in (shaft), T = ' + H.fmt(v.Tk) + ' in (hub), depth H/2 = ' + H.fmt(v.Hk / 2) + ' in.</span>' : '' },
         { id: 'alt', title: 'Alternatives — spline or pin', eq: '11-9', fig: ['t11-5', 't11-6', 'pins'],
-          formula: 'T = K D^2 L\\ \\ (\\text{Table 11-6}) \\qquad F = \\frac{T}{D/2},\\ \\ F_{req} = N F',
+          formula: 'T = K D^2 L\\ \\ (\\text{Table 11-6}) \\qquad F = \\frac{T}{D/2},\\ \\ F_{\\mathrm{req}} = N F',
           text: 'Spline: required \\(K = T/(D^2 L)\\) with L = hub length; fit A permanent, B slides without load, C slides under load. Pin: compare N·F with the failure load. A retaining ring cannot transmit torque.',
           vars: [
             { id: 'Lsp', symbol: 'L', label: 'Spline length (hub length)', unit: 'in', kind: 'input', auto: v => v.Lhub },
             { id: 'fit', label: 'Spline fit', kind: 'choice', type: 'text', default: 'B', options: ['A', 'B', 'C'] },
-            { id: 'Kreq', symbol: 'K_{req}', label: 'Required spline constant', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tkey', 'dkey', 'Lsp') && v.dkey * v.Lsp > 0 ? v.Tkey * (v.Nsp || 1) / (v.dkey * v.dkey * v.Lsp) : undefined,
+            { id: 'Kreq', symbol: 'K_{\\mathrm{req}}', label: 'Required spline constant', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'Tkey', 'dkey', 'Lsp') && v.dkey * v.Lsp > 0 ? v.Tkey * (v.Nsp || 1) / (v.dkey * v.dkey * v.Lsp) : undefined,
               work: v => v.Kreq !== undefined ? '\\(K = \\dfrac{' + H.fmt(v.Nsp || 1) + '(' + H.fmt(v.Tkey, 5) + ')}{' + H.fmt(v.dkey) + '^2(' + H.fmt(v.Lsp) + ')} = ' + H.fmt(v.Kreq, 4) + '\\)' : null },
             { id: 'Nsp', symbol: 'N_{sp}', label: 'Design factor on spline torque', unit: '', kind: 'input', default: 1, hint: 'HW4 P6 used 1 (K = 201), then discussed 3' },
             { id: 'Fpin', symbol: 'F', label: 'Tangential force at the shaft surface', unit: 'lb', kind: 'calc', digits: 5, compute: v => H.has(v, 'Tkey', 'dkey') && v.dkey > 0 ? 2 * v.Tkey / v.dkey : undefined },
-            { id: 'npin', symbol: 'N_{pin}', label: 'Design factor, pin', unit: '', kind: 'input', default: 3 },
+            { id: 'npin', symbol: 'N_{\\mathrm{pin}}', label: 'Design factor, pin', unit: '', kind: 'input', default: 3 },
             { id: 'ptype', label: 'Pin type', kind: 'choice', type: 'text', default: 'Dowel', options: Object.keys(PINS) },
             { id: 'shear', label: 'Pin loading', kind: 'choice', type: 'text', default: 'double shear (through the shaft)', options: ['double shear (through the shaft)', 'single shear'] },
           ],

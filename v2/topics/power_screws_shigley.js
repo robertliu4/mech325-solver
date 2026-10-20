@@ -57,7 +57,7 @@ window.TOPIC = {
   assumptions: [
     { text: 'Screw = first Acme-table row (Mott Table 17-1 / 17-1M) with \\(A_t \\ge F/\\sigma_d\\)', src: 'Fizz p.123 · Fizz p.125', step: 'size' },
     { text: 'Nut length rounded up to the nearest ¼ in', src: 'Fizz p.126', var: 'hr' },
-    { text: 'Thread angle: Acme \\(\\alpha = 14.5^\\circ\\) (\\(2\\alpha = 29^\\circ\\)); square 0°, trapezoidal 15°', src: 'Fizz p.126', var: 'thread' },
+    { text: 'Thread angle: Acme \\(\\alpha\\) = 14.5° (\\(2\\alpha = 29^\\circ\\)); square 0°, trapezoidal 15°', src: 'Fizz p.126', var: 'thread' },
     { text: 'Single-start thread: lead l = p', src: 'Fizz pp.126–127', var: 'ns' },
     { text: 'Mean diameter \\(d_m = (d + d_r)/2\\) (= \\(d - p/2\\) for a square thread; HW5 P4 uses it for the Acme row)', src: 'HW5 P4 · Shigley Fig. 8-3', var: 'dm' },
     { text: '\\(f_c = 0\\) when the collar runs on a rolling thrust bearing', src: 'Fizz p.126', var: 'fc' },
@@ -88,7 +88,7 @@ window.TOPIC = {
         text: 'Enter the axial load per screw; the allowable stresses are only for sizing. Acme\'s sloped 29° flanks let a split nut take up wear/backlash; a square thread cannot.',
         vars: [
           { id: 'F', symbol: 'F', label: 'Axial load on the screw', unit: 'lbf or N', kind: 'input' },
-          { id: 'thread', symbol: '2\\alpha', label: 'Thread form', kind: 'choice', options: [{ label: 'Square (\\(\\alpha = 0^\\circ\\))', value: 0 }, { label: 'Acme (\\(\\alpha = 14.5^\\circ\\))', value: 14.5 }, { label: 'Metric trapezoidal (\\(\\alpha = 15^\\circ\\))', value: 15 }], default: 14.5 },
+          { id: 'thread', symbol: '2\\alpha', label: 'Thread form', kind: 'choice', options: [{ label: 'Square (\\(\\alpha\\) = 0°)', value: 0 }, { label: 'Acme (\\(\\alpha\\) = 14.5°)', value: 14.5 }, { label: 'Metric trapezoidal (\\(\\alpha\\) = 15°)', value: 15 }], default: 14.5 },
           { id: 'f', symbol: 'f', label: 'Thread friction coefficient', kind: 'lookup', fig: 'table8-5', hint: 'Table 8-5; typically 0.10–0.15', check: v => (v.f !== undefined && (v.f < 0.02 || v.f > 0.4)) ? 'f is usually 0.04–0.25' : null },
           { id: 'sigd', symbol: '\\sigma_d', label: 'Allowable tensile stress (sizing)', unit: 'psi or MPa', kind: 'input', hint: 'optional' },
           { id: 'taud', symbol: '\\tau_d', label: 'Allowable thread shear stress (nut)', unit: 'psi or MPa', kind: 'input', hint: 'optional' },

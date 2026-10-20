@@ -86,7 +86,7 @@ function gradeTable(v) {
   const pk = rows.find(x => okF(v, x.f));
   return H.table(['Grade', '\\(S_p\\)', '\\(S_{ut}\\)', '\\(S_y\\)', '\\(S_e\\)', '\\(n_L\\)', '\\(n_0\\)'], rows.map(x => ({ cells: [BOLT_GRADES[x.k][0].split(' (')[0] + (v.grade === x.k ? ' ✔' : ''), x.g[1], x.g[2], x.g[3], x.g[4] || '—', x.f ? H.fmt(x.f.nL, 3) : '—', x.f ? H.fmt(x.f.n0, 3) : '—'],
     ok: x.f ? okF(v, x.f) : undefined, pick: x === pk, set: { grade: x.k, Sp: '', Sut: '', Sy: '', Se: '' } })),
-    { caption: 'Bolt grades for d = ' + H.fmt(v.d) + (FS_SI(v) ? ' mm (Table 8-11, MPa)' : ' in (Tables 8-9 / 8-10, kpsi)'), note: 'Rule: the lowest-strength grade that meets \\(n_L\\) (target or 1) and \\(n_0 \\ge 1\\). Metric class 4.6: \\(S_{ut}\\) = 400 MPa, \\(S_y\\) = 0.6 × 400 = 240 MPa (the digits give \\(S_{ut}/100\\) and \\(S_y/S_{ut}\\)). Rolled threads have a higher endurance strength than cut threads.' });
+    { caption: 'Bolt grades for d = ' + H.fmt(v.d) + (FS_SI(v) ? ' mm (Table 8-11, MPa)' : ' in (Tables 8-9 / 8-10, kpsi)'), note: 'Rule: the lowest-strength grade that meets \\(n_L\\) (target or 1) and \\(n_0 \\ge 1\\). Metric class X.Y: \\(S_{ut} \\approx 100X\\) MPa, \\(S_y \\approx 0.1Y\\,S_{ut}\\) (4.8 → 400 / 320 MPa). Rolled threads have a higher endurance strength than cut threads.' });
 }
 
 window.TOPIC = {
