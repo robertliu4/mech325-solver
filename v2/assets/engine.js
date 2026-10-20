@@ -7,7 +7,7 @@
   const T = window.TOPIC;
   if (!T) { document.body.innerHTML = '<p style="padding:20px">No TOPIC defined.</p>'; return; }
 
-  const BOOKNAME = { shigley: 'Shigley 11e', mott: 'Mott 6e', fizz: 'Fizz guide', mech: 'Mech guide', 'Fizz bible': 'Fizz guide', 'Mech bible': 'Mech guide' };
+  const BOOKNAME = { shigley: 'Shigley 11e', mott: 'Mott 6e', fizz: 'Fizz guide', mech: 'Mech guide', 'Fizz bible': 'Fizz guide', 'Mech bible': 'Mech guide', course: 'Course slides' };
   const BOOKPDF = { shigley: '../original_documents/M325S.pdf', mott: '../original_documents/M325M.pdf', fizz: '../original_documents/Mech_325_Bible_Fizz.pdf', mech: '../original_documents/Mech_325_Bible_Mech.pdf', 'Fizz bible': '../original_documents/Mech_325_Bible_Fizz.pdf', 'Mech bible': '../original_documents/Mech_325_Bible_Mech.pdf' };
   const STORE_KEY = 'm325v2:' + T.id + ':' + T.book;
 
