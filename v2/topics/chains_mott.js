@@ -4,7 +4,9 @@
 // strand factors 1.7/2.5/3.3, CD 30–50 pitches and ≥ 150 % of the large sprocket, even number of pitches, wrap > 120°, V ≤ 9000 ft/min,
 // tensile strength ≥ 10 × working load for chain used in tension (HW1 P5).
 // Verified against: HW1 P6 (Mott 7-40): 6-cyl engine → heavy conveyor, 40 hp, 500 → 250 rpm: SF 1.4 → 56 hp; 3 strands → 22.4 hp/strand;
-//   No. 80, N1 14, N2 28, PD1 4.494, PD2 8.936 (solution 8.931); CD 36 pitches → Lc 93.1 → 94; CD 36.43 in; wrap 173°/187°.
+//   No. 80, N1 14, N2 28, PD1 4.494, PD2 8.931; CD 36 pitches → Lc 93.1 → 94; CD 36.43 in; wrap 173°/187°. Prated = 24.02 hp/strand
+//   (Table 7-16, 14 T @ 500 rpm; the course spreadsheet gives no rating — earlier versions used 23.0) → Pallow 60.05 hp, FS 1.07.
+// Guide assumptions (review pass): `assumptions` below lists Fizz §1.6 / Mech §8.3.4 rules; defaults chain No. 60, N1 17, 1 strand, CD 40 p.
 // Verified against: HW1 P5 (Mott 7-26): 2500 lb per strand lifting → ≥ 25 000 lb → No. 120 (34 000 lb) → SF 13.6.
 // Verified against: Lecture Martin example (slide 30): 10 hp 1200 → 300 rpm, moderate shock, electric motor → SF 1.3, 13 hp; No. 50, 18 T;
 //   with the catalogue's 70 T and CD 30 in = 48 pitches → 142 pitches (auto N2 = 72 for an exact 4:1).
@@ -25,7 +27,23 @@
     subtitle: 'Mott Ch. 7-6 (Tables 7-12 … 7-18, Eqs. 7-18 … 7-22) · merged Fizz §1.6 + Mech §8.3.4',
     sibling: 'chains_shigley.html',
     intro: 'Mott\'s chain-drive design (Example Problem 7-5): service factor from Table 7-17 → design power → choose chain pitch and small-sprocket teeth from the horsepower-rating Tables 7-14 (No. 40), 7-15 (No. 60) and 7-16 (No. 80), which also give the lubrication type (multi-strand designs divide the design power by the strand factor 1.7/2.5/3.3) → N₂ = N₁·VR → pitch diameters (Eq. 7-20) → trial centre distance 30–50 pitches → chain length (Eq. 7-18, round to an even integer) → actual CD (Eq. 7-19) → wrap angles (Eqs. 7-21/7-22, θ₁ ≥ 120°) → factor of safety. Mech bible tip: "you can never go wrong with a No. 60 chain"; No. 40 often fails and No. 80 is usually overkill. <b>Course defaults</b> (MECH 325 "Flexible belts — Intro and Chains" slides 12–34, HW1 P5/P6): P<sub>des</sub> = P·SF·n<sub>d</sub> with SF from Mott Table 7-17 (HW1 P6: 1.4) or the Martin catalogue and n<sub>d</sub> = 1.0 (Renold multipliers for poor lubrication / dirt / cold), at least 17 teeth on the driver (HW1 P6 accepted 14 at low speed), ratio ≤ 7:1, CD 30–50 pitches and ≥ 1.5 × large-sprocket diameter, even number of pitches, wrap &gt; 120°, V ≤ 9000 ft/min, and tensile strength ≥ 10 × working load for chain used in tension.',
-    example: { P: 40, n1: 500, n2: 250, load: 'moderate', driver: 'engine', nd: 1, chain: 80, strands: 3, N1: 14, N2: 28, Prated: 23.0, lub: 'B', CDt: 36 },
+    example: { P: 40, n1: 500, n2: 250, load: 'moderate', driver: 'engine', nd: 1, chain: 80, strands: 3, N1: 14, N2: 28, Prated: 24.02, lub: 'B', CDt: 36 },
+    assumptions: [
+      { text: 'Service factor SF from Mott Table 7-17 (load type × driver) — pick both to auto-fill', src: 'Fizz p.27 · Mech p.34', var: 'SF' },
+      { text: 'No extra design factor: P_{des} = SF·P, i.e. n_d = 1.0 (Renold multipliers only if the problem calls for them)', src: 'Fizz p.27 · Mech p.34 · course Chains s26', var: 'nd' },
+      { text: 'Output speed given as a range → use the middle of the range for VR = n_1/n_2 (n_1 > n_2)', src: 'Fizz p.28 · Mech p.34', var: 'n2' },
+      { text: 'Start with a No. 60 chain — "you can never go wrong with No. 60"; No. 40 often does not work, No. 80 is usually overkill', src: 'Mech p.34', var: 'chain' },
+      { text: 'Single strand first; otherwise 2 / 3 / 4 strands with power-capacity factors 1.7 / 2.5 / 3.3 (required power per strand = P_{des}/factor)', src: 'Fizz p.28 · Mech p.36', var: 'strands' },
+      { text: 'Small sprocket N_1 ≥ 17 teeth (fewer only when n_1 < 100 rpm)', src: 'Fizz p.28 · Mech p.34', var: 'N1' },
+      { text: 'Largest sprocket no more than 120 teeth, i.e. N_1·VR < 120', src: 'Fizz p.28' },
+      { text: 'Rated power from Table 7-14/15/16 must exceed the required power per strand; interpolate between rpm columns; the table zone gives the lubrication type', src: 'Fizz p.28 · Mech p.34', var: 'Prated' },
+      { text: 'N_2 = N_1·VR rounded to the nearest integer (Mott Ex. 7-5: 65.11 → 65; Mech rounds up), then re-check the output speed against the range', src: 'Fizz p.30 · Mech p.35', var: 'N2' },
+      { text: 'Nominal centre distance 40 pitches (recommended range 30–50)', src: 'Fizz p.30 · Mech p.35', var: 'CDt' },
+      { text: 'Chain length rounded to the nearest EVEN number of pitches (Mott Ex. 7-5: 122.5 → 122); Fizz rounds to the nearest integer, Mech rounds up to the next even number', src: 'Mech p.35 · Fizz p.30', var: 'Lc' },
+      { text: 'Angle of wrap on the small sprocket at least 120°', src: 'Fizz p.31' },
+      { text: 'FS = P_{allowed}/P_{des} with P_{allowed} = table rating × strand factor', src: 'Fizz p.31 · Mech p.36' },
+      { text: 'Chain used as a tension member (lifting): only 10 % of the average tensile strength may be used (strength ≥ 10 × working load)', src: 'Fizz p.27 · course HW1 P5' },
+    ],
 
     figures: [
       { id: 'fig7-33', ref: 'Figure 7-33', title: 'Basic arrangement of an industrial chain drive (tight/slack strands)', src: 'figures/mott/fig7-33.png', page: 295 },
@@ -76,11 +94,11 @@
             { id: 'sfac', symbol: '', label: 'Strand (power capacity) factor', unit: '', kind: 'calc', compute: v => STRAND[v.strands] },
             { id: 'Pstrand', symbol: 'P_{per\\,strand}', label: 'Required power per strand', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'Pdes', 'sfac') ? v.Pdes / v.sfac : undefined,
               work: v => (H.has(v, 'Pstrand') && v.strands > 1) ? '\\(P = ' + H.fmt(v.Pdes) + '/' + H.fmt(v.sfac) + ' = ' + H.fmt(v.Pstrand) + '\\ \\text{hp per strand}\\)' : null },
-            { id: 'chain', label: 'Chain number', kind: 'choice', options: Object.keys(CHAIN).map(Number), default: 60 },
+            { id: 'chain', label: 'Chain number', kind: 'choice', options: Object.keys(CHAIN).map(Number), default: 60, hint: 'Mech: start with No. 60 (No. 40 often fails, No. 80 usually overkill)' },
             { id: 'p', symbol: 'p', label: 'Chain pitch', unit: 'in', kind: 'lookup', fig: 'table7-12', auto: v => CHAIN[v.chain] ? CHAIN[v.chain][0] : undefined },
             { id: 'Ts', symbol: '', label: 'Average tensile strength', unit: 'lb', kind: 'lookup', fig: 'table7-12', auto: v => CHAIN[v.chain] ? CHAIN[v.chain][1] : undefined },
-            { id: 'N1', symbol: 'N_1', label: 'Small sprocket teeth', unit: '', kind: 'input', default: 17, hint: 'course: avoid fewer than 17 (Martin minimum recommended; 15 common)',
-              check: v => (H.has(v, 'N1') && v.N1 < 17) ? 'Course: avoid fewer than 17 teeth (HW1 P6 accepted 14 only at 500 rpm with a 3-strand No. 80)' : (H.has(v, 'N1', 'VR') && v.N1 * v.VR > 120) ? 'N1·VR > 120: large sprocket would exceed 120 teeth' : null },
+            { id: 'N1', symbol: 'N_1', label: 'Small sprocket teeth', unit: '', kind: 'input', default: 17, hint: 'Fizz/Mech: 17 or more (fewer only below 100 rpm); Martin: 17 recommended, 15 common',
+              check: v => (H.has(v, 'N1') && v.N1 < 17 && !(H.has(v, 'n1') && v.n1 < 100)) ? 'Fewer than 17 teeth above 100 rpm (Fizz p.28) — HW1 P6 accepted 14 at 500 rpm with a 3-strand No. 80' : (H.has(v, 'N1', 'VR') && v.N1 * v.VR > 120) ? 'N1·VR > 120: large sprocket would exceed 120 teeth' : null },
             { id: 'Prated', symbol: 'P_{rated}', label: 'Rated power per strand (Table 7-14/15/16)', unit: 'hp', kind: 'lookup', fig: 'table7-15', check: v => (H.has(v, 'Prated', 'Pstrand') && v.Prated < v.Pstrand) ? 'Rated power below the required power per strand — larger chain, more teeth or more strands' : null },
             { id: 'lub', label: 'Lubrication type (from table zone)', kind: 'choice', type: 'text', options: [{ label: 'A — manual or drip', value: 'A' }, { label: 'B — bath or disc', value: 'B' }, { label: 'C — oil stream', value: 'C' }] },
           ] },
@@ -100,7 +118,7 @@
       { title: 'Steps 4–6: sprockets', steps: [
         { id: 'spk', title: 'Large sprocket, actual output speed, pitch diameters', eq: '7-20', formula: 'N_2 = N_1 \\cdot VR\\ (\\text{integer}),\\qquad n_2 = n_1\\frac{N_1}{N_2},\\qquad PD = \\frac{p}{\\sin(180^\\circ/N)}',
           vars: [
-            { id: 'N2', symbol: 'N_2', label: 'Large sprocket teeth', unit: '', kind: 'input', auto: v => H.has(v, 'N1', 'VR') ? Math.round(v.N1 * v.VR) : undefined, hint: 'auto = N1·VR rounded', check: v => (H.has(v, 'N2') && v.N2 > 120) ? 'More than 120 teeth' : null },
+            { id: 'N2', symbol: 'N_2', label: 'Large sprocket teeth', unit: '', kind: 'input', auto: v => H.has(v, 'N1', 'VR') ? Math.round(v.N1 * v.VR) : undefined, hint: 'auto = N1·VR rounded to the nearest integer (Fizz; Mech rounds up)', check: v => (H.has(v, 'N2') && v.N2 > 120) ? 'More than 120 teeth' : null },
             { id: 'VRa', symbol: 'VR_{act}', label: 'Actual ratio', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'N1', 'N2') ? v.N2 / v.N1 : undefined },
             { id: 'n2a', symbol: 'n_{2,act}', label: 'Actual output speed', unit: 'rpm', kind: 'calc', compute: v => H.has(v, 'n1', 'N1', 'N2') ? v.n1 * v.N1 / v.N2 : undefined,
               work: v => H.has(v, 'n2a') ? '\\(n_2 = ' + H.fmt(v.n1) + '(' + v.N1 + '/' + v.N2 + ') = ' + H.fmt(v.n2a) + '\\ \\text{rpm}\\)' : null },
@@ -119,7 +137,7 @@
             { id: 'CDt', symbol: 'CD_{nom}', label: 'Nominal centre distance', unit: 'pitches', kind: 'input', default: 40, check: v => (H.has(v, 'CDt') && (v.CDt < 30 || v.CDt > 50)) ? 'Course: 30–50 pitches recommended' : null },
             { id: 'Lcc', symbol: 'L_c', label: 'Chain length (computed)', unit: 'pitches', kind: 'calc', compute: Lc,
               work: v => H.has(v, 'Lcc') ? '\\(L_c = 2(' + H.fmt(v.CDt) + ') + \\frac{' + v.N2 + '+' + v.N1 + '}{2} + \\frac{(' + v.N2 + '-' + v.N1 + ')^2}{4\\pi^2(' + H.fmt(v.CDt) + ')} = ' + H.fmt(v.Lcc) + '\\ \\text{pitches}\\)' : null },
-            { id: 'Lc', symbol: 'L_c', label: 'Chain length used (even integer)', unit: 'pitches', kind: 'input', auto: v => { const l = Lc(v); return l !== undefined ? 2 * Math.round(l / 2) : undefined; }, hint: 'auto = nearest even integer' },
+            { id: 'Lc', symbol: 'L_c', label: 'Chain length used (even integer)', unit: 'pitches', kind: 'input', auto: v => { const l = Lc(v); return l !== undefined ? 2 * Math.round(l / 2) : undefined; }, hint: 'auto = nearest even integer (Mott/Mech: even number of pitches)' },
             { id: 'Lin', symbol: 'L_c', label: 'Chain length', unit: 'in', kind: 'calc', compute: v => H.has(v, 'Lc', 'p') ? v.Lc * v.p : undefined },
             { id: 'CD', symbol: 'CD', label: 'Actual centre distance', unit: 'pitches', kind: 'calc', compute: v => { if (!H.has(v, 'Lc', 'N1', 'N2')) return undefined; const q = v.Lc - (v.N1 + v.N2) / 2; const r = q * q - 8 * (v.N2 - v.N1) ** 2 / (4 * Math.PI * Math.PI); return r >= 0 ? 0.25 * (q + Math.sqrt(r)) : undefined; },
               work: v => H.has(v, 'CD') ? '\\(CD = \\frac14\\left[' + H.fmt(v.Lc) + ' - \\frac{' + v.N2 + '+' + v.N1 + '}{2} + \\sqrt{\\left(' + H.fmt(v.Lc) + ' - \\frac{' + v.N2 + '+' + v.N1 + '}{2}\\right)^2 - \\frac{8(' + v.N2 + '-' + v.N1 + ')^2}{4\\pi^2}}\\right] = ' + H.fmt(v.CD) + '\\ \\text{pitches}\\)' : null },

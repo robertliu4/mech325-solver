@@ -209,8 +209,11 @@
       const vr = varById[a.var]; const cur = v[a.var];
       const assumed = a.value !== undefined ? a.value : vr.default;
       const show = (x) => { if (x === undefined || x === '') return '—'; if (vr.kind === 'choice') { const o = (vr.options || []).find(o => String(o.value !== undefined ? o.value : o) === String(x)); if (o) return plain(o.label !== undefined ? o.label : o); } return typeof x === 'number' ? H.fmt(x, vr.digits || 4) : String(x); };
-      const changed = assumed !== undefined && cur !== undefined && String(cur) !== String(assumed) && !(typeof cur === 'number' && Math.abs(cur - Number(assumed)) < 1e-9);
-      a._val.textContent = (changed ? 'you set ' : 'using ') + show(cur) + (vr.unit ? ' ' + plain(vr.unit) : '');
+      const typed = raw[a.var] !== undefined && raw[a.var] !== '';
+      const changed = assumed !== undefined
+        ? (cur !== undefined && String(cur) !== String(assumed) && !(typeof cur === 'number' && Math.abs(cur - Number(assumed)) < 1e-9))
+        : (!!vr.auto && typed);   // assumption carried by an auto-fill: overriding it by typing counts as a change
+      a._val.textContent = (changed ? 'you set ' : (vr.auto && !typed ? 'auto ' : 'using ')) + show(cur) + (vr.unit ? ' ' + plain(vr.unit) : '');
       a._li.classList.toggle('changed', changed);
     });
   }
