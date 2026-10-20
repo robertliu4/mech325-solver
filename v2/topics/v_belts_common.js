@@ -558,7 +558,7 @@
         { id: 'sec', title: 'Belt cross-section', fig: ['fig7-13', 'gates-b1', 'gates-fb1b2', 'table17-9', 'abcd'],
           text: 'Narrow sections 3V/5V/8V (Mott Fig 7-13, Gates Fig B1; 3VX/5VX are the cogged Gates versions) or the classical A–E sections (Shigley Table 17-9 hp ranges, course chart slide 27). Enter the chart with the <b>design</b> power and the faster-shaft speed; the section whose region contains the point is the pick, and on a boundary take the larger section (Fizz p.10). The table below lists every candidate section with its region at your speed — click <b>Use</b> to set it. For the Gates tension step the section also sets M and Y (3V = Super HC PowerBand row as in HW1 P3b; C = Hi-Power CP as in Tutorial 2 Q2).',
           vars: [
-            { id: 'sec', label: 'Belt section', kind: 'choice', type: 'text', options: [
+            { id: 'sec', label: 'Belt section', kind: 'choice', type: 'text', auto: v => { const s = secSel(v); return s ? s.pick : undefined; }, hint: 'leave on auto to use the ★ section from the table below, or pick one', options: [
               { value: '3V', label: '3V — narrow (Mott Fig 7-14)' }, { value: '5V', label: '5V — narrow (Mott Fig 7-15, 7-17)' }, { value: '8V', label: '8V — narrow (Mott Fig 7-16)' },
               { value: '3VX', label: '3VX — Gates cogged narrow' }, { value: '5VX', label: '5VX — Gates cogged narrow' },
               { value: 'A', label: 'A — classical (Shigley Table 17-12)' }, { value: 'B', label: 'B — classical' }, { value: 'C', label: 'C — classical / Gates Hi-Power CP' }, { value: 'D', label: 'D — classical' }, { value: 'E', label: 'E — classical' },

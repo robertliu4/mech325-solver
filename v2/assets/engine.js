@@ -92,7 +92,7 @@
   function recompute() {
     v = {};
     allVars.forEach(vr => { if (vr.kind !== 'calc') v[vr.id] = parseRaw(vr); });
-    const autoIds = allVars.filter(vr => (vr.kind === 'lookup' || vr.kind === 'input') && vr.auto && v[vr.id] === undefined).map(vr => vr.id);
+    const autoIds = allVars.filter(vr => (vr.kind === 'lookup' || vr.kind === 'input' || vr.kind === 'choice') && vr.auto && v[vr.id] === undefined).map(vr => vr.id);
     for (let pass = 0; pass < 6; pass++) {
       allVars.forEach(vr => {
         if (vr.kind === 'calc') {
@@ -271,10 +271,13 @@
     });
     let shown = null;
     const sync = () => {
-      const o = opts.find(x => x.value === sel.value) || opts[0];
+      // blank + auto → show the auto-picked option, marked "auto"
+      const autoVal = (sel.value === '' && vr.auto && v[vr.id] !== undefined) ? String(v[vr.id]) : null;
+      const o = opts.find(x => x.value === (autoVal !== null ? autoVal : sel.value)) || opts[0];
       opts.forEach(x => x._el.classList.toggle('sel', x === o));
-      if (shown === o) return; shown = o;
-      btn.innerHTML = '<span class="rsel-lab">' + rich(o ? o.label : '') + '</span><span class="rsel-car">▾</span>';
+      const key = (autoVal !== null ? 'auto:' : '') + (o ? o.value : '');
+      if (shown === key) return; shown = key;
+      btn.innerHTML = (autoVal !== null ? '<span class="rsel-auto">auto</span>' : '') + '<span class="rsel-lab">' + rich(o ? o.label : '') + '</span><span class="rsel-car">▾</span>';
       if (o && /\\\(/.test(o.label)) typeset([btn]);
     };
     const choose = (val) => { sel.value = val; raw[vr.id] = val; sync(); update(); };

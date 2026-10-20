@@ -188,3 +188,4 @@ table.seltab tr.pick td:nth-child(2)::before { content: "★ "; color: #15803d; 
 .use-btn { border: 1px solid var(--accent); background: #fff; color: var(--accent); border-radius: 6px; padding: 1px 8px; font-size: .78rem; cursor: pointer; }
 .use-btn:hover { background: var(--accent-soft); }
 .seltab-note { font-size: .78rem; color: var(--muted); }
+.rsel-auto { font-size: .7rem; font-weight: 700; color: #a16207; background: var(--lookup-bg); border: 1px solid var(--lookup-line); border-radius: 4px; padding: 0 4px; margin-right: 6px; }
