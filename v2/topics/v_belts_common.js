@@ -305,7 +305,7 @@
             { id: 'VRn', symbol: 'VR_{nom}', label: 'Nominal speed ratio n1/n2', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'n1', 'n2') ? v.n1 / v.n2 : undefined,
               check: v => !H.has(v, 'VRn') ? null : v.VRn < 1 ? 'n2 > n1: speed INCREASER — Table 7-1 factors × 1.2 (footnote 1)' : v.VRn > 7 ? 'Ratio above 7:1 — beyond the cogged-belt limit (slide 25)' : v.VRn > 6 ? 'Ratio above 6:1 — only cogged belts (≤ 7:1) (slide 25)' : null },
           ] },
-        { id: 'sf', title: 'Service factor and design power', when: M('mott', 'gates', 'shig', 'rate'), fig: ['table7-1', 'table17-15', 'ks-hours'], eq: isM ? 'Mott Table 7-1' : '17-19',
+        { id: 'sf', title: 'Service factor and design power', when: M('mott', 'gates', 'shig', 'rate'), fig: ['table7-1', 'table17-15', 'ks-hours'], eq: isM ? undefined : '17-19',
           formula: 'P_{des} = H_d = P\\,K_s\\,n_d',
           text: 'Always multiply the nominal power by the service factor first (slide 28/41). Mott Table 7-1 is the course\'s primary table (driven-machine row × driver column × hours/day); Gates questions use Gates Table B1 (Tutorial 2 Q2: multi-cylinder engine, brick machine, > 10 h → 1.5; HW1 P3b: AC motor, fan, 22 h → 1.3); the course also gives its own hours table (slide 35) and accepts the Shigley Table 17-15 range (midterm: "1.2 < K<sub>s</sub> < 1.4").',
           vars: [
@@ -334,7 +334,7 @@
           ] },
       ] },
 
-      { title: 'Sheaves and speeds', steps: [
+      { title: 'Solution — steps for the chosen question type', steps: [
         { id: 'd1', title: 'Driver sheave for ≈ 4000 ft/min (limit 5000 ft/min)', when: M('mott'), eq: 'Mott 7-2', fig: ['fig7-14', 'fig7-15', 'fig7-16'],
           formula: 'D_1 = \\frac{12\\,v_b}{\\pi n_1},\\qquad D_{1,max} = \\frac{12(5000)}{\\pi n_1}',
           text: 'Size the driver for the target belt speed (4000 ft/min), then pick a standard pitch diameter from the vertical lines of Fig 7-14/15/16 (next step). Smaller trial sizes are fine as long as the output speed is close — Mott Table 7-3 lists trials; the midterm worked from V &lt; 5000 (D ≤ 16.6 in) and chose 10.8 in.',
@@ -371,9 +371,6 @@
               work: v => H.has(v, 'vb') ? '\\(v_b = \\frac{\\pi(' + f(v.D1) + ')(' + f(v.n1) + ')}{12} = ' + f(v.vb) + '\\ \\text{ft/min}\\)' : null,
               check: v => !H.has(v, 'vb') ? null : v.vb > 6500 ? 'Above the 6500 ft/min absolute maximum' : v.vb > 5000 ? 'Above 5000 ft/min — course limit (consult the sheave supplier)' : v.vb < 1000 ? 'Below 1000 ft/min — consider a chain, gear or timing belt (Mott p.255)' : null },
           ] },
-      ] },
-
-      { title: 'Rated power per belt (Mott)', steps: [
         { id: 'prate', title: 'Basic rating P_Tab and power added for speed ratio ΔP_R', when: M('mott', 'rate'), fig: ['fig7-14', 'fig7-15', 'fig7-16', 'fig7-17'],
           formula: 'P_{rated} = P_{Tab} + \\Delta P_R',
           text: 'Read the <b>solid</b> curve (VR = 1) at D<sub>1</sub> and n<sub>1</sub>, interpolating between the rpm curves (midterm: 10.8 in at 1160 rpm → 23 hp). 5V: ΔP<sub>R</sub> from the steps of Fig 7-17 (midterm 1.26, Mott Ex 7-2 1.15). 3V/8V: the dashed curve is the rating at VR ≥ 3.38, so ΔP<sub>R</sub> is part of the dashed − solid gap (Mott: "a rough interpolation between the two curves"; Mech p.23 interpolates linearly in VR). The auto value applies the Fig 7-17 step pattern to that gap.',
@@ -383,9 +380,6 @@
             { id: 'Prated', symbol: 'P_{rated}', label: 'Rated power per belt', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'P1', 'Padd') ? v.P1 + v.Padd : undefined,
               work: v => H.has(v, 'Prated') ? '\\(P_{rated} = ' + f(v.P1) + ' + ' + f(v.Padd) + ' = ' + f(v.Prated) + '\\ \\text{hp}\\)' : null },
           ] },
-      ] },
-
-      { title: 'Belt length and centre distance', steps: [
         { id: 'trial', title: 'Trial centre distance → required belt length', when: M('mott', 'gates', 'shig', 'rate', 'geom'), fig: ['fig7-4', 'fig17-1'], eq: 'Mott 7-12, 7-17 · Shigley 17-16a',
           formula: 'D_2 < CD < 3(D_2 + D_1),\\qquad L = 2\\,CD + 1.57(D_2 + D_1) + \\frac{(D_2 - D_1)^2}{4\\,CD}',
           text: 'Use the centre distance the problem gives (midterm 32 in, Tutorial 2 "about 12 ft" = 144 in); otherwise choose one in the range — Mech: "try being closer to D". Skip this step if the belt itself is given (type it in the next step).',
@@ -398,7 +392,7 @@
               work: v => H.has(v, 'Lreq') ? '\\(L = 2(' + f(v.CDt) + ') + ' + (v.mode === 'shig' ? '\\tfrac{\\pi}{2}' : '1.57') + '(' + f(v.D2) + ' + ' + f(v.D1) + ') + \\frac{(' + f(v.D2) + ' - ' + f(v.D1) + ')^2}{4(' + f(v.CDt) + ')} = ' + f(v.Lreq) + '\\ \\text{in}\\)' : null },
           ] },
         { id: 'belt', title: 'Standard belt → actual centre distance and wrap angles', when: v => true, fig: ['table7-2', 'table17-10', 'table17-11', 'gates-b4'], eq: 'Mott 7-13, 7-14 · Shigley 17-16b, 17-1',
-          formula: 'L_p = L + L_c,\\quad B = 4L_p - 6.28(D_2 + D_1),\\quad CD = \\frac{B + \\sqrt{B^2 - 32(D_2 - D_1)^2}}{16},\\quad \\theta_{1,2} = 180^\\circ \\mp 2\\sin^{-1}\\frac{D_2 - D_1}{2\\,CD}',
+          formula: '\\begin{gathered} L_p = L + L_c,\\quad B = 4L_p - 6.28(D_2 + D_1),\\quad CD = \\frac{B + \\sqrt{B^2 - 32(D_2 - D_1)^2}}{16} \\\\ \\theta_{1,2} = 180^\\circ \\mp 2\\sin^{-1}\\frac{D_2 - D_1}{2\\,CD} \\end{gathered}',
           text: 'Standard length: Mott Table 7-2 for 3V/5V/8V (the length is the pitch length, L<sub>c</sub> = 0), Shigley Table 17-10 for A–E (inside circumference; add L<sub>c</sub> from Table 17-11 to get L<sub>p</sub>), or the number in the Gates belt name (3V400 = 40.0 in, 3VX800 = 80.0 in, CP330 = 330 in). The guides take the closest length; the course accepts either neighbour. Shigley\'s Eq 17-16b is the same equation written with π/2. Wrap on the small sheave must exceed 120°.',
           vars: [
             { id: 'Lc', symbol: 'L_c', label: 'Length conversion (Table 17-11)', unit: 'in', kind: 'lookup', fig: 'table17-11', auto: v => (sd(v) && v.mode !== 'gates') ? sd(v).conv : (v.sec ? 0 : undefined), hint: 'A 1.3, B 1.8, C 2.9, D 3.3, E 4.5; 0 for 3V/5V/8V and Gates belt numbers' },
@@ -420,9 +414,6 @@
             const x = v.Lreq - (H.has(v, 'Lc') ? v.Lc : 0); const lo = t.filter(a => a <= x).pop(), hi = t.find(a => a >= x);
             return (v.Lstd !== lo && v.Lstd !== hi) ? '<span style="color:#92400e">Note: ' + f(v.Lstd) + ' in is not next to the required ' + f(x) + ' in (neighbours ' + (lo || '—') + ' / ' + (hi || '—') + ') — fine only if a longer/shorter CD is wanted. (Midterm 2025: the solution wrote L = 122.9 in for CD = 32 in — the sum is 114.9 — and took 125 in.)</span>' : '';
           } },
-      ] },
-
-      { title: 'Allowable power per belt', steps: [
         { id: 'mcorr', title: 'Mott: wrap and length corrections → P_A', when: M('mott', 'rate'), fig: ['fig7-18', 'fig7-19'],
           formula: 'P_A = C_\\theta\\,C_L\\,(P_{Tab} + \\Delta P_R)',
           text: 'C<sub>θ</sub> from Fig 7-18 at θ<sub>1</sub>; C<sub>L</sub> from Fig 7-19 at the standard length for the section (midterm 164° → 0.96, 5V 125 in → 1.0; HW1 3V 90 in → 1.07). Slide 30.',
@@ -452,7 +443,7 @@
             { id: 'Ha', symbol: 'H_a', label: 'Allowable power per belt', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'K1', 'K2', 'Htab') ? v.K1 * v.K2 * v.Htab : undefined,
               work: v => H.has(v, 'Ha') ? '\\(H_a = ' + f(v.K1, 3) + '(' + f(v.K2, 3) + ')(' + f(v.Htab) + ') = ' + f(v.Ha) + '\\ \\text{hp}\\)' : null },
           ] },
-        { id: 'nb', title: 'Number of belts and factor of safety', when: M('mott', 'gates', 'shig', 'rate'), eq: isM ? 'slide 30/41' : '17-20, 17-26',
+        { id: 'nb', title: 'Number of belts and factor of safety', when: M('mott', 'gates', 'shig', 'rate'), eq: isM ? undefined : '17-20, 17-26',
           formula: 'N_b = \\left\\lceil \\frac{P_{des}}{P_{belt}} \\right\\rceil,\\qquad n_{fs} = \\frac{N_b P_{belt}}{P_{des}},\\qquad P_{max} = \\frac{N_b P_{belt}}{K_s n_d}',
           text: 'Always round the number of belts <b>up</b> ("2.01 → 3", Mech p.26). n<sub>fs</sub> = allowable / design power (midterm 3 × 23.29 / 52 = 1.34). For an existing drive type the number of belts it has.',
           vars: [
@@ -465,9 +456,6 @@
               work: v => H.has(v, 'nfs') ? '\\(N_b = ' + f(v.Pdes) + '/' + f(v.Pbelt) + ' = ' + f(v.Nreq, 3) + ' \\rightarrow ' + v.Nb + ',\\qquad n_{fs} = \\frac{' + v.Nb + '(' + f(v.Pbelt) + ')}{' + f(v.Pdes) + '} = ' + f(v.nfs, 3) + '\\)' : null },
             { id: 'Pmax', symbol: 'P_{max}', label: 'Largest motor power (n_fs = 1)', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'Pcap', 'Ks') ? v.Pcap / (v.Ks * (H.has(v, 'nd') ? v.nd : 1)) : undefined },
           ] },
-      ] },
-
-      { title: 'Belt tensions (Shigley Eq 17-21 … 17-25)', steps: [
         { id: 'dF', title: 'Torque and tension difference per belt', when: M('shig', 'gates'), fig: ['fig17-14'], eq: '17-22',
           formula: '\\Delta F = \\frac{63\\,025\\,H_{belt}}{n_1 (D_1/2)},\\qquad H_{belt} = H_a\\ \\text{(Tut. 2 Q1)}\\ \\text{or}\\ \\frac{H_d}{N_b}\\ \\text{(Ex. 17-4, Tut. 2 Q2)}',
           text: 'Course Tutorial 2 Q1 loads each belt to its allowable power H<sub>a</sub>; Shigley Ex 17-4 and the Tutorial 2 Q2 comparison (F<sub>i</sub> = 409 lbf) use the actual share H<sub>d</sub>/N<sub>b</sub>. Choose what the question expects. The small sheave is taken as the driver.',
@@ -492,9 +480,6 @@
             { id: 'Fi', symbol: 'F_i', label: 'Initial tension (pre-tension)', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'F1', 'F2', 'Fc') ? (v.F1 + v.F2) / 2 - v.Fc : undefined,
               work: v => H.has(v, 'Fi') ? '\\(F_i = \\frac{' + f(v.F1) + ' + ' + f(v.F2) + '}{2} - ' + f(v.Fc) + ' = ' + f(v.Fi) + '\\ \\text{lbf}\\)' : null },
           ] },
-      ] },
-
-      { title: 'Belt life (Shigley Eq 17-27, 17-28)', steps: [
         { id: 'peaks', title: 'Peak tensions at each sheave', when: M('shig'), fig: ['table17-16', 'fig17-14'],
           formula: 'T_1 = F_1 + \\frac{K_b}{D_1},\\qquad T_2 = F_1 + \\frac{K_b}{D_2}',
           vars: [
@@ -517,9 +502,6 @@
             { id: 'hpd', symbol: '', label: 'Operating hours per day', unit: 'h/day', kind: 'input', hint: '2 shifts = 16 h/day (Tutorial 2 Q1)' },
             { id: 'yrs', symbol: '', label: 'Life in years', unit: 'yr', kind: 'calc', compute: v => H.has(v, 'thr', 'hpd') ? v.thr / v.hpd / 365.25 : undefined },
           ] },
-      ] },
-
-      { title: 'Installation tension (Gates manual, slides 39–40)', steps: [
         { id: 'tst', title: 'Static tension per strand (Formula D19)', when: M('gates', 'tension'), fig: ['gates-d19', 'gates-ex'],
           formula: 'T_{st} = 15\\left(\\frac{2.5 - K_\\phi}{K_\\phi}\\right)\\frac{(\\text{Motor hp})(10^3)}{N\\,V} + \\frac{M V^2}{10^6}\\ \\text{lbf}',
           text: 'K<sub>φ</sub> from Table D26 at (D − d)/C (180° → 1.00; lecture 0.67 → 0.90); M from Table D27. Use the <b>motor (nominal) hp</b>, not the design hp — Tutorial 2 Q2: 251 lbf with 60 hp vs 375 lbf with 90 hp (Module 1 p24). The Mech guide says to look in Shigley for T<sub>st</sub>; the course uses this Gates formula.',
@@ -534,7 +516,7 @@
               work: v => H.has(v, 'Tst') ? '\\(T_{st} = 15\\left(\\frac{2.5 - ' + f(v.Kphi) + '}{' + f(v.Kphi) + '}\\right)\\frac{' + f(v.Hmot) + '(10^3)}{' + f(v.Ng) + '(' + f(v.vb) + ')} + \\frac{' + f(v.M) + '(' + f(v.vb) + ')^2}{10^6} = ' + f(v.Tst) + '\\ \\text{lbf}\\)' : null },
           ] },
         { id: 'defl', title: 'Span length, deflection and deflection force (D35, D20–D23)', when: M('gates', 'tension'), fig: ['gates-d20', 'gates-d19'],
-          formula: 't = C\\left[1 - 0.125\\left(\\frac{D-d}{C}\\right)^2\\right],\\quad \\delta = \\frac{t}{64},\\quad F = \\frac{(1.4 \\text{ to } 1.5)\\,T_{st} + Y}{16}\\ (\\ge 2\\ \\text{belts}),\\quad F = \\frac{(1.4 \\text{ to } 1.5)\\,T_{st} + (t/L)\\,Y}{16}\\ (1\\ \\text{belt})',
+          formula: '\\begin{gathered} t = C\\left[1 - 0.125\\left(\\frac{D-d}{C}\\right)^2\\right],\\quad \\delta = \\frac{t}{64} \\\\ F = \\frac{(1.4 \\text{ to } 1.5)\\,T_{st} + Y}{16}\\ (\\ge 2\\ \\text{belts}),\\quad F = \\frac{(1.4 \\text{ to } 1.5)\\,T_{st} + (t/L)\\,Y}{16}\\ (1\\ \\text{belt}) \\end{gathered}',
           text: 'Push one belt at mid-span until it deflects 1/64 in per inch of span; the force should lie between the minimum and maximum. The square-root span formula printed on the Gates page is marked "incorrect" on slide 39 — Formula D35 is used.',
           vars: [
             { id: 'Y', symbol: 'Y', label: 'Constant Y (Table D27)', unit: '', kind: 'lookup', fig: 'gates-d19', auto: v => GMY[v.sec] ? GMY[v.sec][1] : undefined, hint: '3VX/3V 4 · 5VX 13 · 5V 11 · 8V 22 · AX 7 · BX 8 · CX 15 · CP (C) 87' },
