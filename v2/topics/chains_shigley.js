@@ -5,15 +5,25 @@
 // 15 000 h / 17 T / 100 pitches, CD 30–50 pitches and ≥ 150 % of the large sprocket, V ≤ 9000 ft/min, even number of pitches,
 // wrap > 120°, life correction Eq. 17-39 with Kr = 17 ("not indicated in Shigley text", Module 1 p9).
 // Verified against: Tutorial 1 Q2 (S 17-26, Module 1 p7–10): No. 40-4, N1 21 @ 2000 rpm, N2 84, C/p 40 → L/p 135 (kept odd by the
-//   solution; auto rounds to 136), L 67.5 in, Htab 7.72 (auto 7.65), K1 1.37, K2 3.3, Ha 34.9; H1(21 T) 12.84 → ×3.3 = 42.4;
+//   solution; auto rounds to 136), L 67.5 in, Htab 7.72 (auto 7.72 from Table 17-20), K1 1.37, K2 3.3, Ha 34.9; H1(21 T) 12.84 → ×3.3 = 42.4;
 //   H2(21 T) 10.5 → 34.7 (roller governs); 20 000 h, 135 pitches: H2 10.56 → 34.8 hp; T 91.4 lbf·ft, D1 3.355 in, tension 654 lbf.
 // Verified against: HW1 P7 (S 17-27): 25 hp @ 700 rpm → 140 rpm, No. 80, Ks 1.5, nd 1 → Hd 37.5; N1 17 (K1 = 1), N2 85 (solution used
-//   84); Htab 31.0 hp (Table 17-20; auto 31.01, Eq. 17-32 governs), K2 1.7 → Ha 52.7 ≥ 37.5 → 2 strands, output 140 rpm (141.7 with 84 T).
+//   84 — now the N2 auto, 85 is not stocked for No. 80 in Table 17-21); Htab 31.0 hp (Table 17-20), K2 1.7 → Ha 52.7 ≥ 37.5 → 2 strands, 141.7 rpm.
 // Guide assumptions (review pass): `assumptions` lists Fizz §1.6 / Mech §8.3.4 rules; chain default No. 60 (Mech p.34), N1 = 17 (Mech p.36),
 //   Ks figure now Mott Table 7-17 (the table both guides use for chains).
+// SIZING (v2/SIZING_BRIEF.md): data + pick rules live in chains_common.js (loaded first by chains_shigley.html). Selection tables with Use
+//   buttons: sprocket teeth N1 / N2 (Inputs), chain × strands and every chain number (Chain selection), even chain lengths (Geometry), chain in
+//   tension. chain / strands / Htab / K1 / N2 / Lp are yellow lookups whose auto = the ★ pick (Htab now = Table 17-20 interpolated, not Eq. 17-32/33).
+// Picks verified (Playwright, rating source = Shigley Table 17-20, rule = smallest pitch first):
+//   Shigley Ex 17-5: 90 hp × 1.3 × 1.5 = 175.5 hp @ 300 rpm, 17/34 T, C/p 25 → strands table 1: No. 200 (C′, rejected), 2: No. 160 (105 hp),
+//     3: No. 140 (72.4 hp, B), 4: No. 140 → ★ 3 × No. 140 = Shigley's decision; L 75.79 → 76 ★, C 25.104p = 43.93 in. (Shigley labels the
+//     2-strand No. 160 "C"; the dashed line of Table 17-20 puts 300 rpm in Type B — the table shows B.)
+//   HW1 P7: chain No. 80 given → strands auto 2 (31.0 × 1.7 = 52.7 ≥ 37.5) = course; N1 table ★ 17, N2 table ★ 85 (course took 84, listed).
+//   Tutorial 1 Q2 (analysis, chain 40-4 given): Htab auto 7.72 (Table 17-20 @ 2000 rpm) = course, K1 1.373 → Ha 34.98 hp.
 (function () {
   // Table 17-19: ANSI chain number → [pitch in, min tensile strength lbf, weight lbf/ft]
-  const CHAIN = { 25: [0.25, 780, 0.09], 35: [0.375, 1760, 0.21], 41: [0.5, 1500, 0.25], 40: [0.5, 3130, 0.42], 50: [0.625, 4880, 0.69], 60: [0.75, 7030, 1.00], 80: [1.0, 12500, 1.71], 100: [1.25, 19500, 2.58], 120: [1.5, 28000, 3.87], 140: [1.75, 38000, 4.95], 160: [2.0, 50000, 6.61], 180: [2.25, 63000, 9.06], 200: [2.5, 78000, 10.96], 240: [3.0, 112000, 16.4] };
+  const C = window.CHAINS;
+  const CHAIN = C.T17_19;
   const K2 = { 1: 1.0, 2: 1.7, 3: 2.5, 4: 3.3, 5: 3.9, 6: 4.6, 8: 6.0 };
   const Kr = no => (no === 25 || no === 35) ? 29 : (no === 41 ? 3.4 : 17);
   // helpers that fall back to the table / rounding so that auto-lookups do not depend on other autos (engine runs autos once)
@@ -21,6 +31,11 @@
   const N2v = v => H.has(v, 'N2') ? v.N2 : (H.has(v, 'N1', 'n1', 'n2') ? Math.round(v.N1 * v.n1 / v.n2) : undefined);
   const H1 = v => { const p = pv(v); return (H.has(v, 'n1') && p !== undefined) ? (v.chain === 41 ? 0.0022 : 0.004) * 17 ** 1.08 * v.n1 ** 0.9 * p ** (3 - 0.07 * p) : undefined; };
   const H2 = v => { const p = pv(v); return (H.has(v, 'n1') && p !== undefined) ? 1000 * Kr(v.chain) * 17 ** 1.5 * p ** 0.8 / v.n1 ** 1.5 : undefined; };
+  // selection context for chains_common.js tables / picks
+  const opt = v => ({ src: v.rsrc || 'shig', rule: v.selrule || 'pitch', P: v.Hd, N1: v.N1, n1: v.n1, n2: v.n2, VR: v.VR, chain: v.chain, strands: v.strands,
+    sList: [1, 2, 3, 4], fac: K2, sym: 'H_d', clear: { Htab: '', K1: '' }, N2id: 'N2' });
+  const TSmin = {}; Object.keys(CHAIN).forEach(k => { TSmin[k] = CHAIN[k][1]; });
+  const tensPick = v => H.has(v, 'Fw') ? C.ORDER.find(no => CHAIN[no][1] >= 10 * v.Fw) : undefined;
   const Lpc = v => { const N2 = N2v(v); return (H.has(v, 'Cp', 'N1') && N2 !== undefined) ? 2 * v.Cp + (v.N1 + N2) / 2 + (N2 - v.N1) ** 2 / (4 * Math.PI * Math.PI * v.Cp) : undefined; };
 
   window.TOPIC = {
@@ -29,18 +44,19 @@
     subtitle: 'Shigley Ch. 17-5 (Tables 17-19 … 17-23, Eqs. 17-29 … 17-38) · merged Fizz §1.6 + Mech §8.3.4',
     sibling: 'chains_mott.html',
     intro: 'Shigley\'s roller-chain method (Example 17-5): design power H<sub>d</sub> = H<sub>nom</sub>K<sub>s</sub>n<sub>d</sub>, tabulated 17-tooth rating H<sub>tab</sub> from Table 17-20 (the auto estimate is min(H₁, H₂) of Eqs. 17-32/17-33, which is how the table was built), tooth factor K<sub>1</sub> (Table 17-22) and strand factor K<sub>2</sub> (Table 17-23) → allowable power H<sub>a</sub> = K<sub>1</sub>K<sub>2</sub>H<sub>tab</sub>. Then sprocket pitch diameters (Eq. 17-29), chain length in pitches (Eq. 17-34, round to an even integer), centre distance (Eqs. 17-35/36) and the wrap angles the bibles add from Mott. The Mech bible notes Shigley\'s process "is very similar" to Mott\'s but the rating needs the two correction factors. <b>Course defaults</b> (MECH 325 "Flexible belts — Intro and Chains" slides 12–34, Tutorial 1, HW1 P5–P7): H<sub>d</sub> = H<sub>nom</sub>K<sub>s</sub>n<sub>d</sub> with n<sub>d</sub> = 1.0 and K<sub>s</sub> from Shigley Table 17-15 / Mott 7-17 / Martin Table II (course figure), at least 17 teeth on the driver, ratio ≤ 7:1, K<sub>r</sub> = 17, rating basis 15 000 h, CD 30–50 pitches and ≥ 1.5 × large-sprocket diameter, even number of pitches, wrap &gt; 120°, V ≤ 9000 ft/min; the Eq. 17-39 life correction uses K<sub>r</sub> = 17.',
-    example: { Hnom: 25, n1: 700, n2: 140, Ks: 1.5, nd: 1, N1: 17, chain: 80, strands: 2, Cp: 40, Lh: 15000 },
+    example: { Hnom: 25, n1: 700, n2: 140, Ks: 1.5, nd: 1, N1: 17, chain: 80, Cp: 40, Lh: 15000 },
     assumptions: [
       { text: 'Service factor K_s from Mott Table 7-17 (both guides; Shigley Table 17-15 or the Martin catalogue also accepted) — default 1.3 = moderate shock, electric motor (also Shigley Ex. 17-5)', src: 'Fizz p.27 · Mech p.34', var: 'Ks' },
       { text: 'No extra design factor: the guides use P_{des} = SF·P, i.e. n_d = 1.0 (Shigley Ex. 17-5 chose 1.5; Renold multipliers if stated)', src: 'Fizz p.27 · Mech p.34 · course Chains s26', var: 'nd' },
       { text: 'Output speed given as a range → use its midpoint for VR', src: 'Fizz p.28 · Mech p.34', var: 'n2' },
       { text: 'Use N_1 = 17 teeth so that K_1 = 1 ("you just need Nd to be 17 to not have to do too much work"); never fewer than 17 unless n_1 < 100 rpm', src: 'Mech p.36 · Fizz p.28', var: 'N1' },
-      { text: 'N_2 = N_1·VR rounded to the nearest integer (Mech rounds up); N_2 ≤ 120 teeth', src: 'Fizz p.28 · Fizz p.30 · Mech p.35', var: 'N2' },
-      { text: 'Start with a No. 60 chain (No. 40 often fails, No. 80 is usually overkill), then change size or add strands', src: 'Mech p.34', var: 'chain' },
-      { text: 'Single strand first; strand factors K_2 = 1.7 / 2.5 / 3.3 for 2 / 3 / 4 strands', src: 'Fizz p.28 · Mech p.36', var: 'strands' },
+      { text: 'N_2 = N_1·VR rounded to the nearest integer stocked in Table 17-21 (HW1 P7: 85 → 84; Mech rounds up); N_2 ≤ 120 teeth', src: 'Fizz p.28 · Fizz p.30 · Mech p.35 · course HW1 P7', var: 'N2' },
+      { text: 'Chain size: Shigley Ex. 17-5 forms a table of strands → smallest chain in Table 17-20 and picks the smallest pitch (3 × No. 140); the selection table does the same (rule "smallest pitch first"; Mott/Fizz "single strand first" available). Mech: No. 40 often fails, No. 80 is usually overkill', src: 'Shigley Ex. 17-5 · Mech p.34 · Fizz p.28', var: 'selrule' },
+      { text: 'Strand factors K_2 = 1.7 / 2.5 / 3.3 for 2 / 3 / 4 strands (Table 17-23; 3.9 / 4.6 for 5 / 6)', src: 'Fizz p.28 · Mech p.36', var: 'strands' },
       { text: 'H_{tab} from Table 17-20 (interpolate on rpm; the zone gives the lubrication type); H_a = K_1K_2H_{tab} must be at least H_d', src: 'Fizz p.28 · Mech p.36', var: 'Htab' },
+      { text: 'Rating source: Shigley Table 17-20; Mott Tables 7-14/15/16 or the Renold catalogue pages (course s20) can be selected instead', src: 'course Chains s20, s25', var: 'rsrc' },
       { text: 'Trial centre distance 40 pitches (30–50 recommended)', src: 'Fizz p.30 · Mech p.35', var: 'Cp' },
-      { text: 'Chain length rounded to the nearest EVEN number of pitches (Shigley Ex. 17-5: 75.79 → 76); Fizz rounds to the nearest integer, Mech rounds up', src: 'Mech p.35 · Fizz p.30', var: 'Lp' },
+      { text: 'Chain length rounded to the nearest EVEN number of pitches (Shigley Ex. 17-5: 75.79 → 76), one size up if that drops a 30+ pitch CD below 30; Fizz rounds to the nearest integer, Mech rounds up', src: 'Mech p.35 · Fizz p.30', var: 'Lp' },
       { text: 'Angle of wrap on the small sprocket at least 120°', src: 'Fizz p.31' },
       { text: 'Factor of safety = allowable power / design power = H_a/H_d', src: 'Fizz p.31 · Mech p.36' },
       { text: 'Rating basis 15 000 h, 17-tooth sprocket, 100 pitches; Eq. 17-39 life correction with K_r = 17 for No. 40–240 (course)', src: 'course Chains s24 · Module 1 p9', var: 'Lh' },
@@ -83,6 +99,9 @@
       { id: 'tsu-sf', ref: 'Tsubaki service factors (catalogue p.174)', book: 'course', title: 'Tsubaki selection factors: multi-strand factor, service factor Ks (smooth / moderate / large impact × motor or engine), speed factor Kn, teeth factor Kz, shock factor K chart', src: 'figures/course/tsubaki_chain_service_factors.png', note: 'tsubakimoto chains.pdf p.175 (printed 174). Alternative to Mott Table 7-17 / Martin table; design kW = kW × Ks.' },
       { id: 'tsu-graph', ref: 'Tsubaki provisional selection graph (p.175)', book: 'course', title: 'RS roller chain provisional selection graph: design kW vs small-sprocket rpm → chain number (single, double, triple strand)', src: 'figures/course/tsubaki_rs_provisional_selection_graph.png', note: 'tsubakimoto chains.pdf p.176 (printed 175). Tentative selection only: confirm with the rating table.' },
       { id: 'tsu-constr', ref: 'Tsubaki roller chain construction (p.13)', book: 'course', title: 'Roller chain construction: pin, bush, roller, inner/outer plates, connecting and offset links', src: 'figures/course/tsubaki_roller_chain_construction.png', note: 'tsubakimoto chains.pdf p.14 (printed 13); the diagram on Chains slide 12.' },
+      { id: 'table7-14', ref: 'Table 7-14', book: 'mott', title: 'Mott horsepower ratings — single-strand No. 40 (teeth × rpm, lubrication zones)', src: 'figures/mott/table7-14.png', page: 300, note: 'Rating source "Mott" in the selection tables (teeth rows replace K1).' },
+      { id: 'table7-15', ref: 'Table 7-15', book: 'mott', title: 'Mott horsepower ratings — single-strand No. 60', src: 'figures/mott/table7-15.png', page: 301 },
+      { id: 'table7-16', ref: 'Table 7-16', book: 'mott', title: 'Mott horsepower ratings — single-strand No. 80', src: 'figures/mott/table7-16.png', page: 302 },
       { id: 'fig7-4', ref: 'Figure 7-4', book: 'mott', title: 'Belt/chain configuration — wrap angle geometry (Mott)', src: 'figures/mott/fig7-4.png', page: 265 },
     ],
 
@@ -102,36 +121,43 @@
               check: v => (H.has(v, 'VR') && v.VR > 7) ? 'Course: 7:1 is near the maximum ratio — consider two stages' : null },
           ] },
         { id: 'spk', title: 'Sprocket teeth', fig: ['table17-21', 'fig17-17'],
-          text: 'Course step 3: avoid fewer than 17 teeth on the driver (Martin: 17 minimum recommended, 15 common, as low as 7); odd numbers preferred (17, 19, 21 …); the driven sprocket should not exceed 120 teeth. N₂ = N₁·VR rounded to an integer (HW1 P7 chose 84 for 85), then recompute the output speed.',
+          text: 'Course step 3: avoid fewer than 17 teeth on the driver (Martin: 17 minimum recommended, 15 common, as low as 7); odd numbers preferred (17, 19, 21 …); the driven sprocket should not exceed 120 teeth. <b>Rule:</b> N₁ = smallest odd count ≥ 17 that carries H<sub>d</sub> with the chosen chain (17 gives K₁ = 1, Mech p.36); N₂ = N₁·VR rounded to an integer (HW1 P7 chose 84 for 85), then recompute the output speed and check Table 17-21 stock. The tables below use the chain chosen in the next section.',
           vars: [
             { id: 'N1', symbol: 'N_1', label: 'Driving sprocket teeth', unit: '', kind: 'input', default: 17, hint: 'Mech: use 17 so K1 = 1; never fewer than 17 above 100 rpm', check: v => (H.has(v, 'N1') && v.N1 < 17 && !(H.has(v, 'n1') && v.n1 < 100)) ? 'Fewer than 17 teeth above 100 rpm (Fizz p.28; Martin minimum recommended)' : null },
-            { id: 'N2', symbol: 'N_2', label: 'Driven sprocket teeth', unit: '', kind: 'input', auto: v => H.has(v, 'N1', 'VR') ? Math.round(v.N1 * v.VR) : undefined, hint: 'auto = round(N1·VR); check availability in Table 17-21',
+            { id: 'N2', symbol: 'N_2', label: 'Driven sprocket teeth', unit: '', kind: 'lookup', fig: 'table17-21', auto: v => C.n2pick(v.N1, v.VR, v.chain), hint: 'auto = ★ of the N2 table: N1·VR rounded to the nearest integer stocked in Table 17-21 (Fizz: nearest; Mech rounds up)',
               check: v => (H.has(v, 'N2') && v.N2 > 120) ? 'N2 > 120 teeth: not made in standard sizes' : null },
             { id: 'VRa', symbol: 'VR_{act}', label: 'Actual ratio N2/N1', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'N1', 'N2') ? v.N2 / v.N1 : undefined },
             { id: 'n2a', symbol: 'n_{2,act}', label: 'Actual output speed', unit: 'rpm', kind: 'calc', compute: v => H.has(v, 'n1', 'VRa') ? v.n1 / v.VRa : undefined },
-          ] },
+          ],
+          after: v => C.teethTable(opt(v)) + C.n2Table(opt(v)) },
       ] },
 
       { title: 'Chain selection & capacity', steps: [
-        { id: 'chain', title: 'Chain number, strands and corrected rating', fig: ['table17-19', 'table17-20a', 'table17-20b', 'table17-22', 'table17-23', 'renold-hp', 'renold-limit', 'ansi50', 'rj40', 'rj50', 'rj60', 'rj80', 'rj100', 'tsu-graph', 'tsu-constr'], eq: '17-32, 17-33, 17-37',
-          formula: 'H_1 = 0.004 N_1^{1.08} n_1^{0.9} p^{(3 - 0.07p)},\\quad H_2 = \\frac{1000 K_r N_1^{1.5} p^{0.8}}{n_1^{1.5}},\\quad H_{tab} = \\min(H_1,H_2)\\ (N_1 = 17),\\quad H_a = K_1 K_2 H_{tab}',
-          text: 'Design approach (Example 17-5): the required table rating is H<sub>tab,req</sub> = H<sub>d</sub>/(K<sub>1</sub>K<sub>2</sub>); form a table of strands → required H<sub>tab</sub> → smallest chain in Table 17-20 that provides it at n₁ (with its lubrication type). The auto H<sub>tab</sub> is min(H₁, H₂) at the chosen chain and N₁ = 17 — read Table 17-20 to confirm (K<sub>r</sub> = 29 for No. 25/35, 3.4 for No. 41, 17 for No. 40–240; constant 0.0022 instead of 0.004 for No. 41). K<sub>1</sub> uses the pre-extreme exponent 1.08 when H₁ governs, post-extreme 1.5 when H₂ governs. Course (slide 24): the table is based on 15 000 h at full load, 17-tooth sprocket, 1:1 ratio, single strand of 100 pitches, SF 1.0 and recommended lubrication; K<sub>2</sub> = 1.7 / 2.5 / 3.3 / 3.9 / 4.6 for 2–6 strands.',
+        { id: 'chain', title: 'Select the chain: number, strands and corrected rating', fig: ['table17-19', 'table17-20a', 'table17-20b', 'table17-22', 'table17-23', 'table7-14', 'table7-15', 'table7-16', 'renold-hp', 'renold-limit', 'ansi50', 'rj40', 'rj50', 'rj60', 'rj80', 'rj100', 'tsu-graph', 'tsu-constr'], eq: '17-32, 17-33, 17-37',
+          formula: 'H_1 = 0.004 N_1^{1.08} n_1^{0.9} p^{(3 - 0.07p)},\\quad H_2 = \\frac{1000 K_r N_1^{1.5} p^{0.8}}{n_1^{1.5}},\\quad H_{tab}\\ \\text{from Table 17-20 at } n_1,\\quad H_a = K_1 K_2 H_{tab} \\ge H_d',
+          text: '<b>Rule</b> (Example 17-5): the required table rating is H<sub>tab,req</sub> = H<sub>d</sub>/(K<sub>1</sub>K<sub>2</sub>); form a table of strands → required H<sub>tab</sub> → smallest chain in Table 17-20 that provides it at n₁ (with its lubrication type), reject the galling region C′, and take the <b>smallest pitch</b> with the fewest strands that gives it (Ex. 17-5: 3 strands of No. 140; course/Mech: add strands before going to a much larger pitch — No. 80 is usually overkill). The tables below do this: ★ = pick, <b>Use</b> fills chain and strands (switch the rule to “fewest strands first” for the Mott/Fizz habit, or the rating source to Mott Tables 7-14/15/16 or the Renold catalogue). H<sub>tab</sub> auto = Table 17-20 interpolated on rpm (digitised); H₁/H₂ below are Eqs. 17-32/17-33 at 17 T (K<sub>r</sub> = 29 for No. 25/35, 3.4 for No. 41, 17 for No. 40–240; constant 0.0022 instead of 0.004 for No. 41). K<sub>1</sub> uses the pre-extreme exponent 1.08 when H₁ governs, post-extreme 1.5 when H₂ governs. Course (slide 24): the table is based on 15 000 h at full load, 17-tooth sprocket, 1:1 ratio, single strand of 100 pitches, SF 1.0 and recommended lubrication; K<sub>2</sub> = 1.7 / 2.5 / 3.3 / 3.9 / 4.6 for 2–6 strands.',
           vars: [
-            { id: 'chain', label: 'ANSI chain number', kind: 'choice', options: Object.keys(CHAIN).map(Number), default: 60, hint: 'Mech: start with No. 60; change size or strands until Ha ≥ Hd' },
+            { id: 'rsrc', label: 'Rating source', kind: 'choice', type: 'text', allowBlank: false, default: 'shig', options: [{ label: 'Shigley Table 17-20 (17 T) × K₁', value: 'shig' }, { label: 'Mott Tables 7-14/15/16 (No. 40/60/80, teeth × rpm)', value: 'mott' }, { label: 'Renold ANSI catalogue pages — all numbers (course s20)', value: 'renold' }] },
+            { id: 'selrule', label: 'Selection rule', kind: 'choice', type: 'text', allowBlank: false, default: 'pitch', options: [{ label: 'Smallest pitch first, then fewest strands (Shigley Ex. 17-5)', value: 'pitch' }, { label: 'Fewest strands first, then smallest chain (Mott Ex. 7-5, Fizz)', value: 'strands' }] },
+            { id: 'strands', symbol: '', label: 'Number of strands', unit: '', kind: 'lookup', fig: 'table17-23', auto: v => { const o = opt(v); if (!H.has(v, 'Hd')) return 1; if (H.has(v, 'chain')) return C.fewestStrands(o, v.chain); const k = C.pick(o); return k ? k.strands : undefined; },
+              hint: 'auto = ★ pick of the selection table; Table 17-23 has 1–6 (and 8)', check: v => (H.has(v, 'strands') && !K2[v.strands]) ? 'Table 17-23 lists 1–6 and 8 strands' : null },
+            { id: 'chain', symbol: '', label: 'ANSI chain number', unit: '', kind: 'lookup', fig: 'table17-19',
+              auto: v => { const o = opt(v); if (!H.has(v, 'Hd')) return tensPick(v); if (H.has(v, 'strands')) return C.smallestFor(o, v.strands); const k = C.pick(o); return k ? k.chain : undefined; },
+              hint: 'auto = ★ pick; Mech: No. 40 often fails, No. 80 usually overkill', check: v => (H.has(v, 'chain') && !CHAIN[v.chain]) ? 'Not an ANSI chain number (Table 17-19: 25, 35, 40, 41, 50, 60, 80 … 240)' : null },
             { id: 'p', symbol: 'p', label: 'Chain pitch', unit: 'in', kind: 'lookup', fig: 'table17-19', auto: v => CHAIN[v.chain] ? CHAIN[v.chain][0] : undefined },
-            { id: 'strands', label: 'Number of strands', kind: 'choice', options: [1, 2, 3, 4, 5, 6, 8], default: 1 },
             { id: 'K2', symbol: 'K_2', label: 'Multiple-strand factor', unit: '', kind: 'lookup', fig: 'table17-23', auto: v => K2[v.strands] },
             { id: 'H1', symbol: 'H_1', label: 'Link-plate limited power (17 T)', unit: 'hp', kind: 'calc', compute: H1 },
             { id: 'H2', symbol: 'H_2', label: 'Roller-impact limited power (17 T)', unit: 'hp', kind: 'calc', compute: H2 },
-            { id: 'Htab', symbol: 'H_{tab}', label: 'Tabulated rating (Table 17-20)', unit: 'hp', kind: 'lookup', fig: 'table17-20a', auto: v => { const a = H1(v), b = H2(v); return (a !== undefined && b !== undefined) ? Math.min(a, b) : undefined; } },
-            { id: 'K1', symbol: 'K_1', label: 'Tooth correction factor', unit: '', kind: 'lookup', fig: 'table17-22', auto: v => { const a = H1(v), b = H2(v); return (H.has(v, 'N1') && a !== undefined && b !== undefined) ? Math.pow(v.N1 / 17, a <= b ? 1.08 : 1.5) : undefined; } },
+            { id: 'Htab', symbol: 'H_{tab}', label: 'Tabulated rating at 17 T (Table 17-20)', unit: 'hp', kind: 'lookup', fig: 'table17-20a', auto: v => C.rating(v.rsrc || 'shig', v.chain, 17, v.n1).h17, hint: 'auto = Table 17-20 interpolated on rpm (or the 17-T row of the chosen source)' },
+            { id: 'K1', symbol: 'K_1', label: 'Tooth correction factor', unit: '', kind: 'lookup', fig: 'table17-22', auto: v => { if ((v.rsrc || 'shig') !== 'shig') return C.rating(v.rsrc, v.chain, v.N1, v.n1).k1; const a = H1(v), b = H2(v); return (H.has(v, 'N1') && a !== undefined && b !== undefined) ? Math.pow(v.N1 / 17, a <= b ? 1.08 : 1.5) : undefined; },
+              hint: 'Table 17-22: (N1/17)^1.08 pre-extreme, ^1.5 post-extreme; Mott/Renold source: rating(N1)/rating(17)' },
             { id: 'Ha', symbol: 'H_a', label: 'Allowable power', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'K1', 'K2', 'Htab') ? v.K1 * v.K2 * v.Htab : undefined,
               work: v => H.has(v, 'Ha') ? '\\(H_a = K_1K_2H_{tab} = ' + H.fmt(v.K1, 3) + '(' + H.fmt(v.K2) + ')(' + H.fmt(v.Htab) + ') = ' + H.fmt(v.Ha) + '\\ \\text{hp}\\)' : null },
             { id: 'Htreq', symbol: 'H_{tab,req}', label: 'Required table rating = Hd/(K1 K2)', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'Hd', 'K1', 'K2') ? v.Hd / (v.K1 * v.K2) : undefined,
               work: v => H.has(v, 'Htreq') ? '\\(H_{tab,req} = \\frac{n_dK_sH_{nom}}{K_1K_2} = \\frac{' + H.fmt(v.Hd) + '}{' + H.fmt(v.K1, 3) + '(' + H.fmt(v.K2) + ')} = ' + H.fmt(v.Htreq) + '\\ \\text{hp}\\)' : null },
-            { id: 'lub', label: 'Lubrication type (zone in Table 17-20)', kind: 'choice', type: 'text', options: ['A — manual or drip', 'B — bath or disk', 'C — oil stream', "C′ — galling region (consult manufacturer)"] },
+            { id: 'lub', symbol: '', label: 'Lubrication type (table zone)', unit: '', kind: 'calc', compute: v => { const r = C.rating(v.rsrc || 'shig', v.chain, v.N1, v.n1); return r.z ? C.LUBE[r.z] : undefined; } },
           ],
-          after: v => H.has(v, 'Ha', 'Hd') ? (v.Ha >= v.Hd ? '<span class="result-ok">Capacity OK</span> — H<sub>a</sub> = ' + H.fmt(v.Ha) + ' hp ≥ H<sub>d</sub> = ' + H.fmt(v.Hd) + ' hp' : '<span class="result-bad">Insufficient</span> — H<sub>a</sub> = ' + H.fmt(v.Ha) + ' hp &lt; H<sub>d</sub> = ' + H.fmt(v.Hd) + ' hp: choose a larger chain or more strands') : '' },
+          after: v => (H.has(v, 'Ha', 'Hd') ? (v.Ha >= v.Hd ? '<span class="result-ok">Capacity OK</span> — H<sub>a</sub> = ' + H.fmt(v.Ha) + ' hp ≥ H<sub>d</sub> = ' + H.fmt(v.Hd) + ' hp' : '<span class="result-bad">Insufficient</span> — H<sub>a</sub> = ' + H.fmt(v.Ha) + ' hp &lt; H<sub>d</sub> = ' + H.fmt(v.Hd) + ' hp: choose a larger chain or more strands') : '') + C.strandsTable(opt(v)) + C.chainTable(opt(v)) },
         { id: 'life', title: 'Equation check at the actual N1 and life correction (course Tutorial 1)', eq: '17-32, 17-33, 17-39',
           formula: "H_1 = 0.004 N_1^{1.08} n_1^{0.9} p^{(3-0.07p)},\\quad H_2 = \\frac{1000 K_r N_1^{1.5} p^{0.8}}{n_1^{1.5}},\\quad H_2' = H_2\\left(\\frac{L/p}{100}\\right)^{0.4}\\left(\\frac{15\\,000}{h}\\right)^{0.4},\\quad H = K_2\\min(H_1, H_2')",
           text: 'The course evaluates Eqs. 17-32/17-33 directly at the actual tooth count (Tutorial 1: 21 T → H₁ 12.84, H₂ 10.5 hp per strand, roller limit governs) and then applies the full-life correction Eq. 17-39 for the required hours h and the chain length in pitches, with K<sub>r</sub> = 17 ("not indicated in Shigley text"). h = 15 000 h is the rating-table basis (course: 15 000 h or 8×10⁶ cycles, whichever first).',
@@ -158,12 +184,12 @@
           ] },
         { id: 'len', title: 'Chain length and centre distance', fig: ['fig7-4'], eq: '17-34, 17-35, 17-36',
           formula: '\\frac{L}{p} \\approx \\frac{2C}{p} + \\frac{N_1+N_2}{2} + \\frac{(N_2-N_1)^2}{4\\pi^2 C/p},\\qquad A = \\frac{N_1+N_2}{2} - \\frac{L}{p},\\qquad C = \\frac{p}{4}\\left[-A + \\sqrt{A^2 - 8\\left(\\frac{N_2-N_1}{2\\pi}\\right)^2}\\right]',
-          text: 'Course: trial C/p of 30–50 pitches (40 typical; Example 17-5 used a short drive C/p = 25) and C ≥ 150 % of the large sprocket diameter. Round the chain length to an EVEN number of pitches to avoid an offset link (Tutorial 1 Q2 kept 135 — override the auto if the question does), then recompute C.',
+          text: 'Course: trial C/p of 30–50 pitches (40 typical; Example 17-5 used a short drive C/p = 25) and C ≥ 150 % of the large sprocket diameter. <b>Rule:</b> round the chain length to the nearest EVEN number of pitches to avoid an offset link (one size up if that pulls C below 30 pitches; Tutorial 1 Q2 kept 135 — override the auto if the question does), then recompute C. The table lists the even lengths either side.',
           vars: [
             { id: 'Cp', symbol: 'C/p', label: 'Trial centre distance', unit: 'pitches', kind: 'input', default: 40, check: v => (H.has(v, 'Cp') && (v.Cp < 30 || v.Cp > 50)) ? 'Course: 30–50 pitches recommended' : null },
             { id: 'Lpc', symbol: 'L/p', label: 'Chain length (computed)', unit: 'pitches', kind: 'calc', compute: Lpc,
               work: v => H.has(v, 'Lpc') ? '\\(L/p = 2(' + H.fmt(v.Cp) + ') + \\frac{' + v.N1 + '+' + v.N2 + '}{2} + \\frac{(' + v.N2 + '-' + v.N1 + ')^2}{4\\pi^2(' + H.fmt(v.Cp) + ')} = ' + H.fmt(v.Lpc) + '\\ \\text{pitches}\\)' : null },
-            { id: 'Lp', symbol: 'L/p', label: 'Chain length used (even integer)', unit: 'pitches', kind: 'input', auto: v => { const l = Lpc(v); return l !== undefined ? 2 * Math.round(l / 2) : undefined; }, hint: 'auto = nearest even integer; override if desired' },
+            { id: 'Lp', symbol: 'L/p', label: 'Chain length used (even integer)', unit: 'pitches', kind: 'lookup', fig: 'fig17-16', auto: v => { const N2 = N2v(v); return (H.has(v, 'Cp', 'N1') && N2 !== undefined) ? C.pickLength(v.N1, N2, v.Cp) : undefined; }, hint: 'auto = ★ pick of the length table (nearest even; next even if CD would drop below 30 p)' },
             { id: 'Lin', symbol: 'L', label: 'Chain length', unit: 'in', kind: 'calc', compute: v => H.has(v, 'Lp', 'p') ? v.Lp * v.p : undefined },
             { id: 'A', symbol: 'A', label: 'A = (N1 + N2)/2 − L/p', unit: '', kind: 'calc', compute: v => H.has(v, 'Lp', 'N1', 'N2') ? (v.N1 + v.N2) / 2 - v.Lp : undefined },
             { id: 'Cpa', symbol: 'C/p', label: 'Actual centre distance', unit: 'pitches', kind: 'calc', compute: v => { if (!H.has(v, 'A', 'N1', 'N2')) return undefined; const r = v.A * v.A - 8 * ((v.N2 - v.N1) / (2 * Math.PI)) ** 2; return r >= 0 ? 0.25 * (-v.A + Math.sqrt(r)) : undefined; },
@@ -171,7 +197,8 @@
             { id: 'C', symbol: 'C', label: 'Actual centre distance', unit: 'in', kind: 'calc', compute: v => H.has(v, 'Cpa', 'p') ? v.Cpa * v.p : undefined,
               work: v => H.has(v, 'C') ? '\\(C = ' + H.fmt(v.Cpa) + '(' + H.fmt(v.p) + ') = ' + H.fmt(v.C) + '\\ \\text{in}\\)' : null,
               check: v => (H.has(v, 'C', 'D2') && v.C < 1.5 * v.D2) ? 'Course: CD should be ≥ 150 % of the large sprocket diameter' : null },
-          ] },
+          ],
+          after: v => C.lengthTable({ N1: v.N1, N2: v.N2, C: v.Cp, p: v.p, Lid: 'Lp' }) },
         { id: 'wrap', title: 'Angle of wrap (Mott Eqs. 7-21/7-22, as in both bibles)', fig: ['fig7-4'],
           formula: '\\theta_1 = 180^\\circ - 2\\sin^{-1}\\frac{D_2 - D_1}{2C},\\qquad \\theta_2 = 180^\\circ + 2\\sin^{-1}\\frac{D_2 - D_1}{2C}',
           vars: [
@@ -179,6 +206,19 @@
               check: v => (H.has(v, 'th1') && v.th1 < 120) ? 'θ1 < 120° — increase centre distance' : null },
             { id: 'th2', symbol: '\\theta_2', label: 'Wrap on large sprocket', unit: '°', kind: 'calc', compute: v => H.has(v, 'th1') ? 360 - v.th1 : undefined },
           ] },
+      ] },
+
+      { title: 'Chain in tension (optional)', steps: [
+        { id: 'tens', title: 'Chain used as a tension member (lifting / static load) — course HW1 P5', fig: ['table17-19', 'ansi50', 'renold-sf', 'rj50', 'rj80', 'rj120'],
+          formula: '\\text{tensile strength} \\ge 10 \\times F_w,\\qquad n = \\frac{\\text{tensile strength}}{F_w}',
+          text: 'Optional. <b>Rule:</b> pick the smallest chain whose minimum tensile strength (Table 17-19) is ≥ 10 × the working load per strand (Fizz p.27 "use only 10 % of the tensile strength"; course HW1 P5: 2500 lb → No. 120). With no power entered the chain number auto-fills from this rule. The table also lists the Renold catalogue minimum tensile strength and rated working load (slide 15).',
+          vars: [
+            { id: 'Fw', symbol: 'F_w', label: 'Working load per strand', unit: 'lbf', kind: 'input', hint: 'leave blank for a power-transmission drive' },
+            { id: 'nFw', symbol: 'n', label: 'Min tensile strength / working load', unit: '', kind: 'calc', digits: 3, compute: v => (H.has(v, 'Fw') && v.Fw > 0 && CHAIN[v.chain]) ? CHAIN[v.chain][1] / v.Fw : undefined,
+              work: v => H.has(v, 'nFw') ? '\\(n = ' + H.fmt(CHAIN[v.chain][1]) + '/' + H.fmt(v.Fw) + ' = ' + H.fmt(v.nFw, 3) + '\\)' : null,
+              check: v => (H.has(v, 'nFw') && v.nFw < 10) ? 'Below the course minimum of 10 — pick a larger chain' : null },
+          ],
+          after: v => C.tensionTable({ Fw: v.Fw, TS: TSmin, TSlabel: 'Shigley Table 17-19 min tensile' }) },
       ] },
 
       { title: 'Result', steps: [
@@ -196,7 +236,7 @@
           after: v => {
             if (!H.has(v, 'Ha', 'Hd')) return '';
             const ok = v.Ha >= v.Hd && (!H.has(v, 'th1') || v.th1 >= 120);
-            return (ok ? '<span class="result-ok">PASS</span>' : '<span class="result-bad">FAIL</span>') + ' — ' + (v.strands || 1) + ' strand(s) of No. ' + (v.chain || '?') + ' chain (p = ' + H.fmt(v.p) + ' in), N₁ = ' + v.N1 + ', N₂ = ' + v.N2 + ', L = ' + H.fmt(v.Lp) + ' pitches = ' + H.fmt(v.Lin) + ' in, C = ' + H.fmt(v.C) + ' in; H<sub>a</sub> = ' + H.fmt(v.Ha) + ' hp vs H<sub>d</sub> = ' + H.fmt(v.Hd) + ' hp' + (v.lub ? '; lubrication type ' + v.lub.split(' ')[0] : '') + '. Durability basis: 15 000 h, 100 pitches, recommended lubrication.';
+            return (ok ? '<span class="result-ok">PASS</span>' : '<span class="result-bad">FAIL</span>') + ' — ' + (v.strands || 1) + ' strand(s) of No. ' + (v.chain || '?') + ' chain (p = ' + H.fmt(v.p) + ' in), N₁ = ' + v.N1 + ', N₂ = ' + v.N2 + ', L = ' + H.fmt(v.Lp) + ' pitches = ' + H.fmt(v.Lin) + ' in, C = ' + H.fmt(v.C) + ' in; H<sub>a</sub> = ' + H.fmt(v.Ha) + ' hp vs H<sub>d</sub> = ' + H.fmt(v.Hd) + ' hp' + (v.lub ? '; Type ' + v.lub + ' lubrication' : '') + '. Durability basis: 15 000 h, 100 pitches, recommended lubrication.';
           } },
       ] },
     ],

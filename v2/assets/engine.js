@@ -53,17 +53,30 @@
   let v = {};           // current values (numbers / strings)
   let raw = {};         // raw input strings for inputs so typing isn't clobbered
 
+  // saved state: {v:2, raw:{…}, def:{…}} — def = each field's default when saved, so a value the student never
+  // changed follows the current default after an update (older saves without v:2 are discarded once)
   function load() {
-    try {
-      const s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
-      if (s && s.raw) raw = s.raw;
-    } catch (e) { raw = {}; }
+    raw = {};
+    let sv = null;
+    try { sv = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { sv = null; }
+    if (sv && sv.v === 2 && sv.raw) {
+      const def = sv.def || {};
+      Object.keys(sv.raw).forEach(k => {
+        const vr = varById[k]; if (!vr || vr.kind === 'calc') return;
+        const was = def[k] === undefined ? undefined : String(def[k]);
+        if (was !== undefined && String(sv.raw[k]) === was) return;   // untouched default → use today's default
+        raw[k] = sv.raw[k];
+      });
+    }
     allVars.forEach(vr => {
       if (vr.kind === 'calc') return;
       if (raw[vr.id] === undefined && vr.default !== undefined) raw[vr.id] = String(vr.default);
     });
   }
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({ raw })); } catch (e) { } }
+  function save() {
+    const def = {}; allVars.forEach(vr => { if (vr.kind !== 'calc' && vr.default !== undefined) def[vr.id] = String(vr.default); });
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ v: 2, raw, def })); } catch (e) { }
+  }
 
   function parseRaw(vr) {
     const r = raw[vr.id];
@@ -147,10 +160,11 @@
   // H.table(headers, rows, opts) → HTML for a selection table. rows: [{cells:[...], pick:bool, ok:bool, set:{id:value,...}}]
   window.H.table = (headers, rows, opts) => {
     opts = opts || {};
-    const th = headers.map(h => '<th>' + h + '</th>').join('') + (rows.some(r => r.set) ? '<th></th>' : '');
+    const anySet = rows.some(r => r.set);
+    const th = (anySet ? '<th></th>' : '') + headers.map(h => '<th>' + h + '</th>').join('');
     const tr = rows.map(r => {
-      const btn = r.set ? '<td><button type="button" class="use-btn" onclick=\'' + Object.keys(r.set).map(k => 'H.set(' + JSON.stringify(k) + ',' + JSON.stringify(r.set[k]) + ')').join(';').replace(/'/g, '&#39;') + '\'>' + (opts.useLabel || 'Use') + '</button></td>' : (rows.some(x => x.set) ? '<td></td>' : '');
-      return '<tr class="' + (r.pick ? 'pick ' : '') + (r.ok === false ? 'no' : r.ok === true ? 'ok' : '') + '">' + r.cells.map(c => '<td>' + (c === undefined || c === null ? '—' : c) + '</td>').join('') + btn + '</tr>';
+      const btn = r.set ? '<td><button type="button" class="use-btn" onclick=\'' + Object.keys(r.set).map(k => 'H.set(' + JSON.stringify(k) + ',' + JSON.stringify(r.set[k]) + ')').join(';').replace(/'/g, '&#39;') + '\'>' + (opts.useLabel || 'Use') + '</button></td>' : (anySet ? '<td></td>' : '');
+      return '<tr class="' + (r.pick ? 'pick ' : '') + (r.ok === false ? 'no' : r.ok === true ? 'ok' : '') + '">' + btn + r.cells.map(c => '<td>' + (c === undefined || c === null ? '—' : c) + '</td>').join('') + '</tr>';
     }).join('');
     return (opts.caption ? '<div class="seltab-cap">' + opts.caption + '</div>' : '') + '<div class="seltab-wrap"><table class="seltab"><thead><tr>' + th + '</tr></thead><tbody>' + tr + '</tbody></table></div>' + (opts.note ? '<div class="seltab-note">' + opts.note + '</div>' : '');
   };

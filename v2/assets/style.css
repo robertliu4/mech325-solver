@@ -184,7 +184,7 @@ table.seltab td { padding: 3px 8px; border-bottom: 1px solid #f1f5f9; white-spac
 table.seltab tr.no td { color: #9ca3af; }
 table.seltab tr.ok td:first-child { border-left: 3px solid var(--calc-line); }
 table.seltab tr.pick td { background: #dcfce7; font-weight: 700; color: var(--ink); }
-table.seltab tr.pick td:first-child::before { content: "★ "; color: #15803d; }
+table.seltab tr.pick td:nth-child(2)::before { content: "★ "; color: #15803d; }
 .use-btn { border: 1px solid var(--accent); background: #fff; color: var(--accent); border-radius: 6px; padding: 1px 8px; font-size: .78rem; cursor: pointer; }
 .use-btn:hover { background: var(--accent-soft); }
 .seltab-note { font-size: .78rem; color: var(--muted); }
