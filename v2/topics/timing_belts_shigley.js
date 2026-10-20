@@ -1,4 +1,10 @@
 // Synchronous (timing) belts — Mott Ch. 7-5 (merged Fizz §1.5 + Mech §8.3.3; Example Problem 7-4)
+// Course alignment (v2/COURSE_CONVENTIONS.md §0, §3): "Timing Belts 2023" slides s4–s12 + HW1 P4. Seven-step procedure: SF (Table 7-8) →
+// pitch (Fig 7-27) → small sprocket ≥ NEMA minimum from Gates Table No. 4 (course-only figure, auto lookup) → sprockets/belt from
+// Table 7-7 with D2 < CD < 3(D1+D2) → width from Table 7-9 → V < 6500 ft/min (3500–4000 target) and Rated × CL (Table 7-11) → SF = Pallow/Pdes.
+// Verified against: HW1 P4 (Mott 7-43): 5 hp AC normal @1750 → fan 700 rpm, 22 h/day: SF 1.8 → 9.0 hp; 8 mm; 32/80 teeth (VR 2.5);
+//   PD1 3.208, PD2 8.020; Gates Table 4 min 2.7 in OK; 8 < CD < 33; 920-8MGT (115 T) → CD 8.97 in; Prated 21.2 (30 mm), CL 1.0;
+//   SF 21.2/9.0 = 2.36; V 1470 ft/min < 3500 — all reproduced.
 (function () {
   // Table 7-4 — 8 mm pitch sprockets: teeth → [pitch dia in, flange dia in, bushing size by width 20/30/50/85]
   const T74 = {
@@ -15,6 +21,14 @@
   // Table 7-11 — belt length correction factor by belt designation (pitch length, mm)
   const T711 = { 384: 0.70, 480: 0.80, 560: 0.80, 600: 0.80, 640: 0.90, 720: 0.90, 800: 0.90, 840: 0.90, 880: 0.90, 920: 1.00, 960: 1.00, 1040: 1.00, 1064: 1.00, 1120: 1.00, 1160: 1.00, 1200: 1.00, 1224: 1.00, 1280: 1.10, 1440: 1.10, 1512: 1.10, 1584: 1.10, 1600: 1.10, 1760: 1.10, 1800: 1.20, 2000: 1.20, 2200: 1.20, 2400: 1.20, 2600: 1.20, 2800: 1.20, 3048: 1.20, 3280: 1.20, 3600: 1.20, 4400: 1.20 };
   const BELTS = Object.keys(T711).map(Number);
+  // Gates Table No. 4 — minimum motor-sprocket PD (in): rows motor hp, columns rpm 575/690/870/1160/1750/3450 (NaN = not listed)
+  const G4_RPM = [575, 690, 870, 1160, 1750, 3450];
+  const G4 = [[0.5, NaN, NaN, 2.0, NaN, NaN, NaN], [0.75, NaN, NaN, 2.2, 2.0, NaN, NaN], [1, 2.7, 2.3, 2.2, 2.2, 2.0, NaN], [1.5, 2.7, 2.7, 2.2, 2.2, 2.2, 2.0],
+    [2, 3.4, 2.7, 2.7, 2.2, 2.2, 2.2], [3, 4.1, 3.4, 2.7, 2.7, 2.2, 2.2], [5, 4.1, 4.1, 3.4, 2.7, 2.7, 2.2], [7.5, 4.7, 4.1, 4.0, 3.4, 2.7, 2.7],
+    [10, 5.4, 4.7, 4.0, 4.0, 3.4, 2.7], [15, 6.1, 5.4, 4.7, 4.0, 4.0, 4.0], [20, 7.4, 6.1, 5.4, 4.7, 4.0, 4.0], [25, 8.1, 7.4, 6.1, 5.4, 4.0, 4.0],
+    [30, 9.0, 8.1, 6.1, 6.1, 4.7, NaN], [40, 9.0, 9.0, 7.4, 6.1, 5.4, NaN], [50, 9.9, 9.0, 7.6, 7.4, 6.1, NaN], [60, 10.8, 9.9, 9.0, 7.2, 6.7, NaN],
+    [75, 12.6, 11.7, 8.6, 9.0, 7.7, NaN], [100, 16.2, 13.5, 10.8, 9.0, 7.7, NaN], [125, 18.0, 16.2, 13.5, 10.8, 9.5, NaN], [150, 19.8, 18.0, 16.2, 11.7, 9.5, NaN], [200, 19.8, 19.8, 19.8, NaN, 11.9, NaN]];
+  const gates4 = (hp, rpm) => { const row = G4.find(r => r[0] >= hp - 1e-9); if (!row) return undefined; let ci = 0; G4_RPM.forEach((r, i) => { if (Math.abs(r - rpm) < Math.abs(G4_RPM[ci] - rpm)) ci = i; }); const x = row[ci + 1]; return isNaN(x) ? undefined : x; };
   const nearest = (x, arr) => arr.reduce((b, a) => Math.abs(a - x) < Math.abs(b - x) ? a : b);
   const pitchIn = v => (v.pitch || 8) / 25.4;
   const bush = (N, w) => (T74[N] && T74[N][2][w]) ? T74[N][2][w] : undefined;
@@ -25,8 +39,8 @@
     title: 'Synchronous (Timing) Belts — Drive Selection',
     subtitle: 'Shigley Ch. 17-4 (Table 17-18, Fig. 17-15) + Mott Ch. 7-5 tables · merged Fizz §1.5 + Mech §8.3.3',
     sibling: 'timing_belts_mott.html',
-    intro: '<b>Shigley barely covers timing belts</b>: §17-4 gives only the nomenclature (Figure 17-15) and the inch-series pitches (Table 17-18) and says "the design and selection process for timing belts is so similar to that for V belts that the process will not be presented here." Both bibles therefore follow Mott, and so does this page — every selection table and chart below is Mott\'s (marked "Mott" in the figure panel); only the geometry equations are cross-referenced to Shigley (Eq. 17-1 wrap angle, Eq. 17-16b centre distance). Mott\'s General Selection Procedure for GT-style synchronous belts (Example Problem 7-4): service factor (Table 7-8) → design power → belt pitch from Figure 7-27 (the book only tabulates the <b>8 mm</b> pitch, so that is what you will use) → candidate sprocket pairs for the velocity ratio from Table 7-7 → eliminate pairs that fail the shaft-bore (Tables 7-4/7-5) and sprocket-diameter limits → belt length / centre distance from Table 7-7 → belt width from the power-rating Tables 7-9 (30 mm) / 7-10 (50 mm) with the length factor of Table 7-11 → belt-speed check. Pitch diameters, flange diameters, bushings and bores auto-fill from Tables 7-4/7-5 for 8 mm sprockets; the rated power must be read from Table 7-9/7-10.',
-    example: { P: 20, n1: 1750, n2: 875, CDnom: 22.0, CDtol: 0.375, dsh1: 1.625, dsh2: 1.375, Dmax: 14, SF: 1.7, pitch: 8, N1: 56, N2: 112, belt: 1800, width: 30, Prated: 43.2 },
+    intro: '<b>Shigley barely covers timing belts</b>: §17-4 gives only the nomenclature (Figure 17-15) and the inch-series pitches (Table 17-18) and says "the design and selection process for timing belts is so similar to that for V belts that the process will not be presented here." Both bibles therefore follow Mott, and so does this page — every selection table and chart below is Mott\'s (marked "Mott" in the figure panel); only the geometry equations are cross-referenced to Shigley (Eq. 17-1 wrap angle, Eq. 17-16b centre distance). Mott\'s General Selection Procedure for GT-style synchronous belts (Example Problem 7-4): service factor (Table 7-8) → design power → belt pitch from Figure 7-27 (the book only tabulates the <b>8 mm</b> pitch, so that is what you will use) → candidate sprocket pairs for the velocity ratio from Table 7-7 → eliminate pairs that fail the shaft-bore (Tables 7-4/7-5) and sprocket-diameter limits → belt length / centre distance from Table 7-7 → belt width from the power-rating Tables 7-9 (30 mm) / 7-10 (50 mm) with the length factor of Table 7-11 → belt-speed check. Pitch diameters, flange diameters, bushings and bores auto-fill from Tables 7-4/7-5 for 8 mm sprockets; the rated power must be read from Table 7-9/7-10. <b>Course defaults</b> (MECH 325 "Timing Belts 2023" slides 4–12, HW1 P4): SF from Mott Table 7-8 (1.8 for the HW1 AC-motor → fan, 22 h/day case), the small sprocket must also satisfy the NEMA minimum of Gates Table No. 4 (not in Mott — course figure, auto-filled), D<sub>2</sub> &lt; CD &lt; 3(D<sub>1</sub> + D<sub>2</sub>), belt speed 3500–4000 ft/min target and never above 6500, SF = P<sub>allowable</sub>/P<sub>design</sub>.',
+    example: { P: 5, n1: 1750, n2: 700, CDnom: 9, CDtol: 0.5, SF: 1.8, pitch: 8, N1: 32, N2: 80, belt: 920, width: 30, Prated: 21.2 },
 
     figures: [
       { id: 'fig17-15', ref: 'Figure 17-15', title: 'Timing-belt drive: pitch line, pitch circle, outside and root diameters', src: 'figures/shigley/fig17-15.png', page: 929 },
@@ -36,6 +50,7 @@
       { id: 'table7-6', ref: 'Table 7-6', title: 'Types and sizes of synchronous belt drives (pitch, widths, teeth, lengths)', src: 'figures/mott/table7-6.png', book: 'mott', page: 283 },
       { id: 'table7-7a', ref: 'Table 7-7 (a)', title: '8 mm pitch GT drive selection table — VR 1.000–1.333: centre distance for each belt', src: 'figures/mott/table7-7a.png', book: 'mott', page: 284, note: 'Rows = driver:driven teeth, columns = belt designation (pitch length mm, teeth). Values are centre distances in inches.' },
       { id: 'table7-7b', ref: 'Table 7-7 (b)', title: '8 mm pitch GT drive selection table — VR 1.333–3.000 (continued)', src: 'figures/mott/table7-7b.png', book: 'mott', page: 285 },
+      { id: 'gates4', ref: 'Gates Table No. 4 (slide 7)', book: 'course', title: 'Minimum recommended sprocket pitch diameters for general-purpose electric motors (NEMA) — motor hp × rpm', src: 'figures/course/timing_gates_min_sprocket_dia_table4.png', note: '"Not in Mott." Enter with the motor nameplate hp (round up) and rpm; the motor sprocket PD must be at least this. 5 hp @ 1750 → 2.7 in; 10 hp → 3.4; 20 hp → 4.0.' },
       { id: 'table7-4', ref: 'Table 7-4', title: 'Sprockets with 8 mm belt pitch: pitch dia, flange dia, sprocket number, bushing size per belt width', src: 'figures/mott/table7-4.png', book: 'mott', page: 282 },
       { id: 'table7-5', ref: 'Table 7-5', title: 'Taper-lock bushing: min and max bore', src: 'figures/mott/table7-5.png', book: 'mott', page: 282 },
       { id: 'table7-9', ref: 'Table 7-9', title: '8M GT belt power rating — 30 mm width (rpm × small-sprocket grooves)', src: 'figures/mott/table7-9.png', book: 'mott', page: 288, note: 'Interpolate on rpm if needed.' },
@@ -62,7 +77,7 @@
           ] },
         { id: 'sf', title: 'Service factor and design power', fig: ['table7-8'], formula: 'P_{des} = P_{rated}\\cdot SF,\\qquad VR = \\frac{n_{driving}}{n_{driven}}',
           vars: [
-            { id: 'SF', symbol: 'SF', label: 'Service factor', unit: '', kind: 'lookup', fig: 'table7-8', default: 1.5, check: v => (H.has(v, 'SF') && (v.SF < 1 || v.SF > 2.5)) ? 'SF is 1.0–2.5 in Table 7-8' : null },
+            { id: 'SF', symbol: 'SF', label: 'Service factor', unit: '', kind: 'lookup', fig: 'table7-8', default: 1.5, hint: 'Mott Table 7-8 (driven machine × driver × hours). HW1 P4: AC normal-torque → fan, 22 h/day = 1.8', check: v => (H.has(v, 'SF') && (v.SF < 1 || v.SF > 2.5)) ? 'SF is 1.0–2.5 in Table 7-8' : null },
             { id: 'Pdes', symbol: 'P_{des}', label: 'Design power', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'P', 'SF') ? v.P * v.SF : undefined,
               work: v => H.has(v, 'Pdes') ? '\\(P_{des} = ' + H.fmt(v.P) + '(' + H.fmt(v.SF) + ') = ' + H.fmt(v.Pdes) + '\\ \\text{hp}\\)' : null },
             { id: 'VR', symbol: 'VR', label: 'Velocity ratio', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'n1', 'n2') ? v.n1 / v.n2 : undefined },
@@ -76,16 +91,18 @@
       ] },
 
       { title: 'Steps 5–6: sprockets', steps: [
-        { id: 'spk', title: 'Candidate sprocket pair and pitch diameters', fig: ['table7-7a', 'table7-7b', 'table7-4'], eq: '7-4',
+        { id: 'spk', title: 'Candidate sprocket pair and pitch diameters (≥ NEMA minimum, Gates Table 4)', fig: ['table7-7a', 'table7-7b', 'table7-4', 'gates4'], eq: '7-4',
           formula: 'VR = \\frac{N_{driven}}{N_{driving}},\\qquad PD = \\frac{N\\,p}{\\pi}',
-          text: 'List every driver:driven pair in Table 7-7 with the required VR (e.g. VR 2.00 → 22:44, 24:48, 28:56, 32:64, 36:72, 40:80, 56:112, 72:144), then test each against the limits in the next step. Pitch and flange diameters auto-fill from Table 7-4.',
+          text: 'List every driver:driven pair in Table 7-7 with the required VR (e.g. VR 2.00 → 22:44, 24:48, 28:56, 32:64, 36:72, 40:80, 56:112, 72:144), then test each against the limits in the next step. Pitch and flange diameters auto-fill from Table 7-4. Course step 3: the motor sprocket must be at least the NEMA minimum PD of Gates Table No. 4 for the motor hp and rpm (auto-filled; e.g. 5 hp @ 1750 rpm → 2.7 in). The ≥ 6 teeth-in-mesh rule is satisfied automatically for the Table 7-7 pairs.',
           vars: [
             { id: 'N1', symbol: 'N_{driving}', label: 'Driver sprocket teeth', unit: '', kind: 'lookup', fig: 'table7-7a' },
             { id: 'N2', symbol: 'N_{driven}', label: 'Driven sprocket teeth', unit: '', kind: 'lookup', fig: 'table7-7a', auto: v => H.has(v, 'N1', 'VR') ? nearest(v.N1 * v.VR, Object.keys(T74).map(Number)) : undefined },
             { id: 'VRa', symbol: 'VR_{act}', label: 'Actual velocity ratio', unit: '', kind: 'calc', digits: 4, compute: v => H.has(v, 'N1', 'N2') ? v.N2 / v.N1 : undefined,
               check: v => (H.has(v, 'VRa', 'VR') && Math.abs(v.VRa / v.VR - 1) > 0.02) ? 'Actual ratio differs from the required VR by more than 2 %' : null },
             { id: 'n2a', symbol: 'n_{driven,act}', label: 'Actual driven speed', unit: 'rpm', kind: 'calc', compute: v => H.has(v, 'n1', 'VRa') ? v.n1 / v.VRa : undefined },
-            { id: 'PD1', symbol: 'PD_1', label: 'Driver pitch diameter', unit: 'in', kind: 'lookup', fig: 'table7-4', auto: v => H.has(v, 'N1') ? (T74[v.N1] ? T74[v.N1][0] : v.N1 * pitchIn(v) / Math.PI) : undefined },
+            { id: 'PDmin', symbol: 'PD_{min}', label: 'NEMA minimum motor-sprocket PD (Gates Table 4)', unit: 'in', kind: 'lookup', fig: 'gates4', auto: v => H.has(v, 'P', 'n1') ? gates4(v.P, v.n1) : undefined },
+            { id: 'PD1', symbol: 'PD_1', label: 'Driver pitch diameter', unit: 'in', kind: 'lookup', fig: 'table7-4', auto: v => H.has(v, 'N1') ? (T74[v.N1] ? T74[v.N1][0] : v.N1 * pitchIn(v) / Math.PI) : undefined,
+              check: v => (H.has(v, 'PD1', 'PDmin') && v.PD1 < v.PDmin) ? 'Driver sprocket below the NEMA minimum (Gates Table 4) — pick a larger pair' : null },
             { id: 'PD2', symbol: 'PD_2', label: 'Driven pitch diameter', unit: 'in', kind: 'lookup', fig: 'table7-4', auto: v => H.has(v, 'N2') ? (T74[v.N2] ? T74[v.N2][0] : v.N2 * pitchIn(v) / Math.PI) : undefined },
           ] },
         { id: 'lim', title: 'Eliminate by bore size and sprocket diameter', fig: ['table7-4', 'table7-5'],
@@ -122,14 +139,16 @@
       { title: 'Step 7: belt length and centre distance', steps: [
         { id: 'belt', title: 'Belt designation from Table 7-7', fig: ['table7-7a', 'table7-7b', 'fig7-26'], eq: '17-16b, 17-1',
           formula: 'L_p = \\frac{N_{belt}\\,p}{25.4}\\ \\text{in},\\qquad B = 4L_p - 6.28(PD_2 + PD_1),\\qquad CD = \\frac{B + \\sqrt{B^2 - 32(PD_2 - PD_1)^2}}{16}',
-          text: 'In the row for your sprocket pair, find the belt whose centre distance falls inside CD<sub>nom</sub> ± tolerance. Enter the belt designation number (its pitch length in mm, e.g. 1800 for 1800-8MGT). The centre distance is also computed here from the belt-length equation (should match Table 7-7 to ±0.01 in).',
+          text: 'Course step 4: CD must satisfy D<sub>2</sub> &lt; CD &lt; 3(D<sub>1</sub> + D<sub>2</sub>) (V-belt rule reused; HW1: 8 in &lt; CD &lt; 33 in). In the row for your sprocket pair, find the belt whose centre distance falls inside CD<sub>nom</sub> ± tolerance (or inside those bounds when no CD is specified). Enter the belt designation number (its pitch length in mm, e.g. 1800 for 1800-8MGT). The centre distance is also computed here from the belt-length equation (should match Table 7-7 to ±0.01 in).',
           vars: [
-            { id: 'belt', symbol: '', label: 'Belt designation (pitch length, mm)', unit: 'mm', kind: 'lookup', fig: 'table7-7b', hint: 'e.g. 1800 → 1800-8MGT' },
+            { id: 'CDlo', symbol: 'CD_{min}', label: 'Lower limit D2', unit: 'in', kind: 'calc', compute: v => H.has(v, 'PD2') ? v.PD2 : undefined },
+            { id: 'CDhi', symbol: 'CD_{max}', label: 'Upper limit 3(D1 + D2)', unit: 'in', kind: 'calc', compute: v => H.has(v, 'PD1', 'PD2') ? 3 * (v.PD1 + v.PD2) : undefined },
+            { id: 'belt', symbol: '', label: 'Belt designation (pitch length, mm)', unit: 'mm', kind: 'lookup', fig: 'table7-7b', hint: 'e.g. 920 → 920-8MGT (115 teeth)' },
             { id: 'Nbelt', symbol: 'N_{belt}', label: 'Belt teeth', unit: '', kind: 'calc', compute: v => H.has(v, 'belt') ? Math.round(v.belt / (v.pitch || 8)) : undefined },
             { id: 'Lp', symbol: 'L_p', label: 'Belt pitch length', unit: 'in', kind: 'calc', compute: v => H.has(v, 'belt') ? v.belt / 25.4 : undefined },
             { id: 'CD', symbol: 'CD', label: 'Centre distance (computed)', unit: 'in', kind: 'calc', compute: v => { if (!H.has(v, 'Lp', 'PD1', 'PD2')) return undefined; const B = 4 * v.Lp - 6.28 * (v.PD1 + v.PD2); const r = B * B - 32 * (v.PD2 - v.PD1) ** 2; return r >= 0 ? (B + Math.sqrt(r)) / 16 : undefined; },
               work: v => H.has(v, 'CD') ? '\\(B = 4(' + H.fmt(v.Lp) + ') - 6.28(' + H.fmt(v.PD2) + '+' + H.fmt(v.PD1) + ') = ' + H.fmt(4 * v.Lp - 6.28 * (v.PD1 + v.PD2)) + ';\\quad CD = ' + H.fmt(v.CD) + '\\ \\text{in}\\)' : null,
-              check: v => (H.has(v, 'CD', 'CDnom') && Math.abs(v.CD - v.CDnom) > (v.CDtol || 0) + 1e-6) ? 'CD outside the allowed range ' + H.fmt(v.CDnom - (v.CDtol || 0)) + '–' + H.fmt(v.CDnom + (v.CDtol || 0)) + ' in' : null },
+              check: v => (H.has(v, 'CD', 'CDnom') && Math.abs(v.CD - v.CDnom) > (v.CDtol || 0) + 1e-6) ? 'CD outside the allowed range ' + H.fmt(v.CDnom - (v.CDtol || 0)) + '–' + H.fmt(v.CDnom + (v.CDtol || 0)) + ' in' : (H.has(v, 'CD', 'CDlo', 'CDhi') && (v.CD < v.CDlo || v.CD > v.CDhi)) ? 'CD outside D2 < CD < 3(D1 + D2)' : null },
             { id: 'CDtab', symbol: 'CD_{tab}', label: 'Centre distance read from Table 7-7 (optional)', unit: 'in', kind: 'lookup', fig: 'table7-7b', },
             { id: 'th1', symbol: '\\theta_1', label: 'Wrap on small sprocket', unit: '°', kind: 'calc', compute: v => H.has(v, 'PD1', 'PD2', 'CD') ? 180 - 2 * H.deg(Math.asin((v.PD2 - v.PD1) / (2 * v.CD))) : undefined },
           ] },
@@ -145,22 +164,24 @@
             { id: 'Padj', symbol: 'P_{adj}', label: 'Adjusted rated power', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'Prated', 'CL') ? v.Prated * v.CL : undefined,
               work: v => H.has(v, 'Padj') ? '\\(P_{adj} = ' + H.fmt(v.Prated) + '(' + H.fmt(v.CL) + ') = ' + H.fmt(v.Padj) + '\\ \\text{hp}\\)' : null,
               check: v => (H.has(v, 'Padj', 'Pdes') && v.Padj < v.Pdes) ? 'Padj < Pdes — use the wider belt' : null },
-            { id: 'margin', symbol: 'P_{adj}/P_{des}', label: 'Capacity margin', unit: '', kind: 'calc', digits: 3, compute: v => H.has(v, 'Padj', 'Pdes') ? v.Padj / v.Pdes : undefined },
+            { id: 'margin', symbol: 'SF_{act}', label: 'Safety factor = Pallowable / Pdesign (course)', unit: '', kind: 'calc', digits: 3, compute: v => H.has(v, 'Padj', 'Pdes') ? v.Padj / v.Pdes : undefined,
+              work: v => H.has(v, 'margin') ? '\\(SF = P_{allow}/P_{des} = ' + H.fmt(v.Padj) + '/' + H.fmt(v.Pdes) + ' = ' + H.fmt(v.margin, 3) + '\\)' : null },
           ] },
       ] },
 
       { title: 'Steps 11–12: belt speed and specification', steps: [
-        { id: 'spd', title: 'Belt speed check', eq: 'Shigley (e): V = πdn/12', formula: 'v_{belt} = \\frac{PD_1}{2}\\,\\omega_1 = \\frac{\\pi\\,PD_1\\,n_1}{12} \\le 6500\\ \\text{ft/min}',
+        { id: 'spd', title: 'Belt speed check', eq: 'Shigley (e): V = πdn/12', formula: 'v_{belt} = \\frac{PD_1}{2}\\,\\omega_1 = \\frac{\\pi\\,PD_1\\,n_1}{12} \\le 6500\\ \\text{ft/min}\\ (\\text{target } 3500\\text{–}4000)',
+          text: 'Course: belt speed 3500–4000 ft/min is the design target; HW1 compares against 3500 and the hard limit is 6500 ft/min.',
           vars: [
             { id: 'vb', symbol: 'v_{belt}', label: 'Belt speed', unit: 'ft/min', kind: 'calc', compute: v => H.has(v, 'PD1', 'n1') ? Math.PI * v.PD1 * v.n1 / 12 : undefined,
               work: v => H.has(v, 'vb') ? '\\(v_{belt} = \\frac{' + H.fmt(v.PD1) + '}{2}(' + H.fmt(v.n1) + ')\\frac{2\\pi}{12} = ' + H.fmt(v.vb) + '\\ \\text{ft/min}\\)' : null,
-              check: v => (H.has(v, 'vb') && v.vb > 6500) ? 'Exceeds 6500 ft/min' : (H.has(v, 'vb') && v.vb > 3500) ? 'Above 3500 ft/min: expect more noise' : null },
+              check: v => (H.has(v, 'vb') && v.vb > 6500) ? 'Exceeds the 6500 ft/min limit' : (H.has(v, 'vb') && v.vb > 4000) ? 'Above the 3500–4000 ft/min target: expect more noise' : null },
           ],
           after: v => {
             if (!H.has(v, 'N1', 'N2', 'belt')) return '';
             const ok = H.has(v, 'Padj', 'Pdes', 'vb') && v.Padj >= v.Pdes && v.vb <= 6500;
             const w = v.width || 30; const p = v.pitch || 8;
-            return (ok ? '<span class="result-ok">PASS</span>' : '<span class="result-bad">CHECK</span>') + ' — Specify: P' + v.N1 + '-' + p + 'MGT-' + w + ' driver sprocket' + (v.bush1 ? ' with ' + v.bush1 + ' bushing' : '') + '; P' + v.N2 + '-' + p + 'MGT-' + w + ' driven sprocket' + (v.bush2 ? ' with ' + v.bush2 + ' bushing' : '') + '; ' + v.belt + '-' + p + 'MGT-' + w + ' belt; CD = ' + H.fmt(v.CD) + ' in; output ' + H.fmt(v.n2a) + ' rpm; P<sub>adj</sub> = ' + H.fmt(v.Padj) + ' hp vs P<sub>des</sub> = ' + H.fmt(v.Pdes) + ' hp; v<sub>belt</sub> = ' + H.fmt(v.vb) + ' ft/min.';
+            return (ok ? '<span class="result-ok">PASS</span>' : '<span class="result-bad">CHECK</span>') + ' — Specify: P' + v.N1 + '-' + p + 'MGT-' + w + ' driver sprocket' + (v.bush1 ? ' with ' + v.bush1 + ' bushing' : '') + '; P' + v.N2 + '-' + p + 'MGT-' + w + ' driven sprocket' + (v.bush2 ? ' with ' + v.bush2 + ' bushing' : '') + '; ' + v.belt + '-' + p + 'MGT-' + w + ' belt; CD = ' + H.fmt(v.CD) + ' in; output ' + H.fmt(v.n2a) + ' rpm; P<sub>adj</sub> = ' + H.fmt(v.Padj) + ' hp vs P<sub>des</sub> = ' + H.fmt(v.Pdes) + ' hp (SF = ' + H.fmt(v.margin, 3) + '); v<sub>belt</sub> = ' + H.fmt(v.vb) + ' ft/min.';
           } },
       ] },
     ],

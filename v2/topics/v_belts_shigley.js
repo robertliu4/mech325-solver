@@ -1,4 +1,11 @@
 // V-belts — Shigley Ch. 17-3 (merged Fizz §1.4 + Mech §8.3.2 procedure, Shigley symbols)
+// Course alignment (v2/COURSE_CONVENTIONS.md §0, §2): Shigley is used for tensions, friction and life (slide 42 order). Defaults: Ks from
+// Table 17-15 (1.3 = midterm 2025 value; Tutorial 2 uses 1.4), nd = 1.0, small sheave sized for 4000 ft/min with V < 5000 (D1max shown),
+// D < C < 3(D + d), wrap > 120°, e^{fφ} = exp(0.5123φ), nfs = Nb·Ha/(Hnom·Ks). The course tutorial computes ΔF/T from the allowable
+// power per belt Ha (belts at their full rating) rather than Shigley's Hd/Nb (Ex 17-4) — a choice selects the basis (default = course).
+// Verified against: Tutorial 2 Q1 (S 17-19, Module 1 p11–14): 60 hp, Ks 1.4, D section, d = D = 26 in, Ctrial 144 in, L 360 → Lp 363.3,
+//   C 140.8, V 2722.7, e^{0.5123π} 5.0, K1 1.0, K2 1.10, Htab 16.94, Ha 18.63, Hd 84, Nb 4.51 → 5, ΔF 225.8, T 2935 lbf·in/belt,
+//   Fc 25.9, Fi 169.3, F1 308.1, F2 82.3, nfs 1.109, T1 526.6, Np > 1e9, t > 185 000 h — all reproduced with the course ΔF basis.
 (function () {
   // Table 17-9: width a, thickness b, minimum sheave diameter, hp range
   const SEC = {
@@ -53,8 +60,8 @@
     title: 'V-Belts — Selection & Analysis',
     subtitle: 'Shigley Ch. 17-3 (Tables 17-9 … 17-17, Eqs. 17-16 … 17-28) · merged Fizz §1.4 + Mech §8.3.2',
     sibling: 'v_belts_mott.html',
-    intro: 'Shigley\'s four-step V-belt analysis (Example 17-4): (1) V, L<sub>p</sub>, C, φ and exp(0.5123φ); (2) H<sub>d</sub>, H<sub>a</sub> = K<sub>1</sub>K<sub>2</sub>H<sub>tab</sub> and the number of belts N<sub>b</sub>; (3) F<sub>c</sub>, ΔF, F<sub>1</sub>, F<sub>2</sub>, F<sub>i</sub>, n<sub>fs</sub>; (4) belt life in passes and hours. Shigley rates the inch sections A–E (Table 17-12); the narrow 3V/5V/8V sections are rated with Mott\'s charts in the Mott version. Both bibles prefer Mott for exam selection, but use this page when the question asks for tensions, F<sub>i</sub> or belt life.',
-    example: { Hnom: 10, n: 1750, Ks: 1.3, nd: 1, sec: 'B', d: 7.4, D: 11, L: 112 },
+    intro: 'Shigley\'s four-step V-belt analysis (Example 17-4): (1) V, L<sub>p</sub>, C, φ and exp(0.5123φ); (2) H<sub>d</sub>, H<sub>a</sub> = K<sub>1</sub>K<sub>2</sub>H<sub>tab</sub> and the number of belts N<sub>b</sub>; (3) F<sub>c</sub>, ΔF, F<sub>1</sub>, F<sub>2</sub>, F<sub>i</sub>, n<sub>fs</sub>; (4) belt life in passes and hours. Shigley rates the inch sections A–E (Table 17-12); the narrow 3V/5V/8V sections are rated with Mott\'s charts in the Mott version. Both bibles prefer Mott for exam selection, but use this page when the question asks for tensions, F<sub>i</sub> or belt life. <b>Course defaults</b> (MECH 325 "Flexible belts — Flat and V-belts" slides 22–42, Tutorial 2 Q1): K<sub>s</sub> from Shigley Table 17-15 (midterm range 1.2–1.4 → 1.3; Tutorial 2 uses 1.4), n<sub>d</sub> = 1.0, belt speed target 4000 ft/min and below 5000, wrap &gt; 120°, n<sub>fs</sub> = N<sub>b</sub>H<sub>a</sub>/(H<sub>nom</sub>K<sub>s</sub>). Note that Shigley has no speed-ratio correction ΔP<sub>R</sub> (slide 31) — the Mott page includes it.',
+    example: { Hnom: 60, n: 400, Ks: 1.4, nd: 1, sec: 'D', d: 26, D: 26, Ct: 144, L: 360, dFbasis: 'Ha' },
 
     figures: [
       { id: 'table17-9', ref: 'Table 17-9', title: 'Standard V-belt sections (width, thickness, min sheave dia, hp range)', src: 'figures/shigley/table17-9.png', page: 922 },
@@ -63,7 +70,9 @@
       { id: 'table17-12', ref: 'Table 17-12', title: 'Horsepower ratings of standard V belts (Htab vs sheave dia & belt speed)', src: 'figures/shigley/table17-12.png', page: 924, note: 'Interpolate on belt speed (and sheave diameter). "and up" rows apply to all larger sheaves.' },
       { id: 'table17-13', ref: 'Table 17-13', title: 'Angle-of-wrap correction factor K1', src: 'figures/shigley/table17-13.png', page: 925, note: 'VV column curve fit: K1 = 0.143543 + 0.007468φ − 0.000015052φ² (φ in degrees, 90–180°).' },
       { id: 'table17-14', ref: 'Table 17-14', title: 'Belt-length correction factor K2', src: 'figures/shigley/table17-14.png', page: 925, note: 'Enter with the nominal (inside-circumference) belt length, e.g. B112 → 1.05.' },
-      { id: 'table17-15', ref: 'Table 17-15', title: 'Suggested service factors Ks for V-belt drives', src: 'figures/shigley/table17-15.png', page: 925 },
+      { id: 'table17-15', ref: 'Table 17-15', title: 'Suggested service factors Ks for V-belt drives', src: 'figures/shigley/table17-15.png', page: 925, note: 'Course: Mott Table 7-1 is primary, this table is accepted as a range (midterm: 1.2 < Ks < 1.4).' },
+      { id: 'ks-hours', ref: 'Service factors by hours (slide 35)', book: 'course', title: 'Belt service factors Ks: driven-machine class × hours/day × driver type', src: 'figures/course/belt_service_factor_hours.png', note: 'Light 1.0/1.1/1.2 | 1.1/1.2/1.3; medium 1.1/1.2/1.3 | 1.2/1.3/1.4; heavy 1.2/1.3/1.4 | 1.3/1.4/1.6; very heavy 1.3/1.4/1.5 | 1.5/1.6/1.8 (smooth | coarse driver; <8, <16, >16 h).' },
+      { id: 'abcd', ref: 'Classical A/B/C/D selection chart (slide 27)', book: 'course', title: '"Recommended Nominal V-Belt Selection" chart for the A/B/C/D/E sections', src: 'figures/course/vbelt_selection_chart_abcd.png', note: 'Enter with design hp and rpm of the faster shaft.' },
       { id: 'table17-16', ref: 'Table 17-16', title: 'V-belt parameters Kb (bending) and Kc (centrifugal)', src: 'figures/shigley/table17-16.png', page: 926 },
       { id: 'fig17-14', ref: 'Figure 17-14', title: 'V-belt tensions around the drive (F1, F2, Fi, Fc, Fb)', src: 'figures/shigley/fig17-14.png', page: 926 },
       { id: 'table17-17', ref: 'Table 17-17', title: 'Durability parameters K and b for belt life', src: 'figures/shigley/table17-17.png', page: 927 },
@@ -72,37 +81,38 @@
 
     sections: [
       { title: 'Inputs', steps: [
-        { id: 'in', title: 'Problem data and design power', fig: ['table17-15'], eq: '17-19', formula: 'H_d = H_{nom}K_s n_d',
-          text: 'Ks from Table 17-15 (add 0.1 for continuous 24 h duty, as in Example 17-4). nd is the design factor (1.0 if none given).',
+        { id: 'in', title: 'Problem data and design power', fig: ['table17-15', 'ks-hours'], eq: '17-19', formula: 'H_d = H_{nom}K_s n_d',
+          text: 'Course rule: always multiply the nominal power by the service factor first. Ks from Table 17-15 (add 0.1 for continuous 24 h duty, as in Example 17-4) or the course hours/driver table (slide 35). nd = 1.0 unless the problem states otherwise.',
           vars: [
             { id: 'Hnom', symbol: 'H_{nom}', label: 'Nominal power', unit: 'hp', kind: 'input' },
             { id: 'n', symbol: 'n', label: 'Small-sheave (driver) speed', unit: 'rpm', kind: 'input' },
             { id: 'n2', symbol: 'n_2', label: 'Driven speed (optional)', unit: 'rpm', kind: 'input', hint: 'gives VR = n/n2 when D is unknown' },
-            { id: 'Ks', symbol: 'K_s', label: 'Service factor', unit: '', kind: 'lookup', fig: 'table17-15', default: 1.2 },
-            { id: 'nd', symbol: 'n_d', label: 'Design factor', unit: '', kind: 'input', default: 1.0 },
+            { id: 'Ks', symbol: 'K_s', label: 'Service factor', unit: '', kind: 'lookup', fig: 'table17-15', default: 1.3, hint: 'Table 17-15; midterm 2025 1.3, Tutorial 2 (IC engine → brick machine, 2 shifts) 1.4', check: v => (H.has(v, 'Ks') && (v.Ks < 1 || v.Ks > 2)) ? 'Ks is 1.0–1.8 in Table 17-15' : null },
+            { id: 'nd', symbol: 'n_d', label: 'Design factor', unit: '', kind: 'input', default: 1.0, hint: 'course: nd = 1.0 unless stated' },
             { id: 'Hd', symbol: 'H_d', label: 'Design power', unit: 'hp', kind: 'calc', compute: v => H.has(v, 'Hnom', 'Ks', 'nd') ? v.Hnom * v.Ks * v.nd : undefined,
               work: v => H.has(v, 'Hd') ? '\\(H_d = ' + H.fmt(v.Hnom) + '(' + H.fmt(v.Ks) + ')(' + H.fmt(v.nd) + ') = ' + H.fmt(v.Hd) + '\\ \\text{hp}\\)' : null },
           ] },
-        { id: 'sec', title: 'Belt section and sheaves', fig: ['table17-9'],
-          text: 'Pick the section from the hp range in Table 17-9 (A: ¼–10 hp, B: 1–25, C: 15–100, D: 50–250, E: 100+). Small sheave d must be ≥ the minimum sheave diameter. A good belt speed is 4000 ft/min; trouble above 5000 or below 1000 ft/min.',
+        { id: 'sec', title: 'Belt section and sheaves', fig: ['table17-9', 'abcd'],
+          text: 'Pick the section from the hp range in Table 17-9 (A: ¼–10 hp, B: 1–25, C: 15–100, D: 50–250, E: 100+) or the course A/B/C/D chart (slide 27). Small sheave d must be ≥ the minimum sheave diameter. Course: target 4000 ft/min (auto d), keep V below 5000 ft/min (d<sub>max</sub> shown) and above 1000 ft/min.',
           vars: [
             { id: 'sec', label: 'Belt section', kind: 'choice', type: 'text', options: ['A', 'B', 'C', 'D', 'E'] },
             { id: 'dmin', symbol: 'd_{min}', label: 'Minimum sheave diameter', unit: 'in', kind: 'lookup', fig: 'table17-9', auto: v => sec(v) ? sec(v).dmin : undefined },
             { id: 'd', symbol: 'd', label: 'Small sheave pitch diameter', unit: 'in', kind: 'input', check: v => (H.has(v, 'd', 'dmin') && v.d < v.dmin) ? 'd below minimum sheave diameter for this section' : null,
               auto: v => (H.has(v, 'n') ? 4000 * 12 / (Math.PI * v.n) : undefined), hint: 'auto = size for 4000 ft/min; enter a standard size' },
+            { id: 'dmax', symbol: 'd_{max}', label: 'Largest small sheave for 5000 ft/min', unit: 'in', kind: 'calc', compute: v => H.has(v, 'n') ? 5000 * 12 / (Math.PI * v.n) : undefined },
             { id: 'D', symbol: 'D', label: 'Large sheave pitch diameter', unit: 'in', kind: 'input', auto: v => (H.has(v, 'd', 'n', 'n2') ? v.d * v.n / v.n2 : undefined), hint: 'auto = d·n/n2' },
             { id: 'VR', symbol: 'VR', label: 'Velocity ratio D/d', unit: '', kind: 'calc', compute: v => H.has(v, 'D', 'd') ? v.D / v.d : undefined },
             { id: 'nout', symbol: 'n_{out}', label: 'Actual driven speed', unit: 'rpm', kind: 'calc', compute: v => H.has(v, 'n', 'VR') ? v.n / v.VR : undefined },
             { id: 'V', symbol: 'V', label: 'Belt speed', unit: 'ft/min', kind: 'calc', compute: v => H.has(v, 'd', 'n') ? Math.PI * v.d * v.n / 12 : undefined,
               work: v => H.has(v, 'V') ? '\\(V = \\pi(' + H.fmt(v.d) + ')(' + H.fmt(v.n) + ')/12 = ' + H.fmt(v.V) + '\\ \\text{ft/min}\\)' : null,
-              check: v => (H.has(v, 'V') && (v.V > 5000 || v.V < 1000)) ? 'Belt speed outside 1000–5000 ft/min (Table 17-12 range)' : null },
+              check: v => (H.has(v, 'V') && (v.V > 5000 || v.V < 1000)) ? 'Belt speed outside 1000–5000 ft/min (course limit; Table 17-12 range)' : null },
           ] },
       ] },
 
       { title: 'Geometry (step 1)', steps: [
         { id: 'len', title: 'Belt length and centre distance', fig: ['table17-10', 'table17-11'], eq: '17-16a, 17-16b',
           formula: 'L_p = 2C + \\frac{\\pi(D+d)}{2} + \\frac{(D-d)^2}{4C},\\qquad C = 0.25\\left\\{\\left[L_p - \\frac{\\pi}{2}(D+d)\\right] + \\sqrt{\\left[L_p - \\frac{\\pi}{2}(D+d)\\right]^2 - 2(D-d)^2}\\right\\}',
-          text: 'Either enter a trial centre distance C (recommended D ≤ C ≤ 3(D + d)) — the required pitch length and nearest standard inside circumference are found — or enter the belt length L directly (e.g. B112 → L = 112). The pitch length is L plus the Table 17-11 quantity; the actual C follows from Eq. 17-16b.',
+          text: 'Either enter a trial centre distance C (course: D &lt; C &lt; 3(D + d)) — the required pitch length and nearest standard inside circumference are found — or enter the belt length L directly (e.g. B112 → L = 112). The pitch length is L plus the Table 17-11 quantity; the actual C follows from Eq. 17-16b.',
           vars: [
             { id: 'Ct', symbol: 'C_{trial}', label: 'Trial centre distance (optional)', unit: 'in', kind: 'input',
               check: v => (H.has(v, 'Ct', 'D', 'd') && (v.Ct < v.D || v.Ct > 3 * (v.D + v.d))) ? 'Recommended D < C < 3(D + d)' : null },
@@ -122,7 +132,7 @@
           vars: [
             { id: 'phi', symbol: '\\phi_d', label: 'Wrap angle, small sheave', unit: 'rad', kind: 'calc', digits: 5, compute: v => H.has(v, 'D', 'd', 'C') ? Math.PI - 2 * Math.asin((v.D - v.d) / (2 * v.C)) : undefined,
               work: v => H.has(v, 'phi') ? '\\(\\phi_d = \\pi - 2\\sin^{-1}\\frac{' + H.fmt(v.D) + '-' + H.fmt(v.d) + '}{2(' + H.fmt(v.C) + ')} = ' + H.fmt(v.phi, 5) + '\\ \\text{rad} = ' + H.fmt(v.phideg) + '^\\circ\\)' : null },
-            { id: 'phideg', symbol: '\\phi_d', label: 'Wrap angle, small sheave', unit: '°', kind: 'calc', compute: v => H.has(v, 'phi') ? H.deg(v.phi) : undefined, check: v => (H.has(v, 'phideg') && v.phideg < 120) ? 'Wrap < 120° — increase C' : null },
+            { id: 'phideg', symbol: '\\phi_d', label: 'Wrap angle, small sheave', unit: '°', kind: 'calc', compute: v => H.has(v, 'phi') ? H.deg(v.phi) : undefined, check: v => (H.has(v, 'phideg') && v.phideg < 120) ? 'Wrap < 120° on the small sheave (course rule) — increase C' : null },
             { id: 'efp', symbol: 'e^{0.5123\\phi}', label: 'exp(0.5123 φ)', unit: '', kind: 'calc', compute: v => H.has(v, 'phi') ? Math.exp(0.5123 * v.phi) : undefined },
           ] },
       ] },
@@ -148,18 +158,23 @@
 
       { title: 'Tensions (step 3)', steps: [
         { id: 'tens', title: 'Centrifugal tension, ΔF, F1, F2, Fi and factor of safety', fig: ['table17-16', 'fig17-14'], eq: '17-21 … 17-26',
-          formula: 'F_c = K_c\\left(\\frac{V}{1000}\\right)^2,\\quad \\Delta F = \\frac{63\\,025 H_d/N_b}{n(d/2)},\\quad F_1 = F_c + \\frac{\\Delta F e^{f\\phi}}{e^{f\\phi}-1},\\quad F_2 = F_1 - \\Delta F,\\quad F_i = \\frac{F_1+F_2}{2}-F_c,\\quad n_{fs} = \\frac{H_a N_b}{H_{nom}K_s}',
+          formula: 'F_c = K_c\\left(\\frac{V}{1000}\\right)^2,\\quad \\Delta F = \\frac{63\\,025 H_{belt}}{n(d/2)},\\ H_{belt} = H_a\\ \\text{(course)}\\ \\text{or}\\ H_d/N_b\\ \\text{(Ex. 17-4)},\\quad F_1 = F_c + \\frac{\\Delta F e^{f\\phi}}{e^{f\\phi}-1},\\quad F_2 = F_1 - \\Delta F,\\quad F_i = \\frac{F_1+F_2}{2}-F_c,\\quad n_{fs} = \\frac{H_a N_b}{H_{nom}K_s}',
+          text: 'Course Tutorial 2 Q1 (Module 1 p12) takes the torque per belt from the allowable power H<sub>a</sub> (each belt loaded to its rating: T = 63 025 H<sub>a</sub>/n, ΔF = 2T/d); Shigley Example 17-4 uses the actual share H<sub>d</sub>/N<sub>b</sub>. Pick the basis the question expects (default = course).',
           vars: [
+            { id: 'dFbasis', label: 'Power per belt used for ΔF', kind: 'choice', type: 'text', options: [{ label: 'Ha — allowable per belt (course Tutorial 2)', value: 'Ha' }, { label: 'Hd/Nb — actual share (Shigley Ex. 17-4)', value: 'HdNb' }], default: 'Ha' },
+            { id: 'Hbelt', symbol: 'H_{belt}', label: 'Power per belt for tensions', unit: 'hp', kind: 'calc', compute: v => v.dFbasis === 'HdNb' ? (H.has(v, 'Hd', 'Nb') ? v.Hd / v.Nb : undefined) : (H.has(v, 'Ha') ? v.Ha : undefined) },
+            { id: 'Tb', symbol: 'T', label: 'Torque per belt', unit: 'lbf·in', kind: 'calc', compute: v => H.has(v, 'Hbelt', 'n') ? 63025 * v.Hbelt / v.n : undefined,
+              work: v => H.has(v, 'Tb') ? '\\(T = 63\\,025(' + H.fmt(v.Hbelt) + ')/' + H.fmt(v.n) + ' = ' + H.fmt(v.Tb) + '\\ \\text{lbf·in per belt}\\)' : null },
             { id: 'Kc', symbol: 'K_c', label: 'Centrifugal parameter', unit: '', kind: 'lookup', fig: 'table17-16', auto: v => sec(v) ? sec(v).Kc : undefined },
             { id: 'Fc', symbol: 'F_c', label: 'Centrifugal tension', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'Kc', 'V') ? v.Kc * (v.V / 1000) ** 2 : undefined,
               work: v => H.has(v, 'Fc') ? '\\(F_c = ' + H.fmt(v.Kc) + '(' + H.fmt(v.V) + '/1000)^2 = ' + H.fmt(v.Fc) + '\\ \\text{lbf}\\)' : null },
-            { id: 'dF', symbol: '\\Delta F', label: 'Tension difference per belt', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'Hd', 'Nb', 'n', 'd') ? 63025 * v.Hd / v.Nb / (v.n * v.d / 2) : undefined,
-              work: v => H.has(v, 'dF') ? '\\(\\Delta F = \\frac{63\\,025(' + H.fmt(v.Hd) + ')/' + v.Nb + '}{' + H.fmt(v.n) + '(' + H.fmt(v.d) + '/2)} = ' + H.fmt(v.dF) + '\\ \\text{lbf}\\)' : null },
+            { id: 'dF', symbol: '\\Delta F', label: 'Tension difference per belt', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'Tb', 'd') ? 2 * v.Tb / v.d : undefined,
+              work: v => H.has(v, 'dF') ? '\\(\\Delta F = \\frac{2T}{d} = \\frac{2(' + H.fmt(v.Tb) + ')}{' + H.fmt(v.d) + '} = ' + H.fmt(v.dF) + '\\ \\text{lbf}\\)' : null },
             { id: 'F1', symbol: 'F_1', label: 'Tight-side tension', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'Fc', 'dF', 'efp') ? v.Fc + v.dF * v.efp / (v.efp - 1) : undefined,
               work: v => H.has(v, 'F1') ? '\\(F_1 = ' + H.fmt(v.Fc) + ' + \\frac{' + H.fmt(v.dF) + '(' + H.fmt(v.efp) + ')}{' + H.fmt(v.efp) + ' - 1} = ' + H.fmt(v.F1) + '\\ \\text{lbf}\\)' : null },
             { id: 'F2', symbol: 'F_2', label: 'Slack-side tension', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'F1', 'dF') ? v.F1 - v.dF : undefined },
             { id: 'Fi', symbol: 'F_i', label: 'Initial tension', unit: 'lbf', kind: 'calc', compute: v => H.has(v, 'F1', 'F2', 'Fc') ? (v.F1 + v.F2) / 2 - v.Fc : undefined,
-              work: v => H.has(v, 'Fi') ? '\\(F_i = \\frac{' + H.fmt(v.F1) + ' + ' + H.fmt(v.F2) + '}{2} - ' + H.fmt(v.Fc) + ' = ' + H.fmt(v.Fi) + '\\ \\text{lbf}\\)' : null },
+              work: v => H.has(v, 'Fi') ? '\\(F_i = \\frac{' + H.fmt(v.F1) + ' + ' + H.fmt(v.F2) + '}{2} - ' + H.fmt(v.Fc) + ' = ' + H.fmt(v.Fi) + '\\ \\text{lbf}\\quad\\left(= \\frac{T}{d}\\frac{e^{f\\phi}+1}{e^{f\\phi}-1} = ' + H.fmt(v.Tb / v.d * (v.efp + 1) / (v.efp - 1)) + '\\right)\\)' : null },
             { id: 'nfs', symbol: 'n_{fs}', label: 'Factor of safety', unit: '', kind: 'calc', digits: 3, compute: v => H.has(v, 'Ha', 'Nb', 'Hnom', 'Ks') ? v.Ha * v.Nb / (v.Hnom * v.Ks) : undefined,
               work: v => H.has(v, 'nfs') ? '\\(n_{fs} = \\frac{' + H.fmt(v.Ha) + '(' + v.Nb + ')}{' + H.fmt(v.Hnom) + '(' + H.fmt(v.Ks) + ')} = ' + H.fmt(v.nfs, 3) + '\\)' : null },
           ] },

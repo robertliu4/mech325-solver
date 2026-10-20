@@ -16,7 +16,8 @@ window.TOPIC = {
   subtitle: 'Shigley has no ball-screw design section — procedure and figures from Mott Ch. 17-3 / 17-4 · Fizz guide §5.2',
   sibling: 'ball_screws_mott.html',
   intro: '<b>Note:</b> Shigley 11e only mentions ball screws in passing (Ch. 8 power-screw introduction); it has no load/life chart or torque equations for them. This calculator therefore uses the same Fizz-guide procedure with <b>Mott</b> figures and equation numbers (marked on each figure). The only Shigley link is the efficiency definition e = Fl/(2πT_R) (Eq. 8-4), which rearranged with e = 0.90 gives the ball-screw torque. Selects a ball screw from the load / travel-life chart (Figure 17-8), then computes driving torque (Eq. 17-13, e = 0.90), back-driving torque (Eq. 17-14), speed, power, expected life (Eq. 17-12) and the critical-speed check (Eq. 17-15). '
-    + 'US units: lb, in, in/s, lb·in, hp. Travel life in inches follows the Fizz guide: distance per cycle × cycles per hour × 24 h/day × 365 days/yr × years.',
+    + 'US units: lb, in, in/s, lb·in, hp. Travel life in inches follows the Fizz guide: distance per cycle × cycles per hour × 24 h/day × 365 days/yr × years. '
+    + '<b>Course source:</b> the MECH 325 Module #5 reading guide requires Mott 17-3 (life, torque, power) and 17-4 (column buckling and critical speed) — no course slides, tutorials or worked numbers exist for ball screws, so Mott\'s equations and Example Problem 17-3 are the reference; the Thomson ball-screw catalogue (Canvas) is the beneficial reading for real selection data.',
   example: { F: 12500, dist: 30, cyc: 8, basis: 'day', hrs: 24, days: 365, yrs: 10, size: 2, Vreq: 1.25 },
 
   figures: [
@@ -94,12 +95,37 @@ window.TOPIC = {
             work: v => H.has(v, 'ncrit') ? '\\(n_c = 4.76\\times10^6\\,\\dfrac{' + H.fmt(v.dmin) + '(' + H.fmt(v.Ks) + ')}{' + H.fmt(v.SF) + '(' + H.fmt(v.Lsup) + ')^2} = ' + H.fmt(v.ncrit) + '\\ \\text{rpm}\\)' : null },
           { id: 'nratio', symbol: 'n/n_c', label: 'Operating / critical speed', kind: 'calc', digits: 3, compute: v => H.has(v, 'n', 'ncrit') && v.ncrit > 0 ? v.n / v.ncrit : undefined },
         ],
-        when: v => true,
-        after: v => {
-          let s = '';
-          if (H.has(v, 'nratio')) s += v.nratio < 0.8 ? '<span class="result-ok">n = ' + H.fmt(v.n) + ' rpm &lt; 0.8 n<sub>c</sub> = ' + H.fmt(0.8 * v.ncrit) + ' rpm — critical speed OK.</span> ' : '<span class="result-bad">n = ' + H.fmt(v.n) + ' rpm ≥ 0.8 n<sub>c</sub> = ' + H.fmt(0.8 * v.ncrit) + ' rpm — shorten the span, stiffen the supports or use a larger screw.</span> ';
-          if (BS(v) && v.Tu !== undefined) s += '<div style="margin-top:6px"><b>Result:</b> ' + BS(v).label + (v.ratio !== undefined ? (v.ratio >= 1 ? ' — life PASS' : ' — life FAIL') : '') + '; T<sub>u</sub> = ' + H.fmt(v.Tu) + ' lb·in' + (v.P !== undefined ? ', ' + H.fmt(v.P) + ' hp at ' + H.fmt(v.n) + ' rpm' : '') + '.</div>';
-          return s; } },
+        after: v => H.has(v, 'nratio') ? (v.nratio < 0.8 ? '<span class="result-ok">n = ' + H.fmt(v.n) + ' rpm &lt; 0.8 n<sub>c</sub> = ' + H.fmt(0.8 * v.ncrit) + ' rpm — critical speed OK.</span>' : '<span class="result-bad">n = ' + H.fmt(v.n) + ' rpm ≥ 0.8 n<sub>c</sub> = ' + H.fmt(0.8 * v.ncrit) + ' rpm — shorten the span, stiffen the supports or use a larger screw.</span>') : '' },
+      { id: 'buck', title: 'Column buckling (compressive load)', eq: 'Mott 17-4 with Ch. 6 Eqs. 6-4 / 6-9', formula: 'r = \\frac{d}{4} \\qquad \\frac{KL}{r},\\; K = \\frac{1}{\\sqrt{K_s}} \\qquad C_c = \\sqrt{\\frac{2\\pi^2 E}{S_y}} \\qquad P_{cr} = \\frac{\\pi^2 E A}{(KL/r)^2}\\ (\\text{Euler}, KL/r > C_c) \\quad P_{cr} = A S_y\\left[1 - \\frac{S_y (KL/r)^2}{4\\pi^2 E}\\right]\\ (\\text{Johnson})',
+        text: 'Mott 17-4: a ball screw in compression is a column — long screws by Euler (Eq. 6-4), short ones by J. B. Johnson (Eq. 6-9). The column end-fixity factors differ from the critical-speed ones: simple–simple 1.00, fixed–fixed 4.00, fixed–simple 2.00, fixed–free 0.25 (so the effective-length constant K = 1/√K<sub>s</sub> = 1.0, 0.5, 0.707, 2.0 as in Ch. 6). Use the minor (root) diameter and the same support span; suppliers tabulate the allowable compressive load directly.',
+        vars: [
+          { id: 'Ksc', symbol: 'K_s', label: 'End fixity factor (column)', kind: 'choice', options: [{ label: 'Simply supported both ends — 1.00', value: 1 }, { label: 'Fixed both ends — 4.00', value: 4 }, { label: 'Fixed one end, simple other — 2.00', value: 2 }, { label: 'Fixed one end, free other — 0.25', value: 0.25 }], default: 1 },
+          { id: 'Esc', symbol: 'E', label: 'Modulus of the screw steel', unit: 'psi', kind: 'input', default: 30e6 },
+          { id: 'Sysc', symbol: 'S_y', label: 'Yield strength of the screw', unit: 'psi', kind: 'input', hint: 'e.g. 4140 / induction-hardened: ~ 90 000 psi; Mott App. 3' },
+          { id: 'SR', symbol: 'KL/r', label: 'Slenderness ratio', kind: 'calc', digits: 4, compute: v => H.has(v, 'dmin', 'Lsup', 'Ksc') && v.dmin > 0 ? (1 / Math.sqrt(v.Ksc)) * v.Lsup / (v.dmin / 4) : undefined,
+            work: v => H.has(v, 'SR') ? '\\(KL/r = \\dfrac{(1/\\sqrt{' + H.fmt(v.Ksc) + '})(' + H.fmt(v.Lsup) + ')}{' + H.fmt(v.dmin) + '/4} = ' + H.fmt(v.SR, 4) + '\\)' : null },
+          { id: 'Cc', symbol: 'C_c', label: 'Column constant (Euler / Johnson transition)', kind: 'calc', digits: 4, compute: v => H.has(v, 'Esc', 'Sysc') && v.Sysc > 0 ? Math.sqrt(2 * Math.PI * Math.PI * v.Esc / v.Sysc) : undefined },
+          { id: 'Pcr', symbol: 'P_{cr}', label: 'Critical buckling load', unit: 'lb', kind: 'calc', digits: 4, compute: v => { if (!H.has(v, 'SR', 'Cc', 'Esc', 'Sysc', 'dmin')) return undefined; const Ar = Math.PI * v.dmin * v.dmin / 4;
+              return v.SR > v.Cc ? Math.PI * Math.PI * v.Esc * Ar / (v.SR * v.SR) : Ar * v.Sysc * (1 - v.Sysc * v.SR * v.SR / (4 * Math.PI * Math.PI * v.Esc)); },
+            work: v => H.has(v, 'Pcr') ? (v.SR > v.Cc ? '\\(P_{cr} = \\dfrac{\\pi^2(' + H.fmt(v.Esc, 3) + ')(' + H.fmt(Math.PI * v.dmin * v.dmin / 4, 4) + ')}{(' + H.fmt(v.SR, 4) + ')^2} = ' + H.fmt(v.Pcr, 4) + '\\ \\text{lb (Euler)}\\)' : '\\(P_{cr} = ' + H.fmt(Math.PI * v.dmin * v.dmin / 4, 4) + '(' + H.fmt(v.Sysc) + ')\\left[1 - \\dfrac{' + H.fmt(v.Sysc) + '(' + H.fmt(v.SR, 4) + ')^2}{4\\pi^2(' + H.fmt(v.Esc, 3) + ')}\\right] = ' + H.fmt(v.Pcr, 4) + '\\ \\text{lb (Johnson)}\\)') : null },
+          { id: 'Pall', symbol: 'P_{cr}/SF', label: 'Allowable compressive load', unit: 'lb', kind: 'calc', digits: 4, compute: v => H.has(v, 'Pcr', 'SF') && v.SF > 0 ? v.Pcr / v.SF : undefined },
+          { id: 'nbuck', symbol: 'P_{cr}/F', label: 'Buckling factor of safety', kind: 'calc', digits: 3, compute: v => H.has(v, 'Pcr', 'F') && v.F > 0 ? v.Pcr / v.F : undefined },
+        ],
+        after: v => H.has(v, 'nbuck', 'SF') ? (v.nbuck >= v.SF ? '<span class="result-ok">P<sub>cr</sub>/F = ' + H.fmt(v.nbuck, 3) + ' ≥ SF = ' + H.fmt(v.SF) + ' — no column buckling (' + (v.SR > v.Cc ? 'Euler, long column' : 'Johnson, short column') + ').</span>' : '<span class="result-bad">P<sub>cr</sub>/F = ' + H.fmt(v.nbuck, 3) + ' &lt; SF = ' + H.fmt(v.SF) + ' — buckling risk: larger screw, shorter span or fixed supports (or load the screw in tension).</span>') : (H.has(v, 'SR') ? '<span>Enter S<sub>y</sub> to get the buckling load.</span>' : '') },
+    ] },
+
+    { title: 'Result', steps: [
+      { id: 'result', title: 'Selected ball screw', fig: ['fig17-8'],
+        text: 'Life (Figure 17-8), critical speed (n < 0.8 n<sub>c</sub>) and column buckling (P<sub>cr</sub>/F ≥ SF) must all pass. Mott Example 17-3: 12 500 lb, 15-in stroke × 2, 8 cycles/day, 10 yr → 8.76 × 10⁵ in → 2-in screw, T<sub>u</sub> = 1106 lb·in, 150 rpm, 2.63 hp, expected life ≈ 3.2 × 10⁶ in (3.65× required).',
+        vars: [
+          { id: 'Tures', symbol: 'T_u', label: 'Driving torque', unit: 'lb·in', kind: 'calc', compute: v => v.Tu },
+          { id: 'Pres', symbol: 'P', label: 'Power', unit: 'hp', kind: 'calc', digits: 4, compute: v => v.P },
+        ],
+        after: v => { if (!BS(v) || v.Tu === undefined) return '<span>Complete steps 1–3.</span>';
+          const checks = []; if (v.ratio !== undefined) checks.push(['life', v.ratio >= 1]); if (H.has(v, 'nratio')) checks.push(['critical speed', v.nratio < 0.8]); if (H.has(v, 'nbuck', 'SF')) checks.push(['buckling', v.nbuck >= v.SF]);
+          const bad = checks.filter(c => !c[1]).map(c => c[0]);
+          const sys = BS(v).label + '; T<sub>u</sub> = ' + H.fmt(v.Tu) + ' lb·in, T<sub>b</sub> = ' + H.fmt(v.Tb) + ' lb·in' + (v.P !== undefined ? ', ' + H.fmt(v.P) + ' hp at ' + H.fmt(v.n) + ' rpm' : '') + (v.ratio !== undefined ? '; expected life ' + H.fmt(v.Lexp, 3) + ' in = ' + H.fmt(v.ratio, 3) + '× required' : '') + '.';
+          return bad.length ? '<span class="result-bad"><b>FAIL</b> — ' + bad.join(', ') + '. ' + sys + '</span>' : '<span class="result-ok"><b>PASS</b>' + (checks.length < 3 ? ' (' + checks.map(c => c[0]).join(', ') + ' checked)' : '') + ' — ' + sys + '</span>'; } },
     ] },
   ],
 };
