@@ -14,18 +14,43 @@
   const Y_N = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 26, 28, 30, 34, 38, 43, 50, 60, 75, 100, 150, 300, 400];
   const Y_V = [0.245, 0.261, 0.277, 0.29, 0.296, 0.303, 0.309, 0.314, 0.322, 0.328, 0.331, 0.337, 0.346, 0.353, 0.359, 0.371, 0.384, 0.397, 0.409, 0.422, 0.435, 0.447, 0.46, 0.472, 0.48];
   const lewisY = N => H.interp(N, Y_N, Y_V);
-  // rough read of Fig 14-6 (load at HPSTC, mate ≈ 50–85 teeth). Only a placeholder until the chart is read.
-  const J_N = [12, 15, 17, 20, 24, 30, 35, 40, 45, 50, 60, 80, 125, 275, 1000];
-  const J_V = [0.24, 0.27, 0.30, 0.335, 0.36, 0.385, 0.40, 0.41, 0.42, 0.425, 0.44, 0.455, 0.47, 0.49, 0.50];
-  const Jest = N => (N >= 12) ? H.interp(N, J_N, J_V) : undefined;
+  // Fig 14-6 (20°) and Mott Fig 9-10(b) (25°) digitized, load at HPSTC: rows = teeth N (chart x-axis is linear in 1/N), cols = teeth in the MATING gear
+  const JC_N = [12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 27, 30, 35, 40, 50, 60, 80, 125, 275];
+  const JC_M = [17, 25, 35, 50, 85, 170, 1000];
+  const JC = {
+    20: [[0.21, 0.21, 0.21, 0.21, 0.21, 0.21, 0.21], [0.2196, 0.2196, 0.2196, 0.2196, 0.2196, 0.2196, 0.2196], [0.2341, 0.2341, 0.2341, 0.2341, 0.2341, 0.2341, 0.2341], [0.2515, 0.2515, 0.2515, 0.2515, 0.2515, 0.2515, 0.2515], [0.2717, 0.2717, 0.2717, 0.2717, 0.2717, 0.2717, 0.2717], [0.2932, 0.2967, 0.2967, 0.2967, 0.2967, 0.2967, 0.2967], [0.3002, 0.3075, 0.3131, 0.3173, 0.3242, 0.328, 0.328], [0.3068, 0.3138, 0.3201, 0.3245, 0.3315, 0.335, 0.3391], [0.3131, 0.3201, 0.3267, 0.3315, 0.3384, 0.3425, 0.3466], [0.3248, 0.3318, 0.3391, 0.3444, 0.3517, 0.3568, 0.3612], [0.3346, 0.3422, 0.3498, 0.3558, 0.3631, 0.3694, 0.3741], [0.3473, 0.3552, 0.3637, 0.3704, 0.3779, 0.3855, 0.3909], [0.3577, 0.3659, 0.3748, 0.3824, 0.3903, 0.3988, 0.4051], [0.3713, 0.3802, 0.3899, 0.3985, 0.4067, 0.4165, 0.4238], [0.3817, 0.3912, 0.4013, 0.4111, 0.4197, 0.4304, 0.4386], [0.3963, 0.407, 0.4178, 0.4285, 0.4377, 0.45, 0.4592], [0.4064, 0.4178, 0.4288, 0.4408, 0.4506, 0.4636, 0.4734], [0.419, 0.4317, 0.443, 0.4563, 0.4671, 0.4813, 0.492], [0.4329, 0.4468, 0.4585, 0.4734, 0.4848, 0.5006, 0.5123], [0.4465, 0.4617, 0.474, 0.4905, 0.5028, 0.5198, 0.5325]],
+    25: [[0.3221, 0.3232, 0.3244, 0.3255, 0.3271, 0.3288, 0.3304], [0.3263, 0.3286, 0.3312, 0.3342, 0.3377, 0.3413, 0.3448], [0.3342, 0.3367, 0.3398, 0.3433, 0.3461, 0.349, 0.352], [0.3429, 0.346, 0.3494, 0.3532, 0.3567, 0.36, 0.3631], [0.352, 0.3553, 0.359, 0.3631, 0.3674, 0.3711, 0.3744], [0.3604, 0.3632, 0.3661, 0.3691, 0.3722, 0.3767, 0.3813], [0.3684, 0.3734, 0.379, 0.3845, 0.3891, 0.3925, 0.3957], [0.3759, 0.3824, 0.3873, 0.3911, 0.3964, 0.401, 0.4052], [0.3832, 0.39, 0.3949, 0.3995, 0.4048, 0.4101, 0.4146], [0.3957, 0.4033, 0.4086, 0.4135, 0.42, 0.426, 0.4306], [0.4067, 0.415, 0.4207, 0.426, 0.4329, 0.4397, 0.445], [0.4203, 0.4294, 0.4351, 0.4412, 0.4495, 0.4564, 0.4621], [0.4317, 0.4412, 0.4473, 0.4541, 0.4624, 0.47, 0.4761], [0.4469, 0.4571, 0.4636, 0.4708, 0.4799, 0.4882, 0.4951], [0.4579, 0.4693, 0.4761, 0.4837, 0.4932, 0.5019, 0.5095], [0.4746, 0.4863, 0.4936, 0.5023, 0.5125, 0.5216, 0.53], [0.4856, 0.4981, 0.5057, 0.5148, 0.525, 0.5353, 0.5436], [0.5004, 0.5133, 0.5216, 0.5307, 0.5421, 0.552, 0.5611], [0.5156, 0.5292, 0.5383, 0.5489, 0.5599, 0.5706, 0.58], [0.5315, 0.5451, 0.555, 0.566, 0.5778, 0.5892, 0.599]] };
+  const Jchart = (phi, N, Nm) => {
+    const T = JC[phi]; if (!T || !(N >= 12) || !(Nm > 0)) return undefined;
+    let i = JC_N.length - 2; for (let k = 0; k < JC_N.length - 1; k++) if (N <= JC_N[k + 1]) { i = k; break; }
+    const t = (1 / JC_N[i] - 1 / N) / (1 / JC_N[i] - 1 / JC_N[i + 1]);   // > 1 beyond 275 T: extrapolates toward N = ∞ along the chart axis
+    const m = Math.min(Math.max(Nm, 17), 1000);
+    let j = JC_M.length - 2; for (let k = 0; k < JC_M.length - 1; k++) if (m <= JC_M[k + 1]) { j = k; break; }
+    const s = Math.log(m / JC_M[j]) / Math.log(JC_M[j + 1] / JC_M[j]);
+    const row = r => T[r][j] + (T[r][j + 1] - T[r][j]) * s;
+    return row(i) + (row(i + 1) - row(i)) * t;
+  };
+  // Mott Fig 9-17 (what both guides read): AGMA I at the lowest point of single-tooth contact, I = cos φ/[d_P(1/ρ1 + 1/ρ2)], ρ1 = √(r_oP² − r_bP²) − p_b, ρ2 = C sin φ − ρ1
+  const I_lpstc = (phi, NP, NG) => {
+    if (!(NP > 0 && NG >= NP && phi > 0)) return undefined;
+    const c = cosd(phi), s = sind(phi), rP = NP / 2, rG = NG / 2;      // P = 1 (I does not depend on size)
+    const rho1 = Math.sqrt((rP + 1) ** 2 - (rP * c) ** 2) - Math.PI * c, rho2 = (rP + rG) * s - rho1;
+    return rho1 > 0 && rho2 > 0 ? c / ((1 / rho1 + 1 / rho2) * NP) : undefined;
+  };
+  const KS92 = Pd => Pd >= 5 ? 1.00 : Pd >= 4 ? 1.05 : Pd >= 3 ? 1.15 : Pd >= 2 ? 1.25 : 1.40;   // Mott Table 9-2 (the guides' K_s)
+  const AvT95 = V => V <= 800 ? 10 : V <= 2000 ? 8 : V <= 4000 ? 6 : 4;                         // Mott Table 9-5 by pitch-line speed (A_v = 17 − Q_v)
+  const L_DEF = 20000;   // Mott Table 9-12 "general industrial machines" 20 000–30 000 h — used when no life is given (guides)
   // Table 14-9 constants for Cma (Eq 14-34)
   const CMA = { open: [0.247, 0.0167, -0.765e-4], commercial: [0.127, 0.0158, -0.930e-4], precision: [0.0675, 0.0128, -0.926e-4], extra: [0.00360, 0.0102, -0.822e-4] };
   // Ko table (Fig 14-17 / 14-18)
   const KO = { uniform: { uniform: 1.00, moderate: 1.25, heavy: 1.75 }, light: { uniform: 1.25, moderate: 1.50, heavy: 2.00 }, medium: { uniform: 1.50, moderate: 1.75, heavy: 2.25 } };
   const KR = { 0.5: 0.70, 0.9: 0.85, 0.99: 1.00, 0.999: 1.25, 0.9999: 1.50 };
   const Ks_eq = (F, N, P) => { if (!(F > 0 && N > 0 && P > 0)) return undefined; const k = 1.192 * Math.pow(F * Math.sqrt(lewisY(N)) / P, 0.0535); return k < 1 ? 1 : k; };
-  const YN_auto = N => N >= 1e7 ? 1.3558 * Math.pow(N, -0.0178) : Math.max(1, 4.9404 * Math.pow(N, -0.1045)); // 250 HB line below 10^7
-  const ZN_auto = N => N >= 1e7 ? 1.4488 * Math.pow(N, -0.023) : 2.466 * Math.pow(N, -0.056);
+  // Fig 14-14: 250 HB line below the knee (≈3×10⁶ cycles), upper "normal commercial" line 1.3558 N^-0.0178 above it. Fig 14-15: knee at 10⁷.
+  const YN_auto = N => N >= 3e6 ? 1.3558 * Math.pow(N, -0.0178) : 4.9404 * Math.pow(Math.max(N, 1e3), -0.1045);
+  const ZN_auto = N => N >= 1e7 ? 1.4488 * Math.pow(N, -0.023) : 2.466 * Math.pow(Math.max(N, 1e4), -0.056);
+  const YNw = (sym, N) => '\\(' + sym + ' = ' + (N >= 3e6 ? '1.3558(' + f(N, 3) + ')^{-0.0178}' : '4.9404(' + f(N, 3) + ')^{-0.1045}') + ' = ' + f(YN_auto(N), 4) + '\\)';
+  const ZNw = (sym, N) => '\\(' + sym + ' = ' + (N >= 1e7 ? '1.4488(' + f(N, 3) + ')^{-0.023}' : '2.466(' + f(N, 3) + ')^{-0.056}') + ' = ' + f(ZN_auto(N), 4) + '\\)';
   const okbad = (ok, txt) => '<span class="' + (ok ? 'result-ok' : 'result-bad') + '">' + txt + '</span>';
 
   window.TOPIC = {
@@ -33,8 +58,41 @@
     title: 'Spur Gears — Design & AGMA Stress',
     subtitle: 'Shigley Ch. 13–14 · Fizz 40-step + Mech-guide procedure merged',
     sibling: 'spur_mott.html',
-    intro: 'Full spur-gear design in Shigley notation: inputs → tooth geometry → forces → AGMA bending (Eq. 14-15) and contact (Eq. 14-16) stress → fully-corrected strengths (Eqs. 14-17/14-18) → <b>required Brinell hardness</b> (grade-1/2 steel, Figs. 14-2 &amp; 14-5) and factors of safety <i>S<sub>F</sub></i>, <i>S<sub>H</sub></i> (Eqs. 14-41/14-42) for a chosen material. Yellow fields are chart/table readings — an <i>auto</i> estimate from the textbook curve-fit is filled in until you type the value you read. <b>Defaults are the MECH 325 course assumptions</b> (Gear_Stress_2026 slides, Module 2 tutorials, Midterm 2025): C<sub>p</sub> = 2300 √psi, C<sub>f</sub> = 1, K<sub>s</sub> = 1 (or the Lewis-Y formula), K<sub>B</sub> = 1, K<sub>T</sub> = 1, K<sub>R</sub> = 1.00 at 99 %, C<sub>H</sub> = 1, C<sub>mc</sub> = C<sub>pm</sub> = C<sub>e</sub> = 1 with C<sub>ma</sub> curve 2 (commercial enclosed), K<sub>v</sub> by Eq. 14-27 with Mott\'s Q<sub>v</sub> ↔ A<sub>v</sub> mapping, life 10<sup>7</sup> cycles on the upper (commercial) Y<sub>N</sub>/Z<sub>N</sub> lines, grade-1 through-hardened steel, S<sub>F</sub> = 1 to find the minimum strength then a steel from Mott Table 9-8 / App. 3. Example = Midterm 2025 P2 (10 hp, 1750 → 650 rpm, 17 T, P<sub>d</sub> = 10).',
-    example: { P: 10, nP: 1750, nGd: 650, src: 'uniform', drv: 'moderate', phi: 20, Pd: 10, NP: 17, F: 1.5, Qv: 9, ksMode: 1, Cmc: 1, Cpm: 1, cond: 'commercial', Ce: 1, Cp: 2300, R: 0.99, hpd: 6, dpy: 200, yrs: 1, grade: 1, HBP: 363, HBG: 363, SFd: 1 },
+    intro: 'Full spur-gear design in Shigley notation: inputs → tooth geometry → forces → AGMA bending (Eq. 14-15) and contact (Eq. 14-16) stress → fully-corrected strengths (Eqs. 14-17/14-18) → <b>required Brinell hardness</b> (grade-1/2 steel, Figs. 14-2 &amp; 14-5) and factors of safety <i>S<sub>F</sub></i>, <i>S<sub>H</sub></i> (Eqs. 14-41/14-42) for a chosen material. Yellow fields are chart/table readings — an <i>auto</i> estimate (the textbook equation or a digitized chart) is used until you type the value you read. Step titles carry both student-guide step numbers (F = Fizz 40-step list, M = Mech-guide list; both guides follow Mott, so their table numbers are Mott\'s). <b>Defaults are the Fizz / Mech guide assumptions</b>, translated to Shigley\'s factors — see "Assumptions used" (page links), which also says where the course slides or Shigley differ. Example = Midterm 2025 P2 (10 hp, 1750 → 650 rpm, 17 T, P<sub>d</sub> = 10).',
+    example: { P: 10, nP: 1750, nGd: 650, src: 'uniform', drv: 'moderate', phi: 20, Pd: 10, NP: 17, F: 1.5, Qv: 9, ksMode: 1, Cmc: 1, Cpm: 1, cond: 'commercial', Ce: 1, Cp: 2300, Cf: 1, R: 0.99, KT: 1, hpd: 6, dpy: 200, yrs: 1, q: 1, grade: 1, HBP: 363, HBG: 363, SFd: 1 },
+
+    assumptions: [
+      { text: 'US customary units (hp, lbf, in, ft/min, rpm, psi); a module m in mm is converted with P_d = 25.4/m', src: 'Mech p.63' },
+      { text: 'Shock classes as the guides (Mott) list them — power source: uniform = electric motor / constant-speed gas turbine, light = water turbine / variable-speed drive, medium = multicylinder engine; K_o from Shigley\'s table (default uniform → uniform, K_o = 1.00). The guides use Mott Table 9-1 (more conservative, 4 columns) — course accepts either', src: 'Fizz p.38–39 · Mech p.74 · Gear Stress s12 (course)', var: 'Ko', value: 1 },
+      { text: 'Trial P_d from Mott Fig. 9-11 with P_des = K_o H, rounded to the smaller standard pitch (Shigley has no equivalent chart)', src: 'Fizz p.39 · Mech p.75', var: 'Pd' },
+      { text: 'Pinion teeth N_P between 17 and 20 — 17 (the 20° no-interference minimum, Eq. 13-11) is used until you type one', src: 'Fizz p.39 · Mech p.76', var: 'NP', value: 17 },
+      { text: 'Target output speed = middle of the allowed range; N_G = N_P·VR rounded to the nearest integer, then check the actual n_G is in range', src: 'Fizz p.39–40 · Mech p.76', var: 'nGd' },
+      { text: 'Face width: nominal F = 12/P_d unless given (guide limits 8/P_d … 16/P_d, 0.5 < F/d_P < 2). Shigley/course: 3p ≤ F ≤ 5p, design examples try F = 4p = 4π/P ≈ 12.6/P', src: 'Fizz p.40 · Mech p.77 · Gear Stress s22, s49 (course)', var: 'F' },
+      { text: 'Material: steel on steel → C_p = 2300 √psi (Table 14-8)', src: 'Fizz p.40–41 · Mech p.88 · Gear Stress s30 (course)', var: 'Cp', value: 2300 },
+      { text: 'Quality from Mott Table 9-5 by application or pitch-line speed ("just guess what looks right") — default A_v = 10 ↔ Q_v = 7 (the Table 9-5 value for V ≤ 800 fpm and most industrial drives); course tutorials used Q_v = 6, the midterm Q_v = 9 (A_v 8)', src: 'Fizz p.41 · Mech p.77 · Gear Stress s14 (course)', var: 'Qv', value: 7 },
+      { text: 'K_v by Eq. 14-27 (the curves of Fig. 14-9; the guides read the same curves in Mott Fig. 9-16; course: use the equation)', src: 'Fizz p.41 · Mech p.78 · Gear Stress s14 (course)', var: 'Kv' },
+      { text: '20° full-depth teeth unless stated → 20° J chart (Fig. 14-6)', src: 'Fizz p.42 · Mech p.79, p.88', var: 'phi', value: 20 },
+      { text: 'J_P, J_G from Fig. 14-6 (x = own teeth, curve = mating teeth) — auto = digitized chart', src: 'Fizz p.42 · Mech p.79', var: 'JP' },
+      { text: 'I by Shigley Eq. 14-23 (pitch point, m_N = 1). The guides read Mott Fig. 9-17 instead (≈ 20 % lower — midterm 0.096 vs 0.117); the course accepts both, the Mott value is shown under the step', src: 'Fizz p.43 · Mech p.88 · Gear Stress s31–32 (course)', var: 'I' },
+      { text: 'C_pf from the equations (Eq. 14-32; "the table is bad"); F/(10d_P) < 0.05 → 0.05', src: 'Fizz p.44 · Mech p.80', var: 'Cpf' },
+      { text: 'C_ma for commercial enclosed gear units (curve 2, Table 14-9)', src: 'Fizz p.44 · Mech p.80 · Gear Stress s20 (course)', var: 'cond', value: 'commercial' },
+      { text: 'C_mc = 1 (uncrowned) — with C_pm = C_e = 1 Shigley\'s K_m reduces to the guides\' K_m = 1 + C_pf + C_ma', src: 'Fizz p.45 · Mech p.80 · Gear Stress s19 (course)', var: 'Cmc', value: 1 },
+      { text: 'C_pm = 1 (straddle-mounted pinion, S₁/S < 0.175)', src: 'Gear Stress s20 (course)', var: 'Cpm', value: 1 },
+      { text: 'C_e = 1 (gearing not adjusted at assembly or lapped)', src: 'Gear Stress s19 (course)', var: 'Ce', value: 1 },
+      { text: 'K_s from Mott Table 9-2 by P_d (1.00 for P_d ≥ 5 — the course\'s "typically K_s = 1"); Shigley\'s Lewis-Y formula is selectable', src: 'Fizz p.45 · Mech p.80 · Gear Stress s15 (course)', var: 'ksMode', value: 1 },
+      { text: 'K_B = 1 for a solid (commercial) gear blank — "always 1.00 unless it isn\'t"', src: 'Fizz p.45 · Mech p.81 · Gear Stress s21 (course)', var: 'KB', value: 1 },
+      { text: 'Design factor S_F = S_H = 1 when sizing (minimum S_t, S_c), then choose a material giving 1.0 ≤ S_F ≤ 1.5', src: 'Fizz p.45, p.48 · Mech p.82 · Gear Stress s41 (course)', var: 'SFd', value: 1 },
+      { text: 'Reliability 99 % → K_R = 1.00', src: 'Fizz p.45–46 · Mech p.82 · Gear Stress s38 (course)', var: 'R', value: 0.99 },
+      { text: 'K_T = 1 (T < 250 °F) — not in the guides (Mott has no K_T); course: "always assumed"', src: 'Gear Stress s39 (course)', var: 'KT', value: 1 },
+      { text: 'C_f = 1 — not in the guides/Mott; course value', src: 'Gear Stress s33 (course)', var: 'Cf', value: 1 },
+      { text: 'Design life from the problem, otherwise Mott Table 9-12 — blank uses 20 000 h ("general industrial machines"). AGMA strengths are for 10^7 cycles (Y_N = Z_N = 1)', src: 'Fizz p.46 · Mech p.82', var: 'Lh', value: 20000 },
+      { text: 'Load cycles N = 60 L n q with q = 1 load per revolution (2 for an idler)', src: 'Fizz p.46 · Mech p.82', var: 'q', value: 1 },
+      { text: 'Y_N, Z_N from Figs. 14-14/14-15 — auto uses the printed curve equations, upper "normal commercial gears" lines beyond the knee (1.3558 N^-0.0178, 1.4488 N^-0.023)', src: 'Fizz p.46–47 · Mech p.83, p.90 · Gear Stress s37, s44 (course)', var: 'YNP' },
+      { text: 'Grade 1 through-hardened steel ("grade 1 is the only one that exists")', src: 'Fizz p.48 · Mech p.84', var: 'grade', value: 1 },
+      { text: 'Same material for pinion and gear — design on the pinion; gear H_B defaults to the pinion H_B, so C_H = 1', src: 'Fizz p.48 · Mech p.73 · Gear Stress s45 (course)', var: 'HBG' },
+      { text: 'Pick the steel from Mott Appendix 3 (normally) or Appendix 5 (carburized) / Table 9-8 with H_B above the requirement', src: 'Fizz p.48–51 · Mech p.84–87' },
+      { text: 'Required H_B > 400 → flame/induction hardening or carburizing (Tables 14-3/14-6) instead of through-hardening', src: 'Fizz p.51 · Mech p.87' },
+    ],
 
     figures: [
       { id: 't13-1', ref: 'Table 13-1', title: 'Standard tooth systems for spur gears (addendum, dedendum)', src: 'figures/shigley/table13-1.png', page: 722, note: 'Full-depth 20° is the course default: a = 1/P, b = 1.25/P.' },
@@ -47,8 +105,9 @@
       { id: 'av', ref: 'Table 9-5', book: 'mott', title: 'Recommended AGMA quality numbers A_v (Mott)', src: 'figures/mott/table9-5.png', page: 399, note: 'Shigley uses Q_v (old AGMA 2000). A_v + Q_v = 17, e.g. A_v = 11 ≈ Q_v = 6, A_v = 10 ≈ Q_v = 7.' },
       { id: 'f14-9', ref: 'Figure 14-9', title: 'Dynamic factor K_v vs pitch-line velocity (curves of Q_v)', src: 'figures/shigley/fig14-9.png', page: 785, note: 'Curves are Eq. 14-27; the end of each curve is the maximum allowed velocity, Eq. 14-29.' },
       { id: 'eq14-27', ref: 'Equations 14-27 to 14-29', title: 'K_v curve-fit: A, B from Q_v; (V_t)_max', src: 'figures/shigley/eq14-27-29.png', page: 784 },
-      { id: 't14-2', ref: 'Table 14-2', title: 'Lewis form factor Y (for the optional size-factor equation)', src: 'figures/shigley/table14-2.png', page: 765, note: 'Only needed if you use K_s = 1.192 (F√Y / P)^0.0535 (Eq. (a), Sec. 14-10). Otherwise K_s = 1.' },
-      { id: 'f14-6', ref: 'Figure 14-6', title: 'Spur-gear bending geometry factor J (20°, full depth)', src: 'figures/shigley/fig14-6.png', page: 780, note: 'Enter on the x-axis with the teeth of the gear you want J for; pick the curve of the MATING gear\'s tooth count (load at HPSTC). Do this twice: J_P (x = N_P, curve N_G) and J_G (x = N_G, curve N_P).' },
+      { id: 'mks', ref: 'Table 9-2', book: 'mott', title: 'Suggested size factors K_s (Mott — the guides\' K_s)', src: 'figures/mott/table9-2.png', page: 395, note: 'K_s = 1.00 for P_d ≥ 5 (the course\'s "typically K_s = 1"); 1.05–1.40 only for coarse teeth.' },
+      { id: 't14-2', ref: 'Table 14-2', title: 'Lewis form factor Y (for the optional size-factor equation)', src: 'figures/shigley/table14-2.png', page: 765, note: 'Only needed if you use K_s = 1.192 (F√Y / P)^0.0535 (Eq. (a), Sec. 14-10). Otherwise K_s from Mott Table 9-2.' },
+      { id: 'f14-6', ref: 'Figure 14-6', title: 'Spur-gear bending geometry factor J (20°, full depth)', src: 'figures/shigley/fig14-6.png', page: 780, note: 'Enter on the x-axis with the teeth of the gear you want J for; pick the curve of the MATING gear\'s tooth count (load at HPSTC). Do this twice: J_P (x = N_P, curve N_G) and J_G (x = N_G, curve N_P). Below ≈ 18 teeth all curves merge (Ex. 14-4: 17/52 T → 0.30/0.40). For 25° teeth use Mott Fig. 9-10(b).' },
       { id: 'f14-10', ref: 'Figure 14-10', title: 'Definition of S and S₁ for C_pm (straddle vs offset pinion)', src: 'figures/shigley/fig14-10.png', page: 787 },
       { id: 'eq14-30', ref: 'Equations 14-30 to 14-35', title: 'Load-distribution factor K_m = 1 + C_mc(C_pf C_pm + C_ma C_e)', src: 'figures/shigley/eq14-30-35.png', page: 787 },
       { id: 't14-9', ref: 'Table 14-9', title: 'Constants A, B, C for C_ma = A + BF + CF² (Eq. 14-34)', src: 'figures/shigley/table14-9.png', page: 787, note: 'Course default: commercial, enclosed units.' },
@@ -70,15 +129,16 @@
       { id: 'f14-13', ref: 'Figure 14-13', title: 'Hardness-ratio factor C_H (surface-hardened pinion)', src: 'figures/shigley/fig14-13.png', page: 789 },
       { id: 'f14-17', ref: 'Figure 14-17', title: 'Road map — spur gear BENDING (Eqs. 14-15, 14-17, 14-41)', src: 'figures/shigley/fig14-17.png', page: 793 },
       { id: 'f14-18', ref: 'Figure 14-18', title: 'Road map — spur gear WEAR (Eqs. 14-16, 14-18, 14-42)', src: 'figures/shigley/fig14-18.png', page: 794 },
-      { id: 'mlife', ref: 'Table 9-12', book: 'mott', title: 'Recommended design life (hours) — Mott', src: 'figures/mott/table9-12.png', page: 411, note: 'Shigley gives no life table; general industrial machines 20 000–30 000 h. Course default when nothing is given: 10⁷ cycles.' },
-      { id: 'mf9-17', ref: 'Figure 9-17', book: 'mott', title: 'Pitting geometry factor I (Mott) — accepted alternative to Eq. 14-23', src: 'figures/mott/fig9-17.png', page: 405, note: 'Course: "slightly different but easier". Midterm gives both: I = 0.096 (Mott) vs 0.117 (Eq. 14-23) for 17 T, m_G = 2.7.' },
+      { id: 'mlife', ref: 'Table 9-12', book: 'mott', title: 'Recommended design life (hours) — Mott', src: 'figures/mott/table9-12.png', page: 411, note: 'Shigley gives no life table; the guides take the life from this table when the problem gives none — the calculator then uses 20 000 h (general industrial machines).' },
+      { id: 'mf9-17', ref: 'Figure 9-17', book: 'mott', title: 'Pitting geometry factor I (Mott) — accepted alternative to Eq. 14-23', src: 'figures/mott/fig9-17.png', page: 405, note: 'What both guides read (Fizz step 19, Mech step 27). The curves are I at the lowest point of single-tooth contact (Eq. 14-23 uses the pitch point). Course: "slightly different but easier" — midterm gives both: I = 0.096 (Mott) vs 0.117 (Eq. 14-23) for 17 T, m_G = 2.7.' },
       { id: 'mt9-8', ref: 'Table 9-8', book: 'mott', title: 'Gear materials: through-hardened and carburized alloys (Mott)', src: 'figures/mott/table9-8.png', page: 406, note: 'Course material-selection step: pick an alloy + heat treatment whose HB exceeds the required value and quote HB and % elongation from Appendix 3.' },
       { id: 'mapp3a', ref: 'Appendix 3', book: 'mott', title: 'Steel properties: s_u, s_y, % elongation, HB (1020 … 4150)', src: 'figures/mott/appendix3a.png', page: 804, note: 'e.g. 4140 annealed HB 197, 4140 OQT1300 HB 235, 4140 OQT1000 HB 341.' },
       { id: 'mapp3b', ref: 'Appendix 3 (cont.)', book: 'mott', title: 'Steel properties (4340 … 9255)', src: 'figures/mott/appendix3b.png', page: 805, note: 'e.g. 4340 OQT1000 HB 363 (16 % el.), 4340 OQT700 HB 461. HB ≈ 2 × S_u (ksi).' },
+      { id: 'mapp5', ref: 'Appendix 5', book: 'mott', title: 'Properties of carburized steels (core HB, case HRC)', src: 'figures/mott/appendix5.png', page: 808, note: 'Mech guide: "appendix 3 or 5 … we normally use Appendix 3". Pair with Tables 14-3/14-6 (carburized S_t 55 kpsi, S_c 180 kpsi) when H_B > 400 would be needed.' },
       // ---- course-only slides (v2/COURSE_CONVENTIONS.md §16) ----
       { id: 'cko', ref: 'Gear Stress s12', book: 'course', title: 'Overload factor K_o — Shigley table and Mott Table 9-1 side by side', src: 'figures/course/ko_shigley_vs_mott.png', note: 'Either is accepted; Mott is "more conservative". Tutorials: K_o = 1 (uniform). Midterm: K_o = 1.25 (uniform source, light shock).' },
       { id: 'ckv', ref: 'Gear Stress s14', book: 'course', title: 'K_v analytical method and Mott Table 9-4: Q_v ↔ A_v mapping', src: 'figures/course/gear_kv_q_av_table.png', note: 'Q5 = A12, Q6 = A11, Q7 = A10, Q8 = A9, Q9 = A8, Q10 = A7, Q11 = A6 (A_v + Q_v = 17). Course prefers the equation: "difficult to read the graph accurately".' },
-      { id: 'cks', ref: 'Gear Stress s15', book: 'course', title: 'Size factor K_s: "Typically K_s = 1" or the Lewis-Y formula / Mott Table 9-2', src: 'figures/course/gear_ks_course.png', note: 'Instructor: "I normally will suggest we default to 1.0"; the tutorial keeps K_s = 1.088 from the formula — both accepted.' },
+      { id: 'cks', ref: 'Gear Stress s15', book: 'course', title: 'Size factor K_s: "Typically K_s = 1" or the Lewis-Y formula / Mott Table 9-2', src: 'figures/course/gear_ks_course.png', note: 'Instructor: "I normally will suggest we default to 1.0" (= Mott Table 9-2 for P_d ≥ 5, which the guides use); the tutorial keeps K_s = 1.088 from the formula — both accepted.' },
       { id: 'ckm', ref: 'Gear Stress s19', book: 'course', title: 'K_m (Shigley form) with the course annotations: C_mc = 1, C_e = 1', src: 'figures/course/gear_km_shigley_annotated.png' },
       { id: 'ccma', ref: 'Gear Stress s20', book: 'course', title: 'C_pm and C_ma — "default to curve 2 (commercial enclosed gear units)"', src: 'figures/course/gear_cma_curve2.png' },
       { id: 'cyn', ref: 'Gear Stress s37', book: 'course', title: 'Y_N — "use this line for normal commercial gears" (1.3558 N^-0.0178)', src: 'figures/course/gear_yn_course_line.png', note: 'The 1.6831 N^-0.0323 line is for high-precision applications only.' },
@@ -89,16 +149,16 @@
 
     sections: [
       // ================= INPUTS =================
-      { title: 'Inputs & design decisions', steps: [
-        { id: 'in', title: 'Power, speeds and overload', fig: ['cko', 'ko', 'mko', 'cproc'],
-          text: 'Enter nameplate power and pinion speed. Choose the shock class of the power source and the driven machine; the overload factor K_o is read from the K_o table on the road map (Fig. 14-17) — the course shows it side by side with Mott Table 9-1 and accepts either (tutorials use K_o = 1 for uniform/uniform; the midterm gave K_o = 1.25). Design power P_des = K_o P is what the Mott chart (Fig. 9-11) uses to pick a pitch. Units: US customary throughout (hp, lbf, in, ft/min, rpm, psi).',
+      { title: 'Inputs & design decisions (Fizz steps 1–13 · Mech steps 1–13)', steps: [
+        { id: 'in', title: 'Power, speeds and overload (F1–3 · M1–3)', fig: ['cko', 'ko', 'mko', 'cproc'],
+          text: 'Enter nameplate power and pinion speed. Choose the shock class of the power source (the guides use Mott\'s list: uniform = electric motor or constant-speed gas turbine; light = water turbine, variable-speed drive; medium/moderate = multicylinder engine) and of the driven machine; the overload factor K_o is read from the K_o table on the road map (Fig. 14-17) — the course shows it side by side with Mott Table 9-1 and accepts either (tutorials use K_o = 1 for uniform/uniform; the midterm gave K_o = 1.25). Design power P_des = K_o P is what the Mott chart (Fig. 9-11) uses to pick a pitch. Units: US customary throughout (hp, lbf, in, ft/min, rpm, psi).',
           formula: 'P_{des} = K_o\\,P \\qquad VR = \\frac{n_P}{n_G}',
           vars: [
             { id: 'P', symbol: 'H', label: 'Transmitted power', unit: 'hp', kind: 'input' },
             { id: 'nP', symbol: 'n_P', label: 'Pinion (input) speed', unit: 'rpm', kind: 'input' },
             { id: 'nGd', symbol: 'n_{G,des}', label: 'Desired gear (output) speed', unit: 'rpm', kind: 'input', hint: 'middle of the allowed range if a range is given; leave blank if N_G is given' },
-            { id: 'src', label: 'Power source', kind: 'choice', type: 'text', options: [{ label: 'Uniform (electric motor, turbine)', value: 'uniform' }, { label: 'Light shock (multi-cyl. engine)', value: 'light' }, { label: 'Medium shock (single-cyl. engine)', value: 'medium' }], default: 'uniform' },
-            { id: 'drv', label: 'Driven machine', kind: 'choice', type: 'text', options: [{ label: 'Uniform', value: 'uniform' }, { label: 'Moderate shock', value: 'moderate' }, { label: 'Heavy shock', value: 'heavy' }], default: 'uniform' },
+            { id: 'src', label: 'Power source', kind: 'choice', type: 'text', options: [{ label: 'Uniform (electric motor, constant-speed gas turbine)', value: 'uniform' }, { label: 'Light shock (water turbine, variable-speed drive)', value: 'light' }, { label: 'Medium shock (multicylinder engine)', value: 'medium' }], default: 'uniform' },
+            { id: 'drv', label: 'Driven machine', kind: 'choice', type: 'text', options: [{ label: 'Uniform (generators, paper/film winders)', value: 'uniform' }, { label: 'Moderate shock (machine tools, saws, mixers, pumps, conveyors)', value: 'moderate' }, { label: 'Heavy shock (crushers, punch presses, hammer mills)', value: 'heavy' }], default: 'uniform' },
             { id: 'Ko', symbol: 'K_o', label: 'Overload factor', kind: 'lookup', fig: 'cko', hint: 'auto from the two selects (Shigley table). Mott Table 9-1 (more conservative) is also accepted — type it to override.',
               auto: v => (KO[v.src] && KO[v.src][v.drv]) || undefined,
               check: v => (v.Ko !== undefined && (v.Ko < 1 || v.Ko > 3)) ? 'K_o is normally 1.0–2.75' : null },
@@ -106,14 +166,14 @@
               work: v => has(v, 'P', 'Ko') ? '\\(P_{des} = ' + f(v.Ko) + ' \\times ' + f(v.P) + ' = ' + f(v.P * v.Ko) + '\\ \\mathrm{hp}\\)' : null },
             { id: 'VRd', symbol: 'VR_{des}', label: 'Desired velocity ratio', kind: 'calc', compute: v => has(v, 'nP', 'nGd') && v.nGd > 0 ? v.nP / v.nGd : undefined },
           ] },
-        { id: 'tooth', title: 'Tooth system, pitch and tooth numbers', fig: ['t13-1', 'cteeth', 't13-2', 'm9-11'],
-          text: 'Pressure angle 20° full depth unless stated (course standard-teeth table: a = 1/P, b = 1.25/P, c = 0.25/P). Read a trial diametral pitch from Mott Fig. 9-11 with P_des and n_P (round to the smaller standard P_d from Table 13-2 — bigger teeth). Choose N_P ≥ 17 (no interference at 20°, Eq. 13-11 / Gear Kinematics s26; Fizz: 17–20). N_G = N_P·VR rounded to an integer (midterm: 17 × 2.69 = 45.8 → 46); the actual ratio and output speed follow.',
+        { id: 'tooth', title: 'Tooth system, pitch and tooth numbers (F4–10 · M4–10)', fig: ['t13-1', 'cteeth', 't13-2', 'm9-11'],
+          text: 'Pressure angle 20° full depth unless stated (guides; course standard-teeth table: a = 1/P, b = 1.25/P, c = 0.25/P). Read a trial diametral pitch from Mott Fig. 9-11 with P_des and n_P ("round to the smallest number" — the smaller standard P_d from Table 13-2, bigger teeth). Choose N_P between 17 and 20 (guides; 17 is used until you type one — no interference at 20°, Eq. 13-11). Take n_G at the middle of the allowed range; N_G = N_P·VR rounded to an integer (midterm: 17 × 2.69 = 45.8 → 46); the actual ratio and output speed follow — if n_G is out of range try another N_P.',
           formula: 'N_G = N_P \\cdot VR \\quad\\Rightarrow\\quad m_G = \\frac{N_G}{N_P}, \\qquad n_G = n_P\\frac{N_P}{N_G}',
           vars: [
             { id: 'phi', symbol: '\\phi', label: 'Pressure angle', unit: '°', kind: 'choice', options: [{ label: '20° full depth', value: 20 }, { label: '25° full depth', value: 25 }, { label: '14.5° (obsolete)', value: 14.5 }], default: 20 },
             { id: 'Pd', symbol: 'P_d', label: 'Diametral pitch', unit: 'teeth/in', kind: 'lookup', fig: 'm9-11', hint: 'from Mott Fig. 9-11 (or given). Standard values Table 13-2. Module given? P_d = 25.4/m',
               check: v => v.Pd !== undefined && [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 24, 32, 40, 48, 64, 72, 80, 96, 120].indexOf(v.Pd) < 0 ? 'not a standard pitch (Table 13-2 / Mott 8-3)' : null },
-            { id: 'NP', symbol: 'N_P', label: 'Pinion teeth', kind: 'input', hint: 'typically 17–20', check: v => v.NP !== undefined && v.NP < 17 && v.phi === 20 ? 'N_P < 17 → interference risk at 20° (Eq. 13-11)' : (v.NP !== undefined && v.NP !== Math.round(v.NP) ? 'must be an integer' : null) },
+            { id: 'NP', symbol: 'N_P', label: 'Pinion teeth', kind: 'input', hint: '17–20 (guides); auto 17', auto: () => 17, check: v => v.NP !== undefined && v.NP < 17 && v.phi === 20 ? 'N_P < 17 → interference risk at 20° (Eq. 13-11)' : (v.NP !== undefined && v.NP !== Math.round(v.NP) ? 'must be an integer' : null) },
             { id: 'NG', symbol: 'N_G', label: 'Gear teeth', kind: 'input', hint: 'auto = round(N_P·VR_des); type the given value if specified',
               auto: v => has(v, 'NP', 'VRd') ? Math.round(v.NP * v.VRd) : undefined,
               check: v => v.NG !== undefined && v.NG !== Math.round(v.NG) ? 'must be an integer' : null },
@@ -122,18 +182,18 @@
               work: v => has(v, 'nP', 'NP', 'NG') ? '\\(n_G = ' + f(v.nP) + '\\times' + f(v.NP) + '/' + f(v.NG) + ' = ' + f(v.nP * v.NP / v.NG) + '\\ \\mathrm{rpm}\\)' : null },
           ],
           after: v => has(v, 'nG', 'nGd') ? (Math.abs(v.nG - v.nGd) / v.nGd < 0.05 ? okbad(true, 'n_G is within 5 % of the target (' + f(v.nGd) + ' rpm). Check it lies inside the range given in the problem; otherwise try another N_P.') : okbad(false, 'n_G = ' + f(v.nG) + ' rpm differs from target ' + f(v.nGd) + ' rpm by ' + f(100 * Math.abs(v.nG - v.nGd) / v.nGd, 3) + ' % — check the allowed range, else change N_P.')) : '' },
-        { id: 'fw', title: 'Face width', fig: ['cteeth', 't13-2'],
-          text: 'Course rules (Gear Stress s22, s49–51): Shigley road map 3/P ≤ F ≤ 5π/P with an initial median 4π/P ≈ 12.6/P; Mott 8/P_d < F < 12/P_d; the standard-teeth table says 9/P < F < 13/P. The auto value is the Shigley median 4π/P — round to a convenient size. Also keep 0.5 < F/d_P < 2 (Shigley K_m procedure requires F/d_P ≤ 2).',
-          formula: 'F_{nom} = \\frac{4\\pi}{P_d} \\approx \\frac{12}{P_d}, \\qquad \\frac{8}{P_d} < F < \\frac{12}{P_d}\\ (\\text{Mott}),\\quad \\frac{3}{P_d} \\le F \\le \\frac{5\\pi}{P_d}\\ (\\text{Shigley})',
+        { id: 'fw', title: 'Face width (F13 · M13)', fig: ['cteeth', 't13-2'],
+          text: 'Guides (and Mott): "just use the nominal" F = 12/P_d, limits 8/P_d < F < 16/P_d, and keep 0.5 < F/d_P < 2 (Shigley\'s K_m procedure also needs F/d_P ≤ 2). Shigley / course road map (Gear Stress s22, s49): 3p ≤ F ≤ 5p, i.e. 3π/P … 5π/P, design examples start at 4p = 4π/P ≈ 12.6/P — practically the same nominal. Round to a convenient size.',
+          formula: 'F_{nom} = \\frac{12}{P_d},\\qquad \\frac{8}{P_d} < F < \\frac{16}{P_d}\\ (\\text{guides, Mott}),\\qquad \\frac{3\\pi}{P_d} \\le F \\le \\frac{5\\pi}{P_d}\\ (\\text{Shigley})',
           vars: [
-            { id: 'F', symbol: 'F', label: 'Face width', unit: 'in', kind: 'input', hint: 'auto = 4π/P_d (round to a convenient size)', auto: v => has(v, 'Pd') ? 4 * Math.PI / v.Pd : undefined,
-              check: v => has(v, 'F', 'Pd') && (v.F < 3 / v.Pd || v.F > 5 * Math.PI / v.Pd) ? 'outside Shigley 3/P_d … 5π/P_d = ' + f(3 / v.Pd, 3) + ' … ' + f(5 * Math.PI / v.Pd, 3) + ' in' : (has(v, 'F', 'Pd') && (v.F < 8 / v.Pd || v.F > 12 / v.Pd) ? 'outside the Mott range 8/P_d … 12/P_d = ' + f(8 / v.Pd, 3) + ' … ' + f(12 / v.Pd, 3) + ' in (allowed by Shigley 3/P … 5π/P)' : null) },
+            { id: 'F', symbol: 'F', label: 'Face width', unit: 'in', kind: 'input', hint: 'auto = 12/P_d (guides; round to a convenient size)', auto: v => has(v, 'Pd') ? 12 / v.Pd : undefined,
+              check: v => has(v, 'F', 'Pd') && (v.F < 8 / v.Pd || v.F > 16 / v.Pd) ? 'outside the guide range 8/P_d … 16/P_d = ' + f(8 / v.Pd, 3) + ' … ' + f(16 / v.Pd, 3) + ' in' : (has(v, 'F', 'Pd') && (v.F < 3 * Math.PI / v.Pd || v.F > 5 * Math.PI / v.Pd) ? 'outside Shigley 3p … 5p = ' + f(3 * Math.PI / v.Pd, 3) + ' … ' + f(5 * Math.PI / v.Pd, 3) + ' in (inside the guide range 8/P_d … 16/P_d)' : null) },
             { id: 'FdP', symbol: 'F/d_P', label: 'Face width to pinion diameter ratio', kind: 'calc', digits: 3, compute: v => has(v, 'F', 'dP') ? v.F / v.dP : undefined, check: v => v.FdP !== undefined && (v.FdP > 2 || v.FdP < 0.5) ? 'F/d_P should be 0.5–2 (K_m procedure valid for F/d_P ≤ 2)' : null },
           ] },
       ] },
 
       // ================= GEOMETRY =================
-      { title: 'Tooth geometry (Mech-guide "spec question")', text: 'Eqs. 13-1 to 13-6 and Table 13-1. All lengths in inches. Coarse pitch P_d < 20 uses b = 1.25/P_d, c = 0.25/P_d; fine pitch P_d ≥ 20 uses b = 1.20/P_d + 0.002, c = 0.20/P_d + 0.002 (Mott Table 8-1).', steps: [
+      { title: 'Tooth geometry (Mech-guide spec question steps 1–9)', text: 'Eqs. 13-1 to 13-6 and Table 13-1. All lengths in inches. Coarse pitch P_d < 20 uses b = 1.25/P_d, c = 0.25/P_d; fine pitch P_d ≥ 20 uses b = 1.20/P_d + 0.002, c = 0.20/P_d + 0.002 (Mott Table 8-1).', steps: [
         { id: 'geo1', title: 'Pitch diameters, centre distance, circular pitch, module', eq: '13-1 … 13-3', fig: ['t13-1'],
           formula: 'd_P = \\frac{N_P}{P_d},\\quad d_G = \\frac{N_G}{P_d},\\quad C = \\frac{N_P+N_G}{2P_d},\\quad p = \\frac{\\pi}{P_d},\\quad m = \\frac{25.4}{P_d}',
           vars: [
@@ -153,7 +213,7 @@
             { id: 'hk', symbol: 'h_k', label: 'Working depth', unit: 'in', kind: 'calc', compute: v => has(v, 'a') ? 2 * v.a : undefined },
             { id: 't', symbol: 't', label: 'Tooth thickness', unit: 'in', kind: 'calc', compute: v => has(v, 'p') ? v.p / 2 : undefined },
           ] },
-        { id: 'geo3', title: 'Outside, root and base circle diameters; contact ratio', eq: '13-6, 13-7',
+        { id: 'geo3', title: 'Outside, root and base circle diameters; contact ratio', eq: '13-6, 13-9',
           formula: 'd_o = \\frac{N+2}{P_d},\\quad d_R = d - 2b,\\quad d_b = d\\cos\\phi,\\qquad m_c = \\frac{\\sqrt{r_{oP}^2 - r_{bP}^2} + \\sqrt{r_{oG}^2 - r_{bG}^2} - C\\sin\\phi}{p\\cos\\phi}',
           vars: [
             { id: 'doP', symbol: 'd_{oP}', label: 'Pinion outside diameter', unit: 'in', kind: 'calc', compute: v => has(v, 'NP', 'Pd') ? (v.NP + 2) / v.Pd : undefined },
@@ -172,7 +232,7 @@
 
       // ================= FORCES =================
       { title: 'Forces and torque', steps: [
-        { id: 'force', title: 'Pitch-line velocity, transmitted load, radial & normal force, torque', eq: '13-34, 13-35', fig: ['f13-29'],
+        { id: 'force', title: 'Pitch-line velocity, transmitted load, radial & normal force, torque (F11–12 · M11–12)', eq: '13-34, 13-35', fig: ['f13-29'],
           formula: 'V = \\frac{\\pi d_P n_P}{12},\\quad W_t = \\frac{33\\,000\\,H}{V},\\quad W_r = W_t\\tan\\phi,\\quad W = \\frac{W_t}{\\cos\\phi},\\quad T = \\frac{W_t d}{2} = \\frac{63\\,025\\,H}{n}',
           text: 'Use the nameplate power H (not P_des) for W_t — K_o enters the stress equations separately. W_t is the same on pinion and gear; torques differ by m_G.',
           vars: [
@@ -186,32 +246,33 @@
       ] },
 
       // ================= AGMA FACTORS =================
-      { title: 'AGMA factors for the stress equations', text: 'Road maps: Fig. 14-17 (bending) and Fig. 14-18 (wear). Each factor below has an <i>auto</i> curve-fit; type the chart reading to override.', steps: [
-        { id: 'kv', title: 'Quality number and dynamic factor K_v', eq: '14-27 … 14-29', fig: ['ckv', 'f14-9', 'eq14-27', 'av'],
+      { title: 'AGMA factors for the stress equations (Fizz steps 14–24 · Mech steps 14–19, 26–27)', text: 'Road maps: Fig. 14-17 (bending) and Fig. 14-18 (wear). Each factor below has an <i>auto</i> value (textbook equation or digitized chart); type the chart reading to override.', steps: [
+        { id: 'kv', title: 'Quality number and dynamic factor K_v (F16–17 · M14–15)', eq: '14-27 … 14-29', fig: ['ckv', 'f14-9', 'eq14-27', 'av'],
           formula: 'K_v = \\left(\\frac{A+\\sqrt{V}}{A}\\right)^B,\\quad B = 0.25(12-Q_v)^{2/3},\\quad A = 50+56(1-B),\\quad (V_t)_{max} = [A+(Q_v-3)]^2',
-          text: 'Course: use the equation (Eq. 14-27; "difficult to read the graph accurately"). Shigley\'s AGMA Q_v numbers are "no longer in use" — Mott Table 9-4 maps them to A_v (Q5 = A12 … Q11 = A6, i.e. A_v + Q_v = 17); a problem stating A_v = 8 means Q_v = 9 (midterm). Q_v 3–7 commercial, 8–12 precision; when nothing is stated Q_v = 6 … 7.',
+          text: 'Quality number from the problem, else (guides) from Mott Table 9-5 by application or pitch-line speed — default Q_v = 7 (A_v = 10). Shigley\'s AGMA Q_v numbers are "no longer in use" — Mott Table 9-4 maps them to A_v (Q5 = A12 … Q11 = A6, i.e. A_v + Q_v = 17); a problem stating A_v = 8 means Q_v = 9 (midterm). Course: use the equation (Eq. 14-27; "difficult to read the graph accurately").',
+          after: v => has(v, 'V') ? 'Mott Table 9-5 by pitch-line speed (machine-tool / high-quality drives): V = ' + f(v.V) + ' ft/min → A_v ' + AvT95(v.V) + ' = Q_v ' + (17 - AvT95(v.V)) + '. By application: cranes, punch press, mining conveyor A10 (Q_v 7); cement mixer/kiln, steel mill A11 (Q_v 6); automotive transmission A6 (Q_v 11).' : '',
           vars: [
-            { id: 'Qv', symbol: 'Q_v', label: 'AGMA quality number (Mott A_v in brackets)', kind: 'choice', fig: 'ckv', options: [5, 6, 7, 8, 9, 10, 11].map(q => ({ label: 'Q_v = ' + q + '  (A_v = ' + (17 - q) + ')', value: q })), default: 6 },
+            { id: 'Qv', symbol: 'Q_v', label: 'AGMA quality number (Mott A_v in brackets)', kind: 'choice', fig: 'ckv', options: [5, 6, 7, 8, 9, 10, 11].map(q => ({ label: 'Q_v = ' + q + '  (A_v = ' + (17 - q) + ')', value: q })), default: 7 },
             { id: 'Bv', symbol: 'B', label: 'Exponent B', kind: 'calc', digits: 4, compute: v => has(v, 'Qv') ? 0.25 * Math.pow(12 - v.Qv, 2 / 3) : undefined },
             { id: 'Av', symbol: 'A', label: 'Constant A', kind: 'calc', digits: 4, compute: v => has(v, 'Bv') ? 50 + 56 * (1 - v.Bv) : undefined },
             { id: 'Kv', symbol: 'K_v', label: 'Dynamic factor', kind: 'lookup', fig: 'f14-9', hint: 'auto = Eq. 14-27; or read Fig. 14-9', auto: v => has(v, 'Av', 'Bv', 'V') ? Math.pow((v.Av + Math.sqrt(v.V)) / v.Av, v.Bv) : undefined,
               work: v => has(v, 'Av', 'Bv', 'V') ? '\\(K_v = \\left(\\frac{' + f(v.Av) + ' + \\sqrt{' + f(v.V) + '}}{' + f(v.Av) + '}\\right)^{' + f(v.Bv) + '} = ' + f(Math.pow((v.Av + Math.sqrt(v.V)) / v.Av, v.Bv)) + '\\)' : null },
             { id: 'Vmax', symbol: '(V_t)_{max}', label: 'Max. pitch-line velocity for this Q_v', unit: 'ft/min', kind: 'calc', compute: v => has(v, 'Av', 'Qv') ? Math.pow(v.Av + (v.Qv - 3), 2) : undefined, check: v => has(v, 'V', 'Vmax') && v.V > v.Vmax ? 'V exceeds (V_t)max — use a higher quality number' : null },
           ] },
-        { id: 'ks', title: 'Size factor K_s', fig: ['cks', 't14-2'],
-          text: 'Course (Gear Stress s15): "Typically K_s = 1" — the instructor\'s default, and what the midterm used (P_d > 5). The accepted alternative is Shigley Eq. (a), Sec. 14-10 with the Lewis Y of Table 14-2 (Tutorial 3 keeps K_s = 1.088 for F = 2, Y = 0.296, P = 6). Mott Table 9-2 (1.00 for P_d ≥ 5) gives the same answer as K_s = 1 for ordinary pitches. If the equation gives < 1 use 1.',
-          formula: 'K_s = 1\\ \\ (\\text{course default})\\qquad\\text{or}\\qquad K_s = 1.192\\left(\\frac{F\\sqrt{Y}}{P_d}\\right)^{0.0535}\\ \\ (\\ge 1)',
+        { id: 'ks', title: 'Size factor K_s (F23 · M17)', fig: ['cks', 'mks', 't14-2'],
+          text: 'Guides: K_s from Mott Table 9-2 with P_d — 1.00 for P_d ≥ 5, which is also the course\'s "typically K_s = 1" (midterm: P_d > 5). Shigley\'s own size factor is Eq. (a), Sec. 14-10 with the Lewis Y of Table 14-2 (Tutorial 3 keeps K_s = 1.088 for F = 2, Y = 0.296, P = 6); if it gives < 1 use 1.',
+          formula: 'K_s = \\text{Table 9-2}(P_d)\\ \\ (= 1 \\text{ for } P_d \\ge 5)\\qquad\\text{or}\\qquad K_s = 1.192\\left(\\frac{F\\sqrt{Y}}{P_d}\\right)^{0.0535}\\ \\ (\\ge 1)',
           vars: [
-            { id: 'ksMode', label: 'K_s rule', kind: 'choice', options: [{ label: 'K_s = 1 (course default)', value: 1 }, { label: 'Formula 1.192 (F√Y/P)^0.0535 (Shigley Ex. 14-4, Tutorial 3)', value: 2 }], default: 1 },
+            { id: 'ksMode', label: 'K_s rule', kind: 'choice', options: [{ label: 'Mott Table 9-2 by P_d (guides; = 1 for P_d ≥ 5)', value: 1 }, { label: 'Formula 1.192 (F√Y/P)^0.0535 (Shigley Ex. 14-4, Tutorial 3)', value: 2 }], default: 1 },
             { id: 'YP', symbol: 'Y_P', label: 'Lewis form factor, pinion', kind: 'lookup', fig: 't14-2', digits: 3, auto: v => has(v, 'NP') && v.NP >= 12 ? lewisY(v.NP) : undefined, hint: 'Table 14-2 (interpolated) — only used by the formula' },
             { id: 'YG', symbol: 'Y_G', label: 'Lewis form factor, gear', kind: 'lookup', fig: 't14-2', digits: 3, auto: v => has(v, 'NG') && v.NG >= 12 ? lewisY(v.NG) : undefined },
-            { id: 'KsP', symbol: '(K_s)_P', label: 'Size factor, pinion', kind: 'lookup', fig: 'cks', hint: 'auto = 1 or the formula, per the rule above', auto: v => v.ksMode === 2 ? (has(v, 'F', 'YP', 'Pd') ? Math.max(1, 1.192 * Math.pow(v.F * Math.sqrt(v.YP) / v.Pd, 0.0535)) : undefined) : 1,
+            { id: 'KsP', symbol: '(K_s)_P', label: 'Size factor, pinion', kind: 'lookup', fig: 'cks', hint: 'auto = Table 9-2 or the formula, per the rule above', auto: v => v.ksMode === 2 ? (has(v, 'F', 'YP', 'Pd') ? Math.max(1, 1.192 * Math.pow(v.F * Math.sqrt(v.YP) / v.Pd, 0.0535)) : undefined) : (has(v, 'Pd') ? KS92(v.Pd) : undefined),
               work: v => v.ksMode === 2 && has(v, 'F', 'YP', 'Pd') ? '\\((K_s)_P = 1.192\\left(\\frac{' + f(v.F) + '\\sqrt{' + f(v.YP, 3) + '}}{' + f(v.Pd) + '}\\right)^{0.0535} = ' + f(Math.max(1, 1.192 * Math.pow(v.F * Math.sqrt(v.YP) / v.Pd, 0.0535))) + '\\)' : null },
-            { id: 'KsG', symbol: '(K_s)_G', label: 'Size factor, gear', kind: 'lookup', fig: 'cks', auto: v => v.ksMode === 2 ? (has(v, 'F', 'YG', 'Pd') ? Math.max(1, 1.192 * Math.pow(v.F * Math.sqrt(v.YG) / v.Pd, 0.0535)) : undefined) : 1 },
+            { id: 'KsG', symbol: '(K_s)_G', label: 'Size factor, gear', kind: 'lookup', fig: 'cks', auto: v => v.ksMode === 2 ? (has(v, 'F', 'YG', 'Pd') ? Math.max(1, 1.192 * Math.pow(v.F * Math.sqrt(v.YG) / v.Pd, 0.0535)) : undefined) : (has(v, 'Pd') ? KS92(v.Pd) : undefined) },
           ] },
-        { id: 'km', title: 'Load-distribution factor K_m', eq: '14-30 … 14-35', fig: ['ckm', 'ccma', 'eq14-30', 'f14-10', 'f14-11', 't14-9'],
+        { id: 'km', title: 'Load-distribution factor K_m (F20–22 · M18)', eq: '14-30 … 14-35', fig: ['ckm', 'ccma', 'eq14-30', 'f14-10', 'f14-11', 't14-9'],
           formula: 'K_m = 1 + C_{mc}\\,(C_{pf}C_{pm} + C_{ma}C_e)',
-          text: 'Course defaults (Gear Stress s16–20): C_mc = 1 ("normally uncrowned"); C_pf from Eq. 14-32 (use F/(10d_P) = 0.05 if smaller); C_pm = 1 (straddle-mounted pinion, S₁/S < 0.175); C_ma from curve 2 "commercial enclosed gear units" unless other information is given (Table 14-9: 0.127 + 0.0158F − 0.930×10⁻⁴F²); C_e = 1 ("normally 1.0 for commercial gears"). Mott\'s simpler K_m = 1 + C_pf + C_ma (Eq. 9-17) gives the same number (Mott\'s C_ma constant is −1.093×10⁻⁴ — negligible difference; midterm: C_pf = 0.0694, C_ma = 0.1505, K_m = 1.22).',
+          text: 'Guides: K_m = 1 + C_pf + C_ma with C_pf from the equations ("the table is bad") and C_ma for commercial enclosed gear units — Shigley\'s form gives the same with the course defaults (Gear Stress s16–20): C_mc = 1 ("normally uncrowned"); C_pf from Eq. 14-32 (use F/(10d_P) = 0.05 if smaller); C_pm = 1 (straddle-mounted pinion, S₁/S < 0.175); C_ma from curve 2 "commercial enclosed gear units" unless other information is given (Table 14-9: 0.127 + 0.0158F − 0.930×10⁻⁴F²); C_e = 1 ("normally 1.0 for commercial gears"). Mott\'s simpler K_m = 1 + C_pf + C_ma (Eq. 9-17) gives the same number (Mott\'s C_ma constant is −1.093×10⁻⁴ — negligible difference; midterm: C_pf = 0.0694, C_ma = 0.1505, K_m = 1.22).',
           vars: [
             { id: 'Cmc', symbol: 'C_{mc}', label: 'Lead correction factor', kind: 'choice', options: [{ label: '1 — uncrowned teeth (normal)', value: 1 }, { label: '0.8 — crowned teeth', value: 0.8 }], default: 1 },
             { id: 'Cpf', symbol: 'C_{pf}', label: 'Pinion proportion factor', kind: 'lookup', fig: 'eq14-30', digits: 4, hint: 'auto = Eq. 14-32',
@@ -226,9 +287,9 @@
             { id: 'Km', symbol: 'K_m', label: 'Load-distribution factor', kind: 'calc', digits: 4, compute: v => has(v, 'Cmc', 'Cpf', 'Cpm', 'Cma', 'Ce') ? 1 + v.Cmc * (v.Cpf * v.Cpm + v.Cma * v.Ce) : undefined,
               work: v => has(v, 'Cmc', 'Cpf', 'Cpm', 'Cma', 'Ce') ? '\\(K_m = 1 + ' + f(v.Cmc) + '[' + f(v.Cpf, 4) + '(' + f(v.Cpm) + ') + ' + f(v.Cma, 4) + '(' + f(v.Ce) + ')] = ' + f(v.Km, 4) + '\\)' : null },
           ] },
-        { id: 'kb', title: 'Rim-thickness factor K_B', eq: '14-39, 14-40', fig: ['f14-16'],
+        { id: 'kb', title: 'Rim-thickness factor K_B (F24 · M19)', eq: '14-39, 14-40', fig: ['f14-16'],
           formula: 'm_B = \\frac{t_R}{h_t},\\qquad K_B = 1.6\\ln\\frac{2.242}{m_B}\\ (m_B<1.2),\\quad K_B = 1\\ (m_B \\ge 1.2)',
-          text: 'Course: "Normally K_B = 1.0" (solid blank, m_B ≥ 1.2). Only enter a rim thickness for a rimmed/spoked gear.',
+          text: 'Guides: "always 1.00 unless it isn\'t" / "typically 1 for commercially made gears"; course: "Normally K_B = 1.0" (solid blank, m_B ≥ 1.2). Only enter a rim thickness for a rimmed/spoked gear.',
           vars: [
             { id: 'tR', symbol: 't_R', label: 'Rim thickness below tooth (blank = solid gear)', unit: 'in', kind: 'input' },
             { id: 'mB', symbol: 'm_B', label: 'Backup ratio', kind: 'calc', digits: 3, compute: v => has(v, 'tR', 'ht') ? v.tR / v.ht : undefined },

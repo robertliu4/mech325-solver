@@ -1,9 +1,12 @@
 /* Worm gearsets — Shigley 11e (Sec. 13-11 geometry, 13-17 forces, 15-6…15-9 AGMA rating, heat, Buckingham).
  * Merged Fizz bible pp 69-74 + Mech bible pp 107-113 procedure, in Shigley notation.
- * Defaults follow the UBC MECH 325 course conventions (v2/COURSE_CONVENTIONS.md §0, §10: Worm_Gears_2024 slides, Module 2 p28–37):
- *   d range C^0.875/3 … C^0.875/1.7 (Eq 13-26), f = 0.103 e^(−0.110 Vs^0.45) + 0.012 (Eq 15-38), static f = 0.15 with self-locking when
- *   f_static > cos φn tan λ (λ < 6°), W^t_G = 33 000 nd H0 Ka/(VG e) with Ka, nd on the output power, Fe ≤ 0.67 d, y = 0.125 at 20°,
- *   bronze σall = 24 ksi (σa = W^t_G/(pn Fe y), Mott's Kv variant shown beside), "better to assume no fan", lubricant limit 250 °F.
+ * Defaults follow the Fizz / Mech guide assumptions (TOPIC.assumptions, cited by guide page; the guides' worm procedure is Mott's), with
+ *   the UBC MECH 325 course conventions (v2/COURSE_CONVENTIONS.md §10: Worm_Gears_2024 slides, Module 2 p28–37) where the guides are silent:
+ *   φn = 20°, f from Eq 15-38 (= the guides' μ formula), static f = 0.15 (the guides' value at Vs = 0) with self-locking when
+ *   f_static > cos φn tan λ (λ < 6°), Ka = 1 and nd = 1 unless given (the guides' W_tG = 2To/DG has no application factor; the course
+ *   example gives Ka = 1.25), W^t_G from Shigley 15-58, Fe ≤ 0.67 d (guides print DW/3), y from Table 10-5 (0.125 at 20°), bronze
+ *   σall = 24 ksi (Shigley 15-53 for the verdict, the guides' Mott Kv form beside), sand-cast bronze, Dm = D, d range C^0.875/3 … /1.7,
+ *   "better to assume no fan", ta 70 °F, lubricant limit 250 °F.
  * Verified against: Module 2 p28–37 worked example ("adapted from Shigley"): 1-thread steel worm 1725 rpm, NG 56, 1 hp out, d 1.5, Pt 8,
  *   φn 20°, Ka 1.25, nd 1, F 0.5, sand-cast bronze, 850 in² per side (A = 1700), ta 70 °F → mG 56, D 7.0, px 0.3927, C 4.25
  *   (d range 1.182–2.087 OK), a 0.125, b 0.1446, ht 0.2696, do 1.75, dr 1.211, Dt 7.25, Dr 6.711, c 0.0196, (FW)max 2.646,
@@ -24,8 +27,26 @@
     title: 'Worm Gearsets — Geometry, Forces, Efficiency & AGMA Rating',
     subtitle: 'Shigley Secs. 13-11, 13-17, 15-6 … 15-9 (ANSI/AGMA 6034-B92) · merged Fizz + Mech guide procedure',
     sibling: 'worm_mott.html',
-    intro: 'Single-enveloping cylindrical worm (steel) driving a bronze worm gear on 90° shafts. Enter the output power, speeds, threads/teeth, worm diameter and pitch, then the sheet follows the 21-step bible procedure in Shigley notation: lead & lead angle → center distance and tooth proportions → velocities → coefficient of friction f (Eq. 15-38 / Fig. 13-38) → efficiency and self-locking check → forces on gear and worm with directions (Fig. 13-36, Eq. 13-42) → AGMA allowable tangential load (W<sup>t</sup>)<sub>all</sub> (Eq. 15-28) → Buckingham bending stress (Eq. 15-53) → heat balance and sump temperature (Eqs. 15-49 … 15-52) → PASS/FAIL. <b>Defaults are the MECH 325 course assumptions</b> (Worm_Gears_2024 slides, Module 2 worked example p28–37): worm diameter range C<sup>0.875</sup>/3 … C<sup>0.875</sup>/1.7 (Eq. 13-26), f from Eq. 15-38 (= Mott Fig. 10-25), static f = 0.15 for the self-locking test f<sub>static</sub> &gt; cos φ<sub>n</sub> tan λ (λ &lt; 6°), K<sub>a</sub> and n<sub>d</sub> applied to the output power (Eq. 15-58), F<sub>e</sub> ≤ 0.67 d, y = 0.125 at φ<sub>n</sub> = 20°, phosphor-bronze σ<sub>all</sub> = 24 ksi, sand-cast bronze for C<sub>s</sub>, "better to assume no fan", lubricant limit 250 °F (120 °C). Load the example to reproduce the Module 2 example (1-thread worm, 56T gear, 1 hp out at 1725 rpm, d = 1.5 in, P<sub>t</sub> = 8).',
-    example: { H0: 1, nW: 1725, NW: 1, NG: 56, d: 1.5, Pt: 8, phin: 20, Ka: 1.25, nd: 1, FG: 0.5, A: 1700, ta: 70, fan: 0, mat: 'sand', fstat: 0.15, tmax: 250 },
+    intro: 'Single-enveloping cylindrical worm (steel) driving a bronze worm gear on 90° shafts. Enter the output power, speeds, threads/teeth, worm diameter and pitch, then the sheet follows the 21-step bible procedure in Shigley notation: lead & lead angle → center distance and tooth proportions → velocities → coefficient of friction f (Eq. 15-38 / Fig. 13-38) → efficiency and self-locking check → forces on gear and worm with directions (Fig. 13-36, Eq. 13-42) → AGMA allowable tangential load (W<sup>t</sup>)<sub>all</sub> (Eq. 15-28) → Buckingham bending stress (Eq. 15-53) → heat balance and sump temperature (Eqs. 15-49 … 15-52) → PASS/FAIL. <b>Defaults follow the Fizz / Mech guide assumptions</b> listed in the panel below (the guides\' worm procedure is Mott\'s; course-slide values where the guides are silent): f from Eq. 15-38 (= the guides\' μ formula), static f = 0.15 for the self-locking test f<sub>static</sub> &gt; cos φ<sub>n</sub> tan λ (λ &lt; 6°), K<sub>a</sub> = n<sub>d</sub> = 1 unless given (applied to the output power, Eq. 15-58), F<sub>e</sub> ≤ 0.67 d, y = 0.125 at φ<sub>n</sub> = 20°, phosphor-bronze σ<sub>all</sub> = 24 ksi, sand-cast bronze for C<sub>s</sub>, "better to assume no fan", lubricant limit 250 °F (120 °C). Load the example to reproduce the Module 2 example (1-thread worm, 56T gear, 1 hp out at 1725 rpm, d = 1.5 in, P<sub>t</sub> = 8, K<sub>a</sub> = 1.25).',
+    example: { H0: 1, nW: 1725, NW: 1, NG: 56, d: 1.5, Pt: 8, phin: 20, Ka: 1.25, nd: 1, FG: 0.5, A: 1700, ta: 70, fan: 0, mat: 'sand', fstat: 0.15, tmax: 250, sall: 24000 },
+
+    assumptions: [
+      { text: 'Normal pressure angle φ_n = 20° unless given (y, K_w and λ_max all depend on it); the guides convert a transverse angle with tan φ_n = tan φ_t cos λ', src: 'Fizz p.70 · Mech p.108 · course Module 2', var: 'phin' },
+      { text: 'Application factor K_a = 1 unless given — the guides\' gear force W_tG = 2T_o/D_G carries no application factor; the course Module 2 example gives K_a = 1.25', src: 'Fizz p.72 · Mech p.110', var: 'Ka' },
+      { text: 'Design factor n_d = 1 unless stated', src: 'course Module 2 · course Chains s26', var: 'nd' },
+      { text: 'Gear force from Shigley Eq. 15-58, W^t_G = 33 000 n_d H_0 K_a/(V_G e) (course method); the guides use W_tG = 2T_o/D_G with no K_a and no ÷e — shown beside as 2T_o/D', src: 'Fizz p.72 · Mech p.110' },
+      { text: 'Running friction from the AGMA curve: f = 0.103 exp(−0.110V_s^{0.45}) + 0.012 for V_s > 10 ft/min (0.124 exp(−0.074V_s^{0.645}) below)', src: 'Fizz p.72 · Mech p.110', var: 'f' },
+      { text: 'Static friction f = 0.15 (the guides\' value at V_s = 0) for the self-locking test f_stat > cos φ_n tan λ; rule of thumb λ < 6° (Mott: ≤ 5°)', src: 'Fizz p.72 · Mech p.110 · course Worm Gears s11', var: 'fstat' },
+      { text: 'Lewis form factor y from Table 10-5 by φ_n (0.100 / 0.125 / 0.150 / 0.175 for 14.5° / 20° / 25° / 30°)', src: 'Fizz p.73 · Mech p.111', var: 'y' },
+      { text: 'Bending verdict with Shigley Eq. 15-53 (no dynamic factor, course); the guides divide W_tG by K_v = 1200/(1200 + v_tG) first — shown as σ_d', src: 'Fizz p.73 · Mech p.111 · course Worm Gears s19' },
+      { text: 'Allowable bending stress of the bronze gear σ_all = 24 ksi (phosphor bronze; manganese bronze 17 ksi)', src: 'course Worm Gears s19 · Mott Sec. 10-11', var: 'sall' },
+      { text: 'Sand-cast bronze for C_s unless stated ("most common"; Mott Ex. 10-10 assumes sand cast)', src: 'Fizz p.74 · Mech p.112 · course Worm Gears', var: 'mat' },
+      { text: 'Mean gear diameter D_m = D (standard addendum) in C_s and (W^t)_all — the guides use D_G', src: 'Fizz p.74 · Mech p.112' },
+      { text: 'Effective face width F_e = min(F_G, 0.67d) (Eq. 15-28, Mott Eq. 10-42); both guides print D_W/3 — the textbook limit is used', src: 'Fizz p.74 · Mech p.113', var: 'Fe' },
+      { text: 'No fan on the worm shaft ("better to assume no fan")', src: 'course Module 2 p36', var: 'fan' },
+      { text: 'Ambient t_a = 70 °F if not given; oil-sump limit 250 °F (120 °C)', src: 'course Worm Gears s20', var: 'tmax' },
+      { text: 'Case area not given → AGMA minimum lateral area A_min = 43.2C^{1.7} (Eq. 15-52)', src: 'course Worm Gears s20', var: 'Ause' },
+    ],
 
     figures: [
       { id: 'f13-20', ref: 'Figure 13-20', title: 'Nomenclature of a single-enveloping worm gearset (axial pitch, lead, lead angle, pitch diameters)', src: 'figures/shigley/fig13-20.png', page: 721 },
@@ -61,8 +82,8 @@
             { id: 'NG', symbol: 'N_G', label: 'Worm-gear teeth', kind: 'input' },
             { id: 'd', symbol: 'd', label: 'Worm pitch diameter', unit: 'in', kind: 'input', hint: 'check against Eq. 15-27 range below' },
             { id: 'Pt', symbol: 'P_t', label: 'Transverse diametral pitch of gear', unit: 'teeth/in', kind: 'input', hint: 'or type π/px' },
-            { id: 'phin', symbol: '\\phi_n', label: 'Normal pressure angle', unit: '°', kind: 'choice', options: [{ label: '14.5°', value: 14.5 }, { label: '20°', value: 20 }, { label: '25°', value: 25 }, { label: '30°', value: 30 }], default: 20, hint: 'Table 13-5 pairs it with λ' },
-            { id: 'Ka', symbol: 'K_a', label: 'Application factor', kind: 'input', default: 1.25, hint: 'same idea as Ko (Table 15-2); course example 1.25' },
+            { id: 'phin', symbol: '\\phi_n', label: 'Normal pressure angle', kind: 'choice', options: [{ label: '14.5°', value: 14.5 }, { label: '20°', value: 20 }, { label: '25°', value: 25 }, { label: '30°', value: 30 }], default: 20, hint: 'Table 13-5 pairs it with λ' },
+            { id: 'Ka', symbol: 'K_a', label: 'Application factor', kind: 'input', default: 1, hint: '1 unless given (guides: no K_a); same idea as K_o; course Module 2 example 1.25' },
             { id: 'nd', symbol: 'n_d', label: 'Design factor', kind: 'input', default: 1, hint: 'course: nd = 1.0 unless stated' },
             { id: 'FG', symbol: 'F_G', label: 'Gear face width', unit: 'in', kind: 'input', hint: 'blank → see (FG)rec below; Fe is capped at 0.67 d' },
             { id: 'mat', symbol: '', label: 'Gear bronze (for Cs)', kind: 'choice', type: 'text', options: [{ label: 'Sand-cast bronze (course: "most common")', value: 'sand' }, { label: 'Chilled-cast (static chill / forged) bronze', value: 'chilled' }, { label: 'Centrifugally cast bronze', value: 'centrifugal' }], default: 'sand' },

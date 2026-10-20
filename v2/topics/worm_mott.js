@@ -1,13 +1,16 @@
 /* Worm gearsets — Mott 6e (Secs. 8-9/8-10 geometry, 10-10 forces/efficiency, 10-11 stress, 10-12 surface durability).
  * Follows the 21-step Fizz (pp 69-74) / Mech (pp 107-113) procedure in Mott notation.
- * Defaults follow the UBC MECH 325 course conventions (v2/COURSE_CONVENTIONS.md §0, §10: Worm_Gears_2024 slides, Module 2 p28–37,
- *   which use Shigley 15-6…15-8 with Mott Figs 10-25…10-29 and Table 10-5): μ = 0.103 e^(−0.110 vs^0.45) + 0.012, static μ = 0.15 with
- *   self-locking when μ_static > cos φn tan λ (λ < 6°), gear load W_tG = 33 000 nd Po Ka/(vtG η) (Shigley 15-58, Ka and nd on the output
- *   power — Mott's 2To/DG kept as an option), Fe ≤ 0.67 DW, y = 0.125 at 20°, bronze σall = 24 ksi, heat balance per Shigley 15-49…15-52
- *   with "assume no fan" and a 250 °F lubricant limit.
+ * Defaults follow the Fizz / Mech guide assumptions (TOPIC.assumptions, cited by guide page; both guides are written "using Mott"),
+ *   with the UBC MECH 325 course conventions (v2/COURSE_CONVENTIONS.md §10: Worm_Gears_2024 slides, Module 2 p28–37) where the guides
+ *   are silent: gear load W_tG = 2To/DG (Mott Eq. 10-29, both guides; the course's Shigley 15-58 basis × Ka nd ÷ η is a selector option),
+ *   Ka = nd = 1, μ = 0.103 e^(−0.110 vs^0.45) + 0.012 (guides' formula), static μ = 0.15 (guides' value at vs = 0) with self-locking when
+ *   μ_static > cos φn tan λ (λ < 6°), y from Table 10-5 (0.125 at 20°), bending with the dynamic load Wd = WtG/Kv (guides), Fe ≤ 0.67 DW
+ *   (Mott; the guides print DW/3), sand-cast bronze, bronze σall = 24 ksi, heat balance per Shigley 15-49…15-52 with "assume no fan",
+ *   ta 70 °F and a 250 °F lubricant limit.
  * Verified against: Mott Ex. 10-9/10-10 (52T, triple-thread, DW 2, Pd 6, 1750 rpm, To 4168 lb·in, Fig. 10-25 μ 0.022, chart Cs 740,
- *   Cm 0.814, Cv 0.265 → λ 14.04°, vs 944, WtG 962, WxG 265, WrG 352, Wf 23.3, PL 0.666 hp, η 90.9 %, WtR 1123 lb) with the Mott load
- *   basis; and Module 2 p28–37 (1-thread, NG 56, DW 1.5, Pd 8, φn 20°, 1725 rpm, 1 hp out, Ka 1.25, nd 1, F 0.5, sand-cast)
+ *   Cm 0.814, Cv 0.265 → λ 14.04°, vs 944, WtG 962, WxG 265, WrG 352, Wf 23.3, PL 0.666 hp, η 90.9 %, σ 14 430 psi, WtR 1123 lb) with
+ *   the Mott load basis (now the default); and Module 2 p28–37 (1-thread, NG 56, DW 1.5, Pd 8, φn 20°, 1725 rpm, 1 hp out, Ka 1.25, nd 1,
+ *   F 0.5, sand-cast, basis = Shigley/course selected)
  *   with the Shigley/course basis: λ 4.764°, vs 679.8, μ 0.0250, η 75.63 %, W_tG 966, W_tW (= W_xG) 106.4, p_n 0.3913, σ 41 360 psi (Mott Kv
  *   0.955 form; Shigley form 39 500) > 24 ksi FAIL, Cs 786.9, Cm 0.767, Cv 0.312, Fe 0.5 → W_tR 447 < 966 FAIL (the course solution's 1787
  *   used Fe = 2 in by mistake), Hloss 17 570, hCR 0.396 no fan → ts 96.1 °F (course: Amin 1642 used C = 8.5 by mistake; sheet 505.5 in²). */
@@ -21,8 +24,23 @@
     title: 'Worm Gearsets — Geometry, Forces, Efficiency & AGMA Rating',
     subtitle: 'Mott Secs. 8-9 … 8-10, 10-10 … 10-12 (AGMA 6034-B92) · the 21-step Fizz / Mech guide procedure',
     sibling: 'worm_shigley.html',
-    intro: 'Steel worm driving a bronze wormgear on 90° shafts. Enter the gear data and output power/torque, then the sheet runs the bible\'s 21 steps in Mott\'s notation: lead and lead angle → center distance → pitch-line and sliding speeds → coefficient of friction μ (Eqs. 10-26/10-27, Fig. 10-25) → forces on the gear and worm with directions (Fig. 10-24) → friction power, input power, efficiency → Lewis bending stress in the gear teeth (Eq. 10-37) → C<sub>s</sub>, C<sub>m</sub>, C<sub>v</sub> and the rated tangential load W<sub>tR</sub> (Eq. 10-42) → pitting PASS/FAIL → heat balance (Shigley Eqs. 15-49 … 15-52, used by the course). <b>Defaults are the MECH 325 course assumptions</b> (Worm_Gears_2024 slides, Module 2 worked example p28–37): μ from Eq. 10-27 (= Shigley 15-38), static μ = 0.15 for the self-locking test μ<sub>static</sub> &gt; cos φ<sub>n</sub> tan λ (λ &lt; 6°), gear load from the output power with K<sub>a</sub> and n<sub>d</sub> and divided by the efficiency (Shigley Eq. 15-58 — switch to Mott\'s 2T<sub>o</sub>/D<sub>G</sub> if the question gives torque), F<sub>e</sub> ≤ 0.67 D<sub>W</sub>, y = 0.125 at 20°, phosphor-bronze σ<sub>all</sub> = 24 ksi, sand-cast bronze, "better to assume no fan", lubricant limit 250 °F. Load the example to reproduce Mott Example Problems 8-4, 10-9 and 10-10 (52T gear, triple-thread worm, 1750 rpm, T<sub>o</sub> = 4168 lb·in, Mott load basis).',
-    example: { NG: 52, NW: 3, DW: 2.0, Pd: 6, phiGiven: 20, phiType: 'transverse', nW: 1750, To: 4168, F: 1.25, mat: 'sand', basis: 'mott', Ka: 1, nd: 1, mu: 0.022, Cs: 740, Cm: 0.814, Cv: 0.265, fstat: 0.15, fan: 0, ta: 70, tmax: 250 },
+    intro: 'Steel worm driving a bronze wormgear on 90° shafts. Enter the gear data and output power/torque, then the sheet runs the bible\'s 21 steps in Mott\'s notation: lead and lead angle → center distance → pitch-line and sliding speeds → coefficient of friction μ (Eqs. 10-26/10-27, Fig. 10-25) → forces on the gear and worm with directions (Fig. 10-24) → friction power, input power, efficiency → Lewis bending stress in the gear teeth (Eq. 10-37) → C<sub>s</sub>, C<sub>m</sub>, C<sub>v</sub> and the rated tangential load W<sub>tR</sub> (Eq. 10-42) → pitting PASS/FAIL → heat balance (Shigley Eqs. 15-49 … 15-52, used by the course). <b>Defaults follow the Fizz / Mech guide assumptions</b> listed in the panel below (both guides are written "using Mott"; course-slide values where the guides are silent): gear load W<sub>tG</sub> = 2T<sub>o</sub>/D<sub>G</sub> (the course\'s Shigley Eq. 15-58 basis, output power × K<sub>a</sub> n<sub>d</sub> ÷ η, is a selector option), μ from Eq. 10-27, static μ = 0.15 for the self-locking test μ<sub>static</sub> &gt; cos φ<sub>n</sub> tan λ (λ &lt; 6°), F<sub>e</sub> ≤ 0.67 D<sub>W</sub>, y = 0.125 at 20°, phosphor-bronze σ<sub>all</sub> = 24 ksi, sand-cast bronze, "better to assume no fan", lubricant limit 250 °F. Load the example to reproduce Mott Example Problems 8-4, 10-9 and 10-10 (52T gear, triple-thread worm, 1750 rpm, T<sub>o</sub> = 4168 lb·in).',
+    example: { NG: 52, NW: 3, DW: 2.0, Pd: 6, phiGiven: 20, phiType: 'transverse', nW: 1750, To: 4168, F: 1.25, mat: 'sand', basis: 'mott', Ka: 1, nd: 1, mu: 0.022, Cs: 740, Cm: 0.814, Cv: 0.265, fstat: 0.15, fan: 0, ta: 70, tmax: 250, sall: 24000 },
+
+    assumptions: [
+      { text: 'Pressure angle 20° unless given; Mott\'s force equations need the normal angle — a transverse angle is converted with tan φ_n = tan φ_t cos λ', src: 'Fizz p.70 · Mech p.108', var: 'phiGiven' },
+      { text: 'Gear tangential force W_tG = 2T_o/D_G (Mott Eq. 10-29) as in both guides; the course Module 2 example instead uses Shigley 15-58, W_tG = 33 000 n_d P_o K_a/(v_tG η) — pick it in the selector', src: 'Fizz p.72 · Mech p.110', var: 'basis' },
+      { text: 'Application factor K_a = 1 and design factor n_d = 1 unless given (the guides apply none; course example K_a = 1.25; Mott: Table 9-1 factors for severe service)', src: 'Fizz p.72 · Mech p.110 · Mott Sec. 10-12', var: 'Ka' },
+      { text: 'Friction from the guides\' formula: μ = 0.103e^{−0.11v_s^{0.45}} + 0.012 for v_s > 10 ft/min (0.124e^{−0.074v_s^{0.645}} below; Fig. 10-25)', src: 'Fizz p.72 · Mech p.110', var: 'mu' },
+      { text: 'Static friction μ = 0.15 (the guides\' value at v_s = 0) for the self-locking test μ_static > cos φ_n tan λ; rule of thumb λ < 6° (Mott: ≤ 5°)', src: 'Fizz p.72 · Mech p.110 · course Worm Gears s11', var: 'fstat' },
+      { text: 'Lewis form factor y from Table 10-5 by φ_n (0.125 at 20°)', src: 'Fizz p.73 · Mech p.111', var: 'y' },
+      { text: 'Gear-tooth bending with the dynamic load W_d = W_tG/K_v, K_v = 1200/(1200 + v_tG) (the course also quotes Shigley\'s form without K_v)', src: 'Fizz p.73 · Mech p.111' },
+      { text: 'Allowable bending stress of the bronze gear σ_all = 24 ksi (phosphor bronze; manganese bronze 17 ksi)', src: 'course Worm Gears s19 · Mott Sec. 10-11', var: 'sall' },
+      { text: 'Sand-cast bronze for C_s unless stated ("most common"; Mott Ex. 10-10 assumes sand cast); C_s, C_m, C_v from the guides\' equations with D_G as the mean gear diameter', src: 'Fizz p.74 · Mech p.112 · Mech p.113', var: 'mat' },
+      { text: 'Effective face width F_e = min(F, 0.67D_W) (Mott Eq. 10-42 and Ex. 10-10); both guides print D_W/3 — the textbook limit is used', src: 'Fizz p.74 · Mech p.113', var: 'Fe' },
+      { text: 'Pitting check passes when W_tR > W_tG', src: 'Fizz p.74 · Mech p.113' },
+      { text: 'Heat check (course add-on): no fan on the worm shaft ("better to assume no fan"); t_a = 70 °F if not given; oil limit 250 °F; A_min = 43.2C^{1.7} if no case area is given', src: 'course Module 2 p36 · Worm Gears s20', var: 'fan' },
+    ],
 
     figures: [
       { id: 'f8-24', ref: 'Figure 8-24', title: 'Single-enveloping wormgear set — DW, DG, C, L, Px, FG, FW, Dt, root/outside diameters', src: 'figures/mott/fig8-24.png', page: 348 },
@@ -53,15 +71,15 @@
             { id: 'DW', symbol: 'D_W', label: 'Worm pitch diameter', unit: 'in', kind: 'input' },
             { id: 'Pd', symbol: 'P_d', label: 'Diametral pitch of gear', unit: 'teeth/in', kind: 'input', hint: 'blank if DG is given instead' },
             { id: 'DGin', symbol: 'D_G', label: 'Gear pitch diameter (if given instead of Pd)', unit: 'in', kind: 'input' },
-            { id: 'phiGiven', symbol: '\\phi', label: 'Pressure angle given', unit: '°', kind: 'choice', options: [{ label: '14.5°', value: 14.5 }, { label: '20°', value: 20 }, { label: '25°', value: 25 }, { label: '30°', value: 30 }], default: 20 },
+            { id: 'phiGiven', symbol: '\\phi', label: 'Pressure angle given', kind: 'choice', options: [{ label: '14.5°', value: 14.5 }, { label: '20°', value: 20 }, { label: '25°', value: 25 }, { label: '30°', value: 30 }], default: 20 },
             { id: 'phiType', symbol: '', label: '… measured in which plane?', kind: 'choice', type: 'text', options: [{ label: 'normal (φn)', value: 'normal' }, { label: 'transverse (φt)', value: 'transverse' }], default: 'normal' },
             { id: 'nW', symbol: 'n_W', label: 'Worm speed', unit: 'rpm', kind: 'input' },
             { id: 'To', symbol: 'T_o', label: 'Output torque (if given)', unit: 'lb·in', kind: 'input' },
             { id: 'PoIn', symbol: 'P_o', label: 'Output power (if given instead)', unit: 'hp', kind: 'input' },
             { id: 'F', symbol: 'F', label: 'Wormgear face width', unit: 'in', kind: 'input', hint: 'blank → see FG rule below' },
             { id: 'mat', symbol: '', label: 'Bronze type (for Cs)', kind: 'choice', type: 'text', options: [{ label: 'Sand-cast bronze (course: "most common")', value: 'sand' }, { label: 'Static-chill-cast or forged bronze', value: 'chill' }, { label: 'Centrifugally cast bronze', value: 'centrifugal' }], default: 'sand' },
-            { id: 'basis', symbol: '', label: 'Gear load basis', kind: 'choice', type: 'text', options: [{ label: 'Shigley 15-58 / course: W_tG = 33 000 nd Po Ka/(vtG η)', value: 'shigley' }, { label: 'Mott 10-29: W_tG = 2 To/DG (× Ka nd)', value: 'mott' }], default: 'shigley', hint: 'course examples divide the output load by η and apply Ka, nd' },
-            { id: 'Ka', symbol: 'K_a', label: 'Application (service) factor on the output power', kind: 'input', default: 1, hint: 'course example 1.25; Mott examples 1.0' },
+            { id: 'basis', symbol: '', label: 'Gear load basis', kind: 'choice', type: 'text', options: [{ label: 'Mott 10-29 / guides: W_tG = 2 T_o/D_G (× K_a n_d)', value: 'mott' }, { label: 'Shigley 15-58 / course Module 2: W_tG = 33 000 n_d P_o K_a/(v_tG η)', value: 'shigley' }], default: 'mott', hint: 'guides: 2T_o/D_G; the course worked example divides the output load by η and applies K_a, n_d' },
+            { id: 'Ka', symbol: 'K_a', label: 'Application (service) factor on the output power', kind: 'input', default: 1, hint: '1 unless given (guides, Mott examples); course example 1.25' },
             { id: 'nd', symbol: 'n_d', label: 'Design factor', kind: 'input', default: 1, hint: 'course: 1.0 unless stated' },
           ] },
       ] },
@@ -116,7 +134,7 @@
             { id: 'vs', symbol: 'v_s', label: 'Sliding velocity', unit: 'ft/min', kind: 'calc', compute: v => has(v, 'vtG', 'lam') ? v.vtG / sin(r(v.lam)) : undefined, work: v => has(v, 'vtG', 'lam') ? '\\(v_s = ' + fmt(v.vtG) + '/\\sin ' + fmt(v.lam) + '^\\circ = ' + fmt(v.vtG / sin(r(v.lam))) + '\\) ft/min' : null },
           ] },
         { id: 'mu', title: 'Step 5 — coefficient of friction and self-locking test', eq: '10-26, 10-27', fig: ['f10-25', 'csl'],
-          text: 'Course: running μ from the Eq. 10-27 fit (= Shigley 15-38); <b>static μ ≈ 0.15</b> for the self-locking test μ<sub>static</sub> &gt; cos φ<sub>n</sub> tan λ (Worm Gears s11).',
+          text: 'Guides: running μ from the piecewise formula (Eqs. 10-26/10-27 = Shigley 15-38); its v<sub>s</sub> = 0 value, <b>static μ ≈ 0.15</b>, is what the course uses for the self-locking test μ<sub>static</sub> &gt; cos φ<sub>n</sub> tan λ (Worm Gears s11).',
           formula: '\\mu = \\begin{cases}0.150 & v_s = 0\\\\ 0.124e^{-0.074v_s^{0.645}} & 0 \\lt  v_s \\lt  10\\\\ 0.103e^{-0.110v_s^{0.450}} + 0.012 & v_s \\ge 10\\ \\text{ft/min}\\end{cases}',
           vars: [
             { id: 'mu', symbol: '\\mu', label: 'Coefficient of friction', kind: 'lookup', fig: 'f10-25', auto: v => has(v, 'vs') ? muFit(v.vs) : undefined, hint: 'auto = Eqs. 10-26/10-27; Mott Ex. 10-9 reads 0.022 from Fig. 10-25',

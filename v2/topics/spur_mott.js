@@ -296,32 +296,32 @@
       { title: 'Life, reliability, stress-cycle factors (Fizz steps 25–31 · Mech steps 21–22, 29)', steps: [
         { id: 'life', title: 'Service factor, reliability, design life, load cycles (F25–29 · M21a–d)', eq: '9-27', fig: ['t9-11', 't9-12'],
           formula: 'N_c = 60\\,L\\,n\\,q',
-          text: 'Course: "AGMA suggests SF of 1 to 1.5" — solve for the <b>minimum</b> s_at/s_ac with SF = 1.00, then pick a steel so that 1.0 ≤ SF ≤ 1.5. 99 % reliability → K_R = 1.00 "normally" (tutorials with 90 % use 0.85). AGMA strengths are at 10⁷ cycles — <b>leave the life blank to use 10⁷ (Y_N = Z_N = 1)</b>; otherwise give hours/day × days/yr × years (midterm: 1750 × 60 × 6 × 200 × 1 = 1.26×10⁸) or a life in hours (Table 9-12). q = 1 load per revolution (2 for an idler).',
+          text: 'Guides: "specify a service factor SF between 1.00 and 1.50 — usually pick 1.00" (Mech: "assume 1 for now"), so the stress step gives the <b>minimum</b> s_at/s_ac; then pick a steel so that 1.0 ≤ SF ≤ 1.5 (course: "AGMA suggests SF of 1 to 1.5"). Reliability: "assume 99 %" → K_R = 1.00 (tutorials with 90 % use 0.85). Life: from the problem — hours/day × days/yr × years (midterm: 1750 × 60 × 6 × 200 × 1 = 1.26×10⁸) or hours — otherwise from Table 9-12; <b>blank uses 20 000 h</b> (general industrial machines, as in Mott Ex. 9-5). AGMA strengths s_at/s_ac are for 10⁷ cycles (Y_N = Z_N = 1): to design for exactly 10⁷ cycles enter L = 10⁷/(60 n_P). q = 1 load per revolution (2 for an idler).',
           vars: [
-            { id: 'SFd', symbol: 'SF', label: 'Service (design safety) factor', kind: 'input', default: 1, hint: '1.00 (course: min strength at SF = 1, then target 1.0–1.5)', check: v => v.SFd !== undefined && (v.SFd < 1 || v.SFd > 1.5) ? 'AGMA: 1.0–1.5' : null },
-            { id: 'R', symbol: 'R', label: 'Reliability', kind: 'input', default: 0.99, hint: '0.99 (course default) · 0.90 · 0.999 · 0.9999' },
+            { id: 'SFd', symbol: 'SF', label: 'Service (design safety) factor', kind: 'input', default: 1, hint: '1.00 (guides: usually 1.00; then target 1.0–1.5)', check: v => v.SFd !== undefined && (v.SFd < 1 || v.SFd > 1.5) ? 'guides/AGMA: 1.0–1.5' : null },
+            { id: 'R', symbol: 'R', label: 'Reliability', kind: 'input', default: 0.99, hint: '0.99 (guides: "assume 99 %") · 0.90 · 0.999 · 0.9999' },
             { id: 'KR', symbol: 'K_R', label: 'Reliability factor', kind: 'lookup', fig: 't9-11', digits: 3, hint: 'Table 9-11: 0.99 → 1.00, 0.90 → 0.85', auto: v => { if (!has(v, 'R')) return undefined; if (KR[v.R] !== undefined) return KR[v.R]; return v.R < 0.99 ? 0.658 - 0.0759 * Math.log(1 - v.R) : 0.5 - 0.109 * Math.log(1 - v.R); } },
             { id: 'hpd', symbol: 'h/day', label: 'Hours per day (optional)', unit: 'h', kind: 'input' },
             { id: 'dpy', symbol: 'days/yr', label: 'Days per year (optional)', unit: 'd', kind: 'input' },
             { id: 'yrs', symbol: 'yr', label: 'Years of service (optional)', unit: 'yr', kind: 'input' },
-            { id: 'Lh', symbol: 'L', label: 'Design life (blank = 10⁷ cycles)', unit: 'h', kind: 'lookup', fig: 't9-12', hint: 'auto = h/day × days/yr × yr; or Table 9-12; blank → AGMA 10⁷ cycles', auto: v => has(v, 'hpd', 'dpy', 'yrs') ? v.hpd * v.dpy * v.yrs : undefined },
+            { id: 'Lh', symbol: 'L', label: 'Design life', unit: 'h', kind: 'lookup', fig: 't9-12', hint: 'auto = h/day × days/yr × yr if given, else 20 000 h (Table 9-12, general industrial machines)', auto: v => has(v, 'hpd', 'dpy', 'yrs') ? v.hpd * v.dpy * v.yrs : L_DEF },
             { id: 'q', symbol: 'q', label: 'Load applications per revolution', kind: 'input', default: 1 },
-            { id: 'NcP', symbol: 'N_{cP}', label: 'Pinion load cycles', kind: 'calc', digits: 4, compute: v => has(v, 'Lh', 'nP', 'q') ? 60 * v.Lh * v.nP * v.q : 1e7, work: v => has(v, 'Lh', 'nP', 'q') ? '\\(N_{cP} = 60(' + f(v.Lh) + ')(' + f(v.nP) + ')(' + f(v.q) + ') = ' + f(v.NcP) + '\\)' : 'no life given → AGMA reference 10⁷ cycles' },
-            { id: 'NcG', symbol: 'N_{cG}', label: 'Gear load cycles', kind: 'calc', digits: 4, compute: v => has(v, 'Lh', 'nG', 'q') ? 60 * v.Lh * v.nG * v.q : 1e7, work: v => has(v, 'Lh', 'nG', 'q') ? '\\(N_{cG} = 60(' + f(v.Lh) + ')(' + f(v.nG) + ')(' + f(v.q) + ') = ' + f(v.NcG) + '\\)' : null },
+            { id: 'NcP', symbol: 'N_{cP}', label: 'Pinion load cycles', kind: 'calc', digits: 4, compute: v => has(v, 'Lh', 'nP', 'q') ? 60 * v.Lh * v.nP * v.q : undefined, work: v => v.NcP !== undefined ? '\\(N_{cP} = 60(' + f(v.Lh) + ')(' + f(v.nP) + ')(' + f(v.q) + ') = ' + f(v.NcP) + '\\)' : null },
+            { id: 'NcG', symbol: 'N_{cG}', label: 'Gear load cycles', kind: 'calc', digits: 4, compute: v => has(v, 'Lh', 'nG', 'q') ? 60 * v.Lh * v.nG * v.q : undefined, work: v => v.NcG !== undefined ? '\\(N_{cG} = 60(' + f(v.Lh) + ')(' + f(v.nG) + ')(' + f(v.q) + ') = ' + f(v.NcG) + '\\)' : null },
           ] },
-        { id: 'yz', title: 'Stress cycle factors Y_N and Z_N (steps 30–31)', fig: ['cyn', 'czn', 'f9-21', 'f9-22'],
-          formula: 'Y_N = 1.3558\\,N_c^{-0.0178},\\qquad Z_N = 1.4488\\,N_c^{-0.023}\\qquad (N_c \\ge 10^7)',
-          text: 'Course: beyond 10⁷ cycles use the <b>upper line for normal commercial gears</b> (auto); the 1.6831 N^-0.0323 line is for high-precision applications only. Graph readings are also accepted (midterm Z_N = 0.95 vs 0.943 by equation).',
+        { id: 'yz', title: 'Stress cycle factors Y_N and Z_N (F30–31 · M21e, 29)', fig: ['cyn', 'czn', 'f9-21', 'f9-22'],
+          formula: 'Y_N = 1.3558\\,N_c^{-0.0178}\\ (N_c \\ge 3\\times10^6),\\qquad Z_N = 1.4488\\,N_c^{-0.023}\\ (N_c \\ge 10^7)',
+          text: 'Read Fig. 9-21 / 9-22; the auto value uses the equations printed on the charts — beyond the knee the <b>upper line for normal commercial gears</b> (course; the 1.6831 N^-0.0323 line is for high-precision applications only), below it the 250 HB line (Y_N = 4.9404 N^-0.1045) and Z_N = 2.466 N^-0.056. Graph readings are also accepted (midterm Z_N = 0.95 vs 0.943 by equation).',
           vars: [
-            { id: 'YNP', symbol: 'Y_{NP}', label: 'Bending stress cycle factor, pinion', kind: 'lookup', fig: 'cyn', digits: 4, auto: v => !has(v, 'Lh') ? 1 : has(v, 'NcP') ? YN_auto(v.NcP) : undefined, hint: 'auto = 1.3558 N^-0.0178 (commercial line); read Fig. 9-21', work: v => has(v, 'Lh', 'NcP') && v.NcP >= 1e7 ? '\\(Y_{NP} = 1.3558(' + f(v.NcP, 3) + ')^{-0.0178} = ' + f(YN_auto(v.NcP), 4) + '\\)' : null },
-            { id: 'YNG', symbol: 'Y_{NG}', label: 'Bending stress cycle factor, gear', kind: 'lookup', fig: 'cyn', digits: 4, auto: v => !has(v, 'Lh') ? 1 : has(v, 'NcG') ? YN_auto(v.NcG) : undefined },
-            { id: 'ZNP', symbol: 'Z_{NP}', label: 'Pitting stress cycle factor, pinion', kind: 'lookup', fig: 'czn', digits: 4, auto: v => !has(v, 'Lh') ? 1 : has(v, 'NcP') ? ZN_auto(v.NcP) : undefined, hint: 'auto = 1.4488 N^-0.023 (commercial line); read Fig. 9-22', work: v => has(v, 'Lh', 'NcP') && v.NcP >= 1e7 ? '\\(Z_{NP} = 1.4488(' + f(v.NcP, 3) + ')^{-0.023} = ' + f(ZN_auto(v.NcP), 4) + '\\)' : null },
-            { id: 'ZNG', symbol: 'Z_{NG}', label: 'Pitting stress cycle factor, gear', kind: 'lookup', fig: 'czn', digits: 4, auto: v => !has(v, 'Lh') ? 1 : has(v, 'NcG') ? ZN_auto(v.NcG) : undefined },
+            { id: 'YNP', symbol: 'Y_{NP}', label: 'Bending stress cycle factor, pinion', kind: 'lookup', fig: 'cyn', digits: 4, auto: v => has(v, 'NcP') ? YN_auto(v.NcP) : undefined, hint: 'auto = Fig. 9-21 equations (commercial line beyond the knee)', work: v => has(v, 'NcP') ? YNw('Y_{NP}', v.NcP) : null },
+            { id: 'YNG', symbol: 'Y_{NG}', label: 'Bending stress cycle factor, gear', kind: 'lookup', fig: 'cyn', digits: 4, auto: v => has(v, 'NcG') ? YN_auto(v.NcG) : undefined, work: v => has(v, 'NcG') ? YNw('Y_{NG}', v.NcG) : null },
+            { id: 'ZNP', symbol: 'Z_{NP}', label: 'Pitting stress cycle factor, pinion', kind: 'lookup', fig: 'czn', digits: 4, auto: v => has(v, 'NcP') ? ZN_auto(v.NcP) : undefined, hint: 'auto = Fig. 9-22 equations (commercial line beyond 10⁷)', work: v => has(v, 'NcP') ? ZNw('Z_{NP}', v.NcP) : null },
+            { id: 'ZNG', symbol: 'Z_{NG}', label: 'Pitting stress cycle factor, gear', kind: 'lookup', fig: 'czn', digits: 4, auto: v => has(v, 'NcG') ? ZN_auto(v.NcG) : undefined, work: v => has(v, 'NcG') ? ZNw('Z_{NG}', v.NcG) : null },
           ] },
       ] },
 
-      { title: 'Required strength & hardness — material selection (steps 33, 35, 37–38)', steps: [
-        { id: 'req', title: 'Required allowable stress numbers', eq: '9-30, 9-31',
+      { title: 'Required strength & hardness — material selection (Fizz steps 33, 35, 37–38, 40 · Mech steps 21–23, 29–30)', steps: [
+        { id: 'req', title: 'Required allowable stress numbers (F33, 35 · M21–22, 29)', eq: '9-30, 9-31',
           formula: 's_{at} > s_t\\frac{K_R\\,(SF)}{Y_N},\\qquad s_{ac} > s_c\\frac{K_R\\,(SF)}{Z_N}',
           vars: [
             { id: 'satP', symbol: 's_{at,P}', label: 'Required bending stress number, pinion', unit: 'psi', kind: 'calc', compute: v => has(v, 'stP', 'KR', 'SFd', 'YNP') ? v.stP * v.KR * v.SFd / v.YNP : undefined, work: v => v.satP !== undefined ? '\\(s_{at,P} = ' + f(v.stP) + '(' + f(v.KR, 3) + ')(' + f(v.SFd) + ')/' + f(v.YNP, 4) + ' = ' + f(v.satP) + '\\ \\mathrm{psi}\\)' : null },
@@ -329,9 +329,9 @@
             { id: 'sacP', symbol: 's_{ac,P}', label: 'Required contact stress number, pinion', unit: 'psi', kind: 'calc', compute: v => has(v, 'sc', 'KR', 'SFd', 'ZNP') ? v.sc * v.KR * v.SFd / v.ZNP : undefined, work: v => v.sacP !== undefined ? '\\(s_{ac,P} = ' + f(v.sc) + '(' + f(v.KR, 3) + ')(' + f(v.SFd) + ')/' + f(v.ZNP, 4) + ' = ' + f(v.sacP) + '\\ \\mathrm{psi}\\)' : null },
             { id: 'sacG', symbol: 's_{ac,G}', label: 'Required contact stress number, gear', unit: 'psi', kind: 'calc', compute: v => has(v, 'sc', 'KR', 'SFd', 'ZNG') ? v.sc * v.KR * v.SFd / v.ZNG : undefined },
           ] },
-        { id: 'hb', title: 'Required Brinell hardness (step 37) and material (step 38)', fig: ['f9-18', 'f9-19', 't9-8', 'app3a', 'app3b', 't9-9', 't9-10'],
+        { id: 'hb', title: 'Required Brinell hardness and material (F37–38, 40 · M23, 30)', fig: ['f9-18', 'f9-19', 't9-8', 'app3a', 'app3b', 'app5', 't9-9', 't9-10'],
           formula: 'HB = \\frac{s_{at}/1000 - 12.80}{0.0773}\\ (\\text{grade 1}),\\qquad HB = \\frac{s_{ac}/1000 - 29.10}{0.322}\\ (\\text{grade 1})',
-          text: 'Grade 1 is the course default (Grade 2: HB = (s_at/1000 − 16.40)/0.102, HB = (s_ac/1000 − 34.30)/0.349). Choose the LARGEST. <b>Course material step (Module 2 p27, Midterm P2 part 3):</b> pick an alloy + heat treatment from Table 9-8 / Appendix 3 with at least this hardness and quote its HB and % elongation — e.g. 4140 annealed HB 197, 4140 OQT1300 HB 235, 4140 OQT1000 HB 341, 4340 OQT1000 HB 363 (16 % el.), 4340 OQT700 HB 461 ("OQT1300" = oil-quenched &amp; tempered at 1300 °F; HB ≈ 2 × s_u ksi). Same material for pinion and gear; then confirm 1.0 ≤ SF ≤ 1.5 below. HB > 400 → flame/induction hardening or carburizing (Table 9-9) instead of through-hardening (step 40).',
+          text: 'Grade 1 is the course default (Grade 2: HB = (s_at/1000 − 16.40)/0.102, HB = (s_ac/1000 − 34.30)/0.349). Choose the LARGEST. <b>Course material step (Module 2 p27, Midterm P2 part 3):</b> pick an alloy + heat treatment from Table 9-8 / Appendix 3 with at least this hardness and quote its HB and % elongation — e.g. 4140 annealed HB 197, 4140 OQT1300 HB 235, 4140 OQT1000 HB 341, 4340 OQT1000 HB 363 (16 % el.), 4340 OQT700 HB 461 ("OQT1300" = oil-quenched &amp; tempered at 1300 °F; HB ≈ 2 × s_u ksi). Same material for pinion and gear (Fizz p.48; Mech: "design using pinion values as the gear will be the same material"); Mech: "look at appendix 3 or 5 … we normally use Appendix 3". Then confirm 1.0 ≤ SF ≤ 1.5 below. HB > 400 → flame/induction hardening or carburizing (Table 9-9, Appendix 5) instead of through-hardening (Fizz step 40).',
           vars: [
             { id: 'grade', label: 'Steel grade', kind: 'choice', options: [{ label: 'Grade 1 (course default)', value: 1 }, { label: 'Grade 2', value: 2 }], default: 1 },
             { id: 'HBbP', symbol: 'HB_{bend,P}', label: 'Hardness for pinion bending', unit: 'HB', kind: 'calc', digits: 4, compute: v => has(v, 'satP', 'grade') ? Math.max(0, satHB(v.satP, v.grade)) : undefined, work: v => v.HBbP !== undefined ? '\\(HB = (' + f(v.satP / 1000) + ' - ' + (v.grade === 2 ? '16.40)/0.102' : '12.80)/0.0773') + ' = ' + f(satHB(v.satP, v.grade)) + '\\)' : null },
@@ -343,28 +343,28 @@
           after: v => v.HBreq === undefined ? '' : (v.HBreq > 400 ? okbad(false, 'Required ' + f(v.HBreq, 3) + ' HB > 400: through-hardening is not adequate. Specify flame/induction-hardened (s_ac 170–175 ksi) or carburized grade-1 steel (s_at 55 ksi, s_ac 180 ksi, Table 9-9; e.g. SAE 4320 / 8620 carburized), or enlarge the gears.') : okbad(true, 'Specify a through-hardened grade-' + v.grade + ' steel with HB ≥ ' + f(Math.ceil(v.HBreq), 3) + ' for pinion and gear (' + (v.HBcP >= v.HBbP ? 'pitting' : 'bending') + ' governs). Pick from Appendix 3 / Table 9-8, e.g. SAE 1045, 4140, 4340 Q&T to at least that hardness' + (v.HBreq < 180 ? ' (any ≥ 180 HB steel is fine — below the AGMA data range)' : '') + '.')) },
       ] },
 
-      { title: 'Check the chosen material — safety factors (steps 36, 39)', steps: [
-        { id: 'mat', title: 'Allowable stress numbers of the chosen material', fig: ['f9-18', 'f9-19', 't9-9', 't9-10'],
+      { title: 'Check the chosen material — safety factors (Fizz steps 36, 39 · Mech steps 24, 30)', steps: [
+        { id: 'mat', title: 'Allowable stress numbers of the chosen material (M24, 30)', fig: ['f9-18', 'f9-19', 'app3a', 'app3b', 'app5', 't9-9', 't9-10'],
           formula: 's_{at} = 0.0773\\,HB + 12.80\\ \\mathrm{ksi},\\qquad s_{ac} = 0.322\\,HB + 29.10\\ \\mathrm{ksi}\\quad(\\text{grade 1, through-hardened})',
           text: 'Enter the Brinell hardness of the chosen steel (Appendix 3), or type s_at / s_ac directly for case-hardened (Table 9-9) or iron/bronze (Table 9-10).',
           vars: [
             { id: 'HBP', symbol: 'HB_P', label: 'Pinion hardness', unit: 'HB', kind: 'input' },
-            { id: 'HBG', symbol: 'HB_G', label: 'Gear hardness', unit: 'HB', kind: 'input', hint: 'same material → same HB' },
+            { id: 'HBG', symbol: 'HB_G', label: 'Gear hardness', unit: 'HB', kind: 'input', hint: 'auto = pinion HB (guides: same material for both)', auto: v => v.HBP },
             { id: 'satmP', symbol: 's_{at}', label: 'Allowable bending stress number, pinion', unit: 'psi', kind: 'lookup', fig: 'f9-18', auto: v => has(v, 'HBP', 'grade') ? satOf(v.HBP, v.grade) : undefined, hint: 'auto from Fig. 9-18; Table 9-9/9-10 for other materials' },
             { id: 'satmG', symbol: 's_{at}', label: 'Allowable bending stress number, gear', unit: 'psi', kind: 'lookup', fig: 'f9-18', auto: v => has(v, 'HBG', 'grade') ? satOf(v.HBG, v.grade) : undefined },
             { id: 'sacmP', symbol: 's_{ac}', label: 'Allowable contact stress number, pinion', unit: 'psi', kind: 'lookup', fig: 'f9-19', auto: v => has(v, 'HBP', 'grade') ? sacOf(v.HBP, v.grade) : undefined, hint: 'auto from Fig. 9-19' },
             { id: 'sacmG', symbol: 's_{ac}', label: 'Allowable contact stress number, gear', unit: 'psi', kind: 'lookup', fig: 'f9-19', auto: v => has(v, 'HBG', 'grade') ? sacOf(v.HBG, v.grade) : undefined },
           ] },
-        { id: 'sf', title: 'Safety factors — PASS / FAIL', eq: '9-32, 9-33',
+        { id: 'sf', title: 'Safety factors and power capacity — PASS / FAIL (F36, 39 · M24, 30)', eq: '9-32, 9-33',
           formula: 'SF_{bend} = \\frac{s_{at}}{s_t}\\frac{Y_N}{K_R},\\qquad SF_{cont} = \\frac{s_{ac}}{s_c}\\frac{Z_N}{K_R}',
-          text: 'Fizz step 36: verify 1.0 < SF < 1.5 (AGMA range) — higher is safe but wasteful. Contact (pitting) normally governs for long lives.',
+          text: 'Fizz step 36: verify 1.0 < SF < 1.5 — higher is safe but wasteful. The contact SF uses Z_N (Mott Eq. 9-33 and Fizz p.48 print Y_N — a typo; Mech p.91 has Z_N). Contact (pitting) normally governs for long lives. Fizz step 39: power the pinion can transmit with this material at the design SF.',
           vars: [
             { id: 'SFbP', symbol: 'SF_{bend,P}', label: 'Bending safety factor, pinion', kind: 'calc', digits: 3, compute: v => has(v, 'satmP', 'stP', 'YNP', 'KR') ? v.satmP / v.stP * v.YNP / v.KR : undefined, work: v => v.SFbP !== undefined ? '\\(SF = \\frac{' + f(v.satmP) + '}{' + f(v.stP) + '}\\cdot\\frac{' + f(v.YNP, 4) + '}{' + f(v.KR, 3) + '} = ' + f(v.SFbP, 3) + '\\)' : null },
             { id: 'SFbG', symbol: 'SF_{bend,G}', label: 'Bending safety factor, gear', kind: 'calc', digits: 3, compute: v => has(v, 'satmG', 'stG', 'YNG', 'KR') ? v.satmG / v.stG * v.YNG / v.KR : undefined, work: v => v.SFbG !== undefined ? '\\(SF = \\frac{' + f(v.satmG) + '}{' + f(v.stG) + '}\\cdot\\frac{' + f(v.YNG, 4) + '}{' + f(v.KR, 3) + '} = ' + f(v.SFbG, 3) + '\\)' : null },
             { id: 'SFcP', symbol: 'SF_{cont,P}', label: 'Contact safety factor, pinion', kind: 'calc', digits: 3, compute: v => has(v, 'sacmP', 'sc', 'ZNP', 'KR') ? v.sacmP / v.sc * v.ZNP / v.KR : undefined, work: v => v.SFcP !== undefined ? '\\(SF = \\frac{' + f(v.sacmP) + '}{' + f(v.sc) + '}\\cdot\\frac{' + f(v.ZNP, 4) + '}{' + f(v.KR, 3) + '} = ' + f(v.SFcP, 3) + '\\)' : null },
             { id: 'SFcG', symbol: 'SF_{cont,G}', label: 'Contact safety factor, gear', kind: 'calc', digits: 3, compute: v => has(v, 'sacmG', 'sc', 'ZNG', 'KR') ? v.sacmG / v.sc * v.ZNG / v.KR : undefined, work: v => v.SFcG !== undefined ? '\\(SF = \\frac{' + f(v.sacmG) + '}{' + f(v.sc) + '}\\cdot\\frac{' + f(v.ZNG, 4) + '}{' + f(v.KR, 3) + '} = ' + f(v.SFcG, 3) + '\\)' : null },
-            { id: 'Pcap', symbol: 'P_{cap}', label: 'Power capacity, bending (Fizz step 39)', unit: 'hp', kind: 'calc', compute: v => has(v, 'satmP', 'YNP', 'F', 'JP', 'nP', 'DP', 'Pd', 'SFd', 'KR', 'Ko', 'Ks', 'Km', 'KB', 'Kv') ? v.satmP * v.YNP * v.F * v.JP * v.nP * v.DP / (126000 * v.Pd * v.SFd * v.KR * v.Ko * v.Ks * v.Km * v.KB * v.Kv) : undefined, hint: 'P_cap = s_at Y_N F J n_P D_P / (126000 P_d SF K_R K_o K_s K_m K_B K_v)' },
-            { id: 'Pcapc', symbol: 'P_{cap,c}', label: 'Power capacity, pitting (Fizz step 39)', unit: 'hp', kind: 'calc', compute: v => has(v, 'sacmP', 'ZNP', 'F', 'I', 'nP', 'DP', 'SFd', 'KR', 'Cp', 'Ko', 'Ks', 'Km', 'Kv') ? v.nP * v.F * v.I / (126000 * v.Ko * v.Ks * v.Km * v.Kv) * Math.pow(v.sacmP * v.DP * v.ZNP / (v.SFd * v.KR * v.Cp), 2) : undefined, hint: 'P_cap = n_P F I/(126000 K_o K_s K_m K_v) · [s_ac D_P Z_N/(SF K_R C_p)]²' },
+            { id: 'Pcap', symbol: 'P_{cap}', label: 'Power capacity, pinion bending (Fizz step 39)', unit: 'hp', kind: 'calc', compute: v => has(v, 'satmP', 'YNP', 'F', 'JP', 'nP', 'DP', 'Pd', 'SFd', 'KR', 'Ko', 'Ks', 'Km', 'KB', 'Kv') ? v.satmP * v.YNP * v.F * v.JP * v.nP * v.DP / (126000 * v.Pd * v.SFd * v.KR * v.Ko * v.Ks * v.Km * v.KB * v.Kv) : undefined, hint: 'P_cap = s_at Y_N F J n_P D_P / (126000 P_d SF K_R K_o K_s K_m K_B K_v)' },
+            { id: 'Pcapc', symbol: 'P_{cap,c}', label: 'Power capacity, pinion pitting (Fizz step 39)', unit: 'hp', kind: 'calc', compute: v => has(v, 'sacmP', 'ZNP', 'F', 'I', 'nP', 'DP', 'SFd', 'KR', 'Cp', 'Ko', 'Ks', 'Km', 'Kv') ? v.nP * v.F * v.I / (126000 * v.Ko * v.Ks * v.Km * v.Kv) * Math.pow(v.sacmP * v.DP * v.ZNP / (v.SFd * v.KR * v.Cp), 2) : undefined, hint: 'P_cap = n_P F I/(126000 K_o K_s K_m K_v) · [s_ac D_P Z_N/(SF K_R C_p)]²' },
           ],
           after: v => {
             if (!has(v, 'SFbP', 'SFbG', 'SFcP', 'SFcG')) return '<i>Enter the chosen material hardness (or s_at / s_ac) to get the safety factors.</i>';
@@ -375,7 +375,7 @@
       ] },
 
       { title: 'Gear train (optional) — train value', steps: [
-        { id: 'train', title: 'Compound train: speed and torque chain', fig: ['f8-42', 'tv'],
+        { id: 'train', title: 'Compound train: speed and torque chain (Fizz p.76)', fig: ['f8-42', 'tv'],
           formula: 'TV = (VR_1)(VR_2) = \\frac{N_B N_D}{N_A N_C} = \\frac{n_{in}}{n_{out}},\\qquad n_{out} = \\frac{n_{in}}{TV},\\qquad T_{out} = TV\\cdot T_{in}\\ (\\text{no losses})',
           text: 'Fizz "Gear Trains": TV = (VR)₁(VR)₂… = N_output/N_input = n_input/n_output. TV > 1 for a reducer. Leave stage 2 blank for a single pair. Each external mesh reverses the direction of rotation.',
           vars: [

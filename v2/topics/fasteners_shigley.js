@@ -8,6 +8,10 @@
 //   τ 104 MPa (body), 146 MPa (threads, Ar), bearing 131 MPa on the 10-mm web — reproduced (20 973 N, 104.3 MPa, 131.1 MPa).
 // Verified against: Shigley Example 8-4 (the `example`: ⅝-11 UNC SAE 5 through two ¾-in grade-25 CI members, E 14 Mpsi, 36 kip, nL 2) →
 //   L 2.25 in, kb 5.21, km 8.95 (Eq. 8-22) / 8.81 (Eq. 8-23) Mlbf/in, C 0.368, Fi 14.4 kip, N 5.52 → 6 bolts, nL 2.18, np 1.16, n0 3.80 — reproduced.
+// Probe-checked: frusta stack (Eq. 8-20) for Shigley Example 8-2 (½-in bolt, 0.595 steel + 0.0775 / 0.6725 CI) → k1 30.80, k2 285.5, k3 14.15,
+//   km 9.378 Mlbf/in — reproduced.
+// Probe-checked: Shigley Example 8-5 (⅝-11 SAE 5 cap screw, 1/16 washer + ⅝ steel + ⅝ CI, 5 kip, L 1.5 so kb = AtE/l) → kb 6.78, km 17.40,
+//   C 0.280, np 1.22, nL 3.43, n0 4.00, Goodman nf 2.44 (2.43), Gerber nf 3.65 — reproduced (Gerber Eq. 8-46 was inverted before this review).
 // Guide assumptions (Fizz pp.146–156; the Mech guide's fastener unit, p.131, is empty) are listed in `assumptions` and carried by the defaults.
 // Bolt grades: [label, unitSystem, [ [dmax, Sp, Sut, Sy, Se], ... ] ]  (US: in & kpsi, Table 8-9/8-10/8-17; SI: mm & MPa, Table 8-11/8-17)
 const BOLT_GRADES = {
@@ -52,7 +56,7 @@ window.TOPIC = {
     { text: 'Bolt length L rounded up to the nearest ¼ in (SI: next 5 mm) above l + H (nut) or h + 1.5d (cap screw)', src: 'Fizz p.147', var: 'L' },
     { text: 'Steel bolt E = 30 Mpsi (207 GPa) unless stated — Shigley Table A-5', src: 'Shigley Table A-5', var: 'Eb' },
     { text: 'Member pressure cone at 30° from a washer-face diameter 1.5d under the head and nut, widening to mid-grip and then converging (Eqs. 8-20, 8-22, 8-23 all assume this)', src: 'Fizz p.149', var: 'f1D' },
-    { text: 'Hole diameter d in Eq. 8-20: the bolt nominal diameter for plates, the inner diameter for washers; same-material members with the same hole may be merged into one frustum', src: 'Fizz p.150', var: 'f1d' },
+    { text: 'Hole diameter d in Eq. 8-20: the bolt nominal diameter for plates, the inner diameter for washers; same-material members with the same hole may be merged into one frustum (Shigley Ex. 8-2 merges the steel washer with the steel plate, using the bolt d)', src: 'Fizz p.150', var: 'f1d' },
     { text: 'Identical top and bottom halves: compute the top half and halve it, k_m = k_top/2', src: 'Fizz pp.150–151' },
     { text: 'Preload when not given: F_i = 0.75 A_t S_p for non-permanent, reused fasteners (0.90 A_t S_p for permanent joints)', src: 'Fizz p.153', var: 'preload' },
     { text: 'Torque factor K from Table 8-15, K = 0.20 when the bolt condition is not stated (Shigley §8-8)', src: 'Fizz p.153 · Shigley §8-8', var: 'K' },
@@ -268,7 +272,7 @@ window.TOPIC = {
         formula: 'n_f = \\frac{S_e(S_{ut} - \\sigma_i)}{S_{ut}\\sigma_a + S_e(\\sigma_m - \\sigma_i)}\\ (\\text{Goodman}) \\qquad n_p = \\frac{S_p}{\\sigma_m + \\sigma_a}',
         vars: [
           { id: 'nf', symbol: 'n_f', label: 'Fatigue factor of safety', kind: 'calc', digits: 3, compute: v => { if (!H.has(v, 'Se', 'Sut', 'sigi', 'siga', 'sigm') || v.siga <= 0) return undefined;
-              if (v.fcrit === 'gerber' && v.Pmin === 0) return 2 * v.siga * v.Se / (v.Sut * Math.sqrt(v.Sut * v.Sut + 4 * v.Se * (v.Se + v.sigi)) - v.Sut * v.Sut - 2 * v.sigi * v.Se);
+              if (v.fcrit === 'gerber' && v.Pmin === 0) return (v.Sut * Math.sqrt(v.Sut * v.Sut + 4 * v.Se * (v.Se + v.sigi)) - v.Sut * v.Sut - 2 * v.sigi * v.Se) / (2 * v.siga * v.Se);
               if (v.fcrit === 'asme' && v.Pmin === 0 && H.has(v, 'Sp')) return v.Se / (v.siga * (v.Sp * v.Sp + v.Se * v.Se)) * (v.Sp * Math.sqrt(v.Sp * v.Sp + v.Se * v.Se - v.sigi * v.sigi) - v.sigi * v.Se);
               return v.Se * (v.Sut - v.sigi) / (v.Sut * v.siga + v.Se * (v.sigm - v.sigi)); },
             work: v => H.has(v, 'nf') ? ((v.fcrit === 'goodman' || v.Pmin !== 0) ? '\\(n_f = \\dfrac{' + H.fmt(v.Se) + '(' + H.fmt(v.Sut) + ' - ' + H.fmt(v.sigi, 4) + ')}{' + H.fmt(v.Sut) + '(' + H.fmt(v.siga, 4) + ') + ' + H.fmt(v.Se) + '(' + H.fmt(v.sigm, 4) + ' - ' + H.fmt(v.sigi, 4) + ')} = ' + H.fmt(v.nf, 3) + '\\)' : '\\(n_f = ' + H.fmt(v.nf, 3) + '\\) (' + (v.fcrit === 'gerber' ? 'Eq. 8-46' : 'Eq. 8-47') + ')') : null },
