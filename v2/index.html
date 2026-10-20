@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MECH 325 Solver v2 — unified calculators</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .hero { max-width: 1100px; margin: 0 auto; padding: 26px 18px 6px; }
+  .hero h1 { margin: 0 0 6px; font-size: 1.6rem; }
+  .hero p { color: var(--muted); margin: 0 0 10px; }
+  .grid { max-width: 1100px; margin: 0 auto; padding: 10px 18px 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  .area { grid-column: 1 / -1; margin: 14px 0 0; font-size: .9rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .card h3 { margin: 0 0 4px; font-size: 1.02rem; }
+  .card p { margin: 0 0 10px; font-size: .86rem; color: var(--muted); }
+  .card .links { display: flex; gap: 8px; }
+  .card a { flex: 1; text-align: center; text-decoration: none; color: #fff; border-radius: 8px; padding: 7px 10px; font-weight: 600; font-size: .9rem; }
+  .card a.s { background: var(--shigley); } .card a.m { background: var(--mott); }
+  .card a.old { background: #fff; color: var(--muted); border: 1px solid var(--line); flex: 0 0 auto; font-weight: 500; }
+  .card a:hover { filter: brightness(1.08); }
+  .small { font-size: .82rem; color: var(--muted); }
+  .refs a { margin-right: 14px; }
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>MECH 325 Solver <span class="badge shigley">Shigley</span> <span class="badge mott">Mott</span></h1>
+  <p>Each topic merges the Fizz and Mech/Dog guide procedures into one step-by-step calculator, with every table, chart and diagram the procedure needs cropped from the textbook and labelled with its real figure/table number. Pick the textbook your section uses.</p>
+  <p class="small">White = you enter · <span style="background:#fff7cc;border:1px solid #e6b800;border-radius:4px;padding:0 6px">yellow</span> = read from a table/graph (click the 📋/📈 button to jump to it) · <span style="background:#e6f6ea;border:1px solid #38a169;border-radius:4px;padding:0 6px">green</span> = calculated. Values auto-save in your browser. "Summary / copy" gives you a text block for assignments.</p>
+  <p class="small refs">Textbooks: <a href="../original_documents/M325S.pdf">Shigley 11e (PDF)</a><a href="../original_documents/M325M.pdf">Mott 6e (PDF)</a><a href="../original_documents/Mech_325_Bible_Fizz.pdf">Fizz guide</a><a href="../original_documents/Mech_325_Bible_Mech.pdf">Mech/Dog guide</a><a href="../calculators/other/unit_conversions.html">Unit conversions</a><a href="../calculators/other/fbd_analysis.html">FBD / shaft reactions</a><a href="../index.html">Old per-guide calculators</a></p>
+</div>
+<div class="grid" id="grid"></div>
+<script>
+const TOPICS = [
+  ['Gears', [
+    ['spur', 'Spur gears', 'Geometry, forces, AGMA bending & contact stress, strength, hardness / material selection, gear trains'],
+    ['helical', 'Helical gears', 'Normal/transverse geometry, three force components, helical J, stress & strength'],
+    ['bevel', 'Straight bevel gears', 'Cone geometry, force directions, bevel I & J, stress & strength'],
+    ['worm', 'Worm gearsets', 'Lead angle, forces, efficiency & self-locking, AGMA wear/bending rating, heat'],
+    ['rack', 'Rack & pinion', 'Linear speed and force, pinion sizing, stress check'],
+  ]],
+  ['Belts, chains & rope', [
+    ['flat_belts', 'Flat belts', 'Wrap angle, tensions, friction development, power capacity'],
+    ['v_belts', 'V-belts', 'Service factor, section, sheaves, length, rated power & corrections, number of belts'],
+    ['timing_belts', 'Synchronous (timing) belts', 'Pitch chart, sprockets, length, width from rated tables'],
+    ['chains', 'Roller chains', 'Pitch & strands from rated hp tables, sprockets, length, lubrication'],
+    ['wire_rope', 'Wire rope', 'Rope/sheave selection, bending & fatigue, hoist loads'],
+  ]],
+  ['Bearings & shafts', [
+    ['bushings', 'Bushings (boundary-lubricated)', 'PV method, material limits, wear'],
+    ['ball_cyl_bearings', 'Ball & cylindrical roller bearings', 'Equivalent load, life/reliability, required C10, catalogue pick'],
+    ['tapered_bearings', 'Tapered roller bearings', 'Induced thrust, direct/indirect mounting, equivalent loads, C10'],
+    ['shafts_keys', 'Shafts & keys', 'Fatigue diameter (DE-Goodman / Mott), stress concentration, key sizing'],
+  ]],
+  ['Screws, springs & fasteners', [
+    ['power_screws', 'Power screws', 'Thread geometry, raise/lower torque, efficiency, self-locking, stresses'],
+    ['ball_screws', 'Ball screws', 'Torque, efficiency, life & load'],
+    ['springs', 'Helical compression springs', 'Wire size, index, stress, rate, lengths, buckling, static & fatigue safety'],
+    ['fasteners', 'Bolted joints', 'Stiffnesses, joint constant, preload & torque, load/separation/yield/fatigue factors'],
+  ]],
+  ['Fluid power', [
+    ['fluids', 'Hydraulic cylinders & pumps', 'Rod buckling, bore/pressure, flow, pipe sizing, motor power, circuit analysis'],
+  ]],
+];
+const OLD = { spur: ['gears/fizz_spur','gears/mech_spur_stress'], helical: ['gears/fizz_helical','gears/mech_helical_stress'], bevel: ['gears/fizz_bevel','gears/mech_bevel_stress'], worm: ['gears/fizz_worm','gears/mech_worm_calculator'], rack: ['gears/fizz_rack','gears/mech_rack_calculator'],
+  flat_belts: ['belts/fizz_flat_belts','belts/mech_flat_belts'], v_belts: ['belts/fizz_v_belts','belts/mech_v_belts'], timing_belts: ['belts/fizz_time_belts','belts/mech_timing_belts'], chains: ['belts/fizz_chains','belts/mech_chains'], wire_rope: ['belts/fizz_rope','belts/mech_rope'],
+  bushings: ['bearings/fizz_blb'], ball_cyl_bearings: ['bearings/fizz_ball_cyl'], tapered_bearings: ['bearings/fizz_tapered_roll'], shafts_keys: ['bearings/fizz_shafts_keys'],
+  power_screws: ['screws/fizz_power'], ball_screws: ['screws/fizz_ball'], springs: ['screws/fizz_springs'], fasteners: ['screws/fizz_fasteners'], fluids: ['fluids/fizz_fluids','fluids/mech_fluids'] };
+const g = document.getElementById('grid');
+TOPICS.forEach(([area, items]) => {
+  const a = document.createElement('div'); a.className = 'area'; a.textContent = area; g.appendChild(a);
+  items.forEach(([id, name, desc]) => {
+    const c = document.createElement('div'); c.className = 'card';
+    const old = (OLD[id] || []).map((p, i) => '<a class="old" href="../calculators/' + p + '.html" title="old ' + (i ? 'Mech' : 'Fizz') + ' guide calculator">old ' + (i ? 'M' : 'F') + '</a>').join('');
+    c.innerHTML = '<h3>' + name + '</h3><p>' + desc + '</p><div class="links"><a class="s" href="' + id + '_shigley.html">Shigley</a><a class="m" href="' + id + '_mott.html">Mott</a>' + old + '</div>';
+    g.appendChild(c);
+  });
+});
+</script>
+</body>
+</html>
