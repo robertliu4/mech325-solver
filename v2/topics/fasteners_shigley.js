@@ -1,18 +1,21 @@
 // Bolted joints — Shigley Ch. 8-3 … 8-12 (Fizz §5.4 procedure; Examples 8-2 … 8-7)
-// Course alignment (v2/COURSE_CONVENTIONS.md §14): the course has only the Module 5 reading guide — required Shigley 8-3/8-4 (preload,
-// stiffness), 8-6 (bolt strength), 8-7 … 8-9 (external load, torque–preload, joint), 8-11 (fatigue), 8-12 (shear joints, eccentric loading
-// emphasised); beneficial 8-5 (member stiffness). 8-1/8-2 power screws live in power_screws_shigley.js; 8-10 gasketed joints are not in the
-// guide and are omitted. No course worked numbers exist, so the textbook defaults apply (Fi = 0.75 Fp reused / 0.90 Fp permanent, K = 0.2,
-// Table 8-17 Se, Goodman). Step 7 adds the 8-12 eccentric shear-joint analysis (Example 8-7).
-// Verified against: Shigley Example 8-7 (16 kN at 425 mm from a 4-bolt M16 group, r = 96 mm): F′ 4 kN, F″ 17.7 kN, FA = FB 21.0 kN,
-//   τ 104 MPa (body), 146 MPa (threads, Ar), bearing 131 MPa on the 10-mm web — reproduced (20 973 N, 104.3 MPa, threads 145.5 MPa on Ar 144.1 mm², 131.1 MPa).
-// Verified against: Shigley Example 8-4 (the `example`: ⅝-11 UNC SAE 5 through two ¾-in grade-25 CI members, E 14 Mpsi, 36 kip, nL 2) →
-//   L 2.25 in, kb 5.21, km 8.95 (Eq. 8-22) / 8.81 (Eq. 8-23) Mlbf/in, C 0.368, Fi 14.4 kip, N 5.52 → 6 bolts, nL 2.18, np 1.16, n0 3.80 — reproduced.
-// Probe-checked: frusta stack (Eq. 8-20) for Shigley Example 8-2 (½-in bolt, 0.595 steel + 0.0775 / 0.6725 CI) → k1 30.80, k2 285.5, k3 14.15,
-//   km 9.378 Mlbf/in — reproduced.
-// Probe-checked: Shigley Example 8-5 (⅝-11 SAE 5 cap screw, 1/16 washer + ⅝ steel + ⅝ CI, 5 kip, L 1.5 so kb = AtE/l) → kb 6.78, km 17.40,
-//   C 0.280, np 1.22, nL 3.43, n0 4.00, Goodman nf 2.44 (2.43), Gerber nf 3.65 — reproduced (Gerber Eq. 8-46 was inverted before this review).
-// Guide assumptions (Fizz pp.146–156; the Mech guide's fastener unit, p.131, is empty) are listed in `assumptions` and carried by the defaults.
+// Course alignment (v2/COURSE_CONVENTIONS.md §14): Module 5 reading guide — Shigley 8-3/8-4, 8-6 … 8-9, 8-11, 8-12 (eccentric loading
+// emphasised). Course worked numbers: HW5 P1–P3 (8-17, 8-29 mod, 8-77), final-exam review Scenario 3, STQ 2022 (8-34, 8th ed.), RAP quiz.
+// Verified against: Shigley Example 8-4 (the `example`: ⅝-11 UNC SAE 5, two ¾-in CI members, E 14 Mpsi, 36 kip, nL 2) → L 2.25 in,
+//   kb 5.21, km 8.95 (8-22), C 0.368, Fi 14.4 kip, N 5.52 → 6 bolts, nL 2.18, np 1.16, n0 3.80 — reproduced.
+// Verified against: Shigley Example 8-7 (16 kN at 425 mm, 4 × M16, r 96 mm) → 21.0 kN, τ 104 MPa (body) / 146 MPa (threads), bearing 131 MPa — reproduced.
+// Probe-checked: Ex. 8-2 frusta (k1 30.80, k2 285.5, k3 14.15 → km 9.378 Mlbf/in); Ex. 8-5 (kb 6.78, km 17.40, C 0.280, np 1.22, nL 3.43,
+//   n0 4.00, Goodman nf 2.44, Gerber 3.65) — reproduced.
+// Verified against: HW5 P1 (8-17: ½-13 UNC gr 8, washers 0.095/ID 0.531, two 2-in Al plates, nut 7/16) → L 4.75 in, kb 1.322 Mlbf/in,
+//   frusta 89.2 / 9.24 → km 4.19 Mlbf/in — reproduced.
+// Verified against: HW5 P2 (8-29 mod: kb 3, km 12 Mlbf/in given, 80 kip / 6 bolts, ½-13 gr 8, 0.75 Fp, K 0.18) → C 0.2, Fi 12.77 kip,
+//   T 1149 lbf·in (95.8 ft·lbf), wrench ¾ in, nL 1.60, n0 1.20, Goodman nf 0.856 — reproduced.
+// Verified against: HW5 P3 (8-77: 3 × M12 × 1.75 ISO 5.8 at 0, ±32 mm, 12 kN at 200 mm, 8-mm 1020 HR bracket 136 mm deep) → F′ 4 kN,
+//   F″ 37.5 kN, F 37.7 kN, τ 333 MPa → n 0.728, bearing 393 MPa → bolt n 1.07, bracket n 0.534, I 1.48 × 10⁶ mm⁴, σ 110 MPa → n 1.91 — reproduced.
+// Verified against: final-exam review Scenario 3 (4 × M8 × 1.25 ISO 4.6, kb 0.24, km 1.30 × 10⁶ N/mm, 2400 N, Fi 8 kN, Se 48) → C 0.156,
+//   σb 221.1 MPa → np 1.02, σa 1.28 MPa, Goodman nf 15.2 — reproduced.
+// Verified against: STQ 2022 P2 (8-34: ¾-16 UNF SAE 5, 1.5-in CI joint, 0.134 washers, P 6 kip, Fi 25 kip) → kb 6.78 Mlbf/in, C 0.320
+//   (with km 14.4 given), σi 67.0, σa 2.57 kpsi, Goodman nf 2.77, Gerber 4.19, nL 3.50 — reproduced.
 // Bolt grades: [label, unitSystem, [ [dmax, Sp, Sut, Sy, Se], ... ] ]  (US: in & kpsi, Table 8-9/8-10/8-17; SI: mm & MPa, Table 8-11/8-17)
 const BOLT_GRADES = {
   sae1: ['SAE 1 (¼–1½ in)', 'US', [[1e9, 33, 60, 36, null]]],
@@ -24,7 +27,7 @@ const BOLT_GRADES = {
   sae8: ['SAE 8 (¼–1½ in)', 'US', [[1e9, 120, 150, 130, 23.2]]],
   sae82: ['SAE 8.2 (¼–1 in)', 'US', [[1e9, 120, 150, 130, null]]],
   a307: ['ASTM A307 (¼–1½ in)', 'US', [[1e9, 33, 60, 36, null]]],
-  a325: ['ASTM A325 type 1/2/3 (½–1: 85/120/92; 1⅛–1½: 74/105/81)', 'US', [[1, 85, 120, 92, null], [1e9, 74, 105, 81, null]]],
+  a325: ['ASTM A325 (½–1: 85/120/92; 1⅛–1½: 74/105/81)', 'US', [[1, 85, 120, 92, null], [1e9, 74, 105, 81, null]]],
   a354bc: ['ASTM A354 BC (¼–2½: 105/125/109; 2¾–4: 95/115/99)', 'US', [[2.5, 105, 125, 109, null], [1e9, 95, 115, 99, null]]],
   a354bd: ['ASTM A354 BD (¼–4 in)', 'US', [[1e9, 120, 150, 130, null]]],
   a449: ['ASTM A449 (¼–1: 85/120/92; 1⅛–1½: 74/105/81; 1¾–3: 55/90/58)', 'US', [[1, 85, 120, 92, null], [1.5, 74, 105, 81, null], [1e9, 55, 90, 58, null]]],
@@ -37,237 +40,282 @@ const BOLT_GRADES = {
   iso109: ['ISO 10.9 (M5–M36)', 'SI', [[1e9, 830, 1040, 940, 162]]],
   iso129: ['ISO 12.9 (M1.6–M36)', 'SI', [[1e9, 970, 1220, 1100, 190]]],
 };
+// Table 8-2: [size, d, UNC n, At, Ar, UNF n, At, Ar]; Table 8-1: [d mm, coarse p, At, Ar, fine p, At, Ar]
+const UN = [['10', 0.19, 24, 0.0175, 0.0145, 32, 0.02, 0.0175], ['12', 0.216, 24, 0.0242, 0.0206, 28, 0.0258, 0.0226], ['1/4', 0.25, 20, 0.0318, 0.0269, 28, 0.0364, 0.0326],
+  ['5/16', 0.3125, 18, 0.0524, 0.0454, 24, 0.058, 0.0524], ['3/8', 0.375, 16, 0.0775, 0.0678, 24, 0.0878, 0.0809], ['7/16', 0.4375, 14, 0.1063, 0.0933, 20, 0.1187, 0.109],
+  ['1/2', 0.5, 13, 0.1419, 0.1257, 20, 0.1599, 0.1486], ['9/16', 0.5625, 12, 0.182, 0.162, 18, 0.203, 0.189], ['5/8', 0.625, 11, 0.226, 0.202, 18, 0.256, 0.24],
+  ['3/4', 0.75, 10, 0.334, 0.302, 16, 0.373, 0.351], ['7/8', 0.875, 9, 0.462, 0.419, 14, 0.509, 0.48], ['1', 1, 8, 0.606, 0.551, 12, 0.663, 0.625],
+  ['1 1/4', 1.25, 7, 0.969, 0.89, 12, 1.073, 1.024], ['1 1/2', 1.5, 6, 1.405, 1.294, 12, 1.581, 1.521]];
+const ISO = [[3, 0.5, 5.03, 4.47], [4, 0.7, 8.78, 7.75], [5, 0.8, 14.2, 12.7], [6, 1, 20.1, 17.9], [8, 1.25, 36.6, 32.8, 1, 39.2, 36.0], [10, 1.5, 58.0, 52.3, 1.25, 61.2, 56.3],
+  [12, 1.75, 84.3, 76.3, 1.25, 92.1, 86.0], [14, 2, 115, 104, 1.5, 125, 116], [16, 2, 157, 144, 1.5, 167, 157], [20, 2.5, 245, 225, 1.5, 272, 259], [24, 3, 353, 324, 2, 384, 365],
+  [30, 3.5, 561, 519, 2, 621, 596], [36, 4, 817, 759, 2, 915, 884], [42, 4.5, 1120, 1050, 2, 1260, 1230], [48, 5, 1470, 1380, 2, 1670, 1630]];
 const WILEMAN = { steel: [0.78715, 0.62873, 30.0, 207], aluminum: [0.79670, 0.63816, 10.3, 71], copper: [0.79568, 0.63553, 17.3, 119], ci: [0.77871, 0.61616, 14.5, 100], general: [0.78952, 0.62914, null, null] };
 const FS_SI = v => v.units === 'SI';
-const gradeRow = v => { const g = BOLT_GRADES[v.grade]; if (!g || !H.has(v, 'd')) return undefined; return g[2].find(r => v.d <= r[0]) || g[2][g[2].length - 1]; };
-const KS = v => FS_SI(v) ? 1 : 1000;   // kpsi -> psi
+const gradeRowAt = (v, g, d) => { const G = BOLT_GRADES[g]; if (!G || d === undefined) return undefined; return G[2].find(r => d <= r[0]) || G[2][G[2].length - 1]; };
+const gradeRow = v => gradeRowAt(v, v.grade, v.d);
+const KS = v => FS_SI(v) ? 1 : 1000;
 const frust = (E, d, t, D) => { if (!(E > 0 && d > 0 && t > 0 && D > d)) return undefined; const a = 1.155 * t; return 0.5774 * Math.PI * E * d / Math.log((a + D - d) * (D + d) / ((a + D + d) * (D - d))); };
-
-// TX: H.fmt for inside \( \) work lines — writes 3e+7 as 3\times10^{7} so MathJax shows real powers of ten.
+const fracTex = s => s.replace(/^(\d+) (\d+)\/(\d+)$/, '$1\\tfrac{$2}{$3}').replace(/^(\d+)\/(\d+)$/, '\\tfrac{$1}{$2}');
 const TX = (x, d) => String(H.fmt(x, d)).replace(/e([+-]?)(\d+)$/, (m, s, e) => '\\times10^{' + (s === '-' ? '-' : '') + e + '}');
+// thread list for the unit system: {lab, d, n|p, At, Ar, series}
+function threads(v) {
+  if (FS_SI(v)) { const fine = H.has(v, 'pitch', 'd') && ISO.some(r => r[0] === v.d && r[4] === v.pitch && r[1] !== v.pitch);
+    return ISO.filter(r => !fine || r[4]).map(r => fine ? { lab: 'M' + r[0] + ' × ' + r[4], d: r[0], p: r[4], At: r[5], Ar: r[6] } : { lab: 'M' + r[0] + ' × ' + r[1], d: r[0], p: r[1], At: r[2], Ar: r[3] }); }
+  const fine = H.has(v, 'tpi', 'd') && UN.some(r => r[1] === v.d && r[5] === v.tpi && r[2] !== v.tpi);
+  return UN.map(r => fine ? { lab: '\\(' + fracTex(r[0]) + '\\)-' + r[5] + ' UNF', d: r[1], n: r[5], At: r[6], Ar: r[7] } : { lab: '\\(' + fracTex(r[0]) + '\\)-' + r[2] + ' UNC', d: r[1], n: r[2], At: r[3], Ar: r[4] });
+}
+// static factors for a candidate bolt (At, Sp) with the current C, P and preload rule
+function facs(v, At, Sp) {
+  if (!H.has(v, 'C', 'P') || !(v.P > 0)) return undefined; const Fi = v.preload === 0 ? v.Fig : v.preload * At * Sp; if (Fi === undefined) return undefined;
+  return { np: Sp * At / (v.C * v.P + Fi), nL: (Sp * At - Fi) / (v.C * v.P), n0: Fi / (v.P * (1 - v.C)) };
+}
+const okF = (v, f) => f && f.np >= 1 && f.nL >= (H.has(v, 'nLt') ? v.nLt : 1) && f.n0 >= 1;
+function sizeTable(v) {
+  const r0 = BOLT_GRADES[v.grade]; if (!r0 || r0[1] !== (FS_SI(v) ? 'SI' : 'US') || !H.has(v, 'C', 'P')) return '';
+  const list = threads(v).map(t => { const g = gradeRowAt(v, v.grade, t.d); const f = g ? facs(v, t.At, g[1] * KS(v)) : undefined; return { t, f }; });
+  const pk = list.find(x => okF(v, x.f)); const i = pk ? list.indexOf(pk) : list.findIndex(x => x.t.d === v.d);
+  const shown = list.slice(Math.max(0, (i < 0 ? 0 : i) - 3), (i < 0 ? 0 : i) + 4);
+  return H.table(['Thread', '\\(A_t\\)', '\\(n_p\\)', '\\(n_L\\)', '\\(n_0\\)'], shown.map(x => ({ cells: [x.t.lab + (x.t.d === v.d ? ' ✔' : ''), x.t.At, x.f ? H.fmt(x.f.np, 3) : '—', x.f ? H.fmt(x.f.nL, 3) : '—', x.f ? H.fmt(x.f.n0, 3) : '—'],
+    ok: okF(v, x.f), pick: x === pk, set: FS_SI(v) ? { d: x.t.d, pitch: x.t.p, At: x.t.At } : { d: x.t.d, tpi: x.t.n, At: x.t.At } })),
+    { caption: 'Select the bolt size — Table ' + (FS_SI(v) ? '8-1' : '8-2') + ', ' + BOLT_GRADES[v.grade][0].split(' (')[0] + ', P = ' + H.fmt(v.P, 4) + ' per bolt', note: 'Rule: the smallest size with \\(n_p \\ge 1\\), \\(n_0 \\ge 1\\) and \\(n_L \\ge\\) ' + (H.has(v, 'nLt') ? H.fmt(v.nLt) + ' (target)' : '1') + '; C is held at the current ' + H.fmt(v.C, 3) + ' (it changes slightly with d — Use recomputes). Standard sizes are catalogued by the major diameter.' });
+}
+function gradeTable(v) {
+  if (!H.has(v, 'd', 'At')) return '';
+  const sys = FS_SI(v) ? 'SI' : 'US';
+  const rows = Object.keys(BOLT_GRADES).filter(k => BOLT_GRADES[k][1] === sys).map(k => { const g = gradeRowAt(v, k, v.d); return { k, g, f: facs(v, v.At, g[1] * KS(v)) }; }).sort((a, b) => a.g[1] - b.g[1] || a.g[2] - b.g[2]);
+  const pk = rows.find(x => okF(v, x.f));
+  return H.table(['Grade', '\\(S_p\\)', '\\(S_{ut}\\)', '\\(S_y\\)', '\\(S_e\\)', '\\(n_L\\)', '\\(n_0\\)'], rows.map(x => ({ cells: [BOLT_GRADES[x.k][0].split(' (')[0] + (v.grade === x.k ? ' ✔' : ''), x.g[1], x.g[2], x.g[3], x.g[4] || '—', x.f ? H.fmt(x.f.nL, 3) : '—', x.f ? H.fmt(x.f.n0, 3) : '—'],
+    ok: x.f ? okF(v, x.f) : undefined, pick: x === pk, set: { grade: x.k, Sp: '', Sut: '', Sy: '', Se: '' } })),
+    { caption: 'Bolt grades for d = ' + H.fmt(v.d) + (FS_SI(v) ? ' mm (Table 8-11, MPa)' : ' in (Tables 8-9 / 8-10, kpsi)'), note: 'Rule: the lowest-strength grade that meets \\(n_L\\) (target or 1) and \\(n_0 \\ge 1\\). Metric class 4.6: \\(S_{ut}\\) = 400 MPa, \\(S_y\\) = 0.6 × 400 = 240 MPa (the digits give \\(S_{ut}/100\\) and \\(S_y/S_{ut}\\)). Rolled threads have a higher endurance strength than cut threads.' });
+}
+
 window.TOPIC = {
   id: 'fasteners', book: 'shigley',
-  title: 'Bolted Tension Joints — Stiffness, Preload, Safety Factors & Fatigue',
-  subtitle: 'Shigley Ch. 8-3 … 8-11 · Fizz guide §5.4 procedure (Examples 8-2 … 8-5)',
+  title: 'Bolted Joints — Stiffness, Preload, Safety Factors, Fatigue & Shear',
+  subtitle: 'Shigley Ch. 8-3 … 8-12 · Fizz guide §5.4 (Examples 8-2 … 8-7, HW5 P1–P3)',
   sibling: 'fasteners_mott.html',
-  intro: 'The full Fizz §5.4 bolted-joint procedure on Shigley\'s equations: bolt length and grip (Table 8-7), bolt stiffness k<sub>b</sub> (Eq. 8-17), member stiffness k<sub>m</sub> (frusta Eq. 8-20, same-material Eq. 8-22, or Wileman Eq. 8-23 / Table 8-8), joint constant C, proof strength and preload (Tables 8-9 … 8-11, Eq. 8-31), wrench torque (Eq. 8-27, Table 8-15), and the static factors n<sub>p</sub>, n<sub>L</sub>, n<sub>0</sub> (Eqs. 8-28 … 8-30). If a fluctuating load is given, the fatigue factor with Table 8-17 endurance strengths and Goodman (Eq. 8-38), or Gerber / ASME-elliptic for repeated loading (Eqs. 8-46, 8-47). '
-    + 'Units: US (in, lbf, psi; strengths from the tables in kpsi are converted) or SI (mm, N, MPa). Step 7 covers Shigley 8-12: bolt groups in shear with eccentric loading (primary F′ = V/n, secondary F″ = Mr/Σr², Example 8-7). <b>Course note:</b> MECH 325 provides only the Module 5 reading guide for fasteners (8-3 … 8-9, 8-11, 8-12 required; 8-5 beneficial) and no worked numbers, so the textbook defaults apply unchanged.',
+  intro: 'Bolt and grip → \\(k_b\\) → \\(k_m\\) → C → strength, preload and torque → \\(n_p\\), \\(n_L\\), \\(n_0\\) → fatigue (Goodman / Gerber) → eccentric shear joints (8-12). '
+    + 'Units: US (in, lbf, psi) or SI (mm, N, MPa). Stiffnesses given in the problem can be typed directly.',
   example: { units: 'US', d: 0.625, tpi: 11, joint: 'a', tw1: 0, t1: 0.75, t2: 0.75, tw2: 0, Hn: 0.547, kmm: 'eq822', Em: 14e6, matm: 'ci', grade: 'sae5', Ptot: 36000, N: 6, preload: 0.75, K: 0.2, nLt: 2 },
 
   assumptions: [
-    { text: 'Bolt length L rounded up to the nearest ¼ in (SI: next 5 mm) above l + H (nut) or h + 1.5d (cap screw)', src: 'Fizz p.147', var: 'L' },
-    { text: 'Steel bolt E = 30 Mpsi (207 GPa) unless stated — Shigley Table A-5', src: 'Shigley Table A-5', var: 'Eb' },
-    { text: 'Member pressure cone at 30° from a washer-face diameter 1.5d under the head and nut, widening to mid-grip and then converging (Eqs. 8-20, 8-22, 8-23 all assume this)', src: 'Fizz p.149', var: 'f1D' },
-    { text: 'Hole diameter d in Eq. 8-20: the bolt nominal diameter for plates, the inner diameter for washers; same-material members with the same hole may be merged into one frustum (Shigley Ex. 8-2 merges the steel washer with the steel plate, using the bolt d)', src: 'Fizz p.150', var: 'f1d' },
-    { text: 'Identical top and bottom halves: compute the top half and halve it, k_m = k_top/2', src: 'Fizz pp.150–151' },
-    { text: 'Preload when not given: F_i = 0.75 A_t S_p for non-permanent, reused fasteners (0.90 A_t S_p for permanent joints)', src: 'Fizz p.153', var: 'preload' },
-    { text: 'Torque factor K from Table 8-15, K = 0.20 when the bolt condition is not stated (Shigley §8-8)', src: 'Fizz p.153 · Shigley §8-8', var: 'K' },
-    { text: 'A wrench torque of about 1000 lbf·in is already "VERY high" for a hand wrench (homework solutions)', src: 'Fizz p.153', var: 'T' },
-    { text: 'Fatigue: Goodman with the fully corrected S_e of Table 8-17 (rolled threads, K_f included); repeated load 0 → P (P_min = 0) unless stated', src: 'Fizz pp.154–155', var: 'Pmin' },
-    { text: 'Shear joints: required design factor n_d = 1.5 (Shigley Ex. 8-6) and bolt shear yield 0.577 S_y — not in the guides', src: 'Shigley Ex. 8-6', var: 'ndsj' },
+    { text: 'Bolt length rounded up to the nearest ¼ in (SI: next 5 mm) above l + H (nut) or h + 1.5d (cap screw)', src: 'Fizz p.147', var: 'L' },
+    { text: 'Steel bolt E = 30 Mpsi (207 GPa) unless stated', src: 'Shigley Table A-5', var: 'Eb' },
+    { text: 'Pressure cone at 30° from a washer-face diameter 1.5d, widening to mid-grip, then converging', src: 'Fizz p.149', var: 'f1D' },
+    { text: 'Frustum hole diameter = bolt d for plates, the inner diameter for washers', src: 'Fizz p.150', var: 'f1d' },
+    { text: 'Identical halves: compute the top half and halve it, \\(k_m = k_{top}/2\\)', src: 'Fizz pp.150–151', step: 'frustak' },
+    { text: 'Preload \\(F_i = 0.75A_tS_p\\) for reused fasteners (0.90 for permanent joints)', src: 'Fizz p.153', var: 'preload' },
+    { text: 'Torque factor K = 0.20 when the bolt condition is not stated (0.18 lubricated)', src: 'Fizz p.153 · Shigley §8-8', var: 'K' },
+    { text: 'Fatigue: Goodman with the fully corrected \\(S_e\\) of Table 8-17; repeated load 0 → P', src: 'Fizz pp.154–155', var: 'Pmin' },
+    { text: 'Shear joints: \\(n_d\\) = 1.5 and bolt shear yield \\(0.577S_y\\)', src: 'Shigley Ex. 8-6', var: 'ndsj' },
   ],
 
   figures: [
-    { id: 'fig8-13', ref: 'Figure 8-13 / 8-14', title: 'Tension-loaded bolted joint with nut (a) and cap-screw joint (b); l = grip', src: 'figures/shigley/fig8-13-14.png', page: 457 },
-    { id: 'table8-7', ref: 'Table 8-7', title: 'Suggested procedure for finding fastener stiffness (grip, length, LT, ld, lt, kb)', src: 'figures/shigley/table8-7.png', page: 459, note: 'Figure (a): bolt and nut; figure (b): cap screw into a tapped member.' },
-    { id: 'table8-2', ref: 'Table 8-2', title: 'UNC / UNF: tensile-stress area At and minor-diameter area', src: 'figures/shigley/table8-2.png', page: 446 },
-    { id: 'table8-1', ref: 'Table 8-1', title: 'Metric coarse / fine: tensile-stress area At', src: 'figures/shigley/table8-1.png', page: 445 },
-    { id: 'fig8-15', ref: 'Figure 8-15', title: 'Member compression modelled as a frustum of a hollow cone (half-apex angle α = 30°)', src: 'figures/shigley/fig8-15.png', page: 460 },
-    { id: 'fig8-17', ref: 'Figure 8-17', title: 'Example 8-2: frusta drawn through a washer + two plates (the Fizz step-3 diagram)', src: 'figures/shigley/fig8-17.png', page: 463, note: 'Start at dw = 1.5d on the washer face, spread at 30° to mid-grip, then converge. Each material / direction change is a new frustum.' },
-    { id: 'table8-8', ref: 'Table 8-8', title: 'Wileman stiffness parameters A, B and E by member material', src: 'figures/shigley/table8-8.png', page: 462 },
-    { id: 'fig8-16', ref: 'Figure 8-16', title: 'Dimensionless member stiffness km/(Ed) vs aspect ratio d/l', src: 'figures/shigley/fig8-16.png', page: 462 },
+    { id: 'fig8-13', ref: 'Figure 8-13 / 8-14', title: 'Tension-loaded bolted joint with nut (a) and cap screw (b); l = grip', src: 'figures/shigley/fig8-13-14.png', page: 457 },
+    { id: 'table8-7', ref: 'Table 8-7', title: 'Procedure for fastener stiffness (grip, length, \\(L_T\\), \\(l_d\\), \\(l_t\\), \\(k_b\\))', src: 'figures/shigley/table8-7.png', page: 459 },
+    { id: 'table8-2', ref: 'Table 8-2', title: 'UNC / UNF: tensile-stress area \\(A_t\\) and minor-diameter area \\(A_r\\)', src: 'figures/shigley/table8-2.png', page: 446 },
+    { id: 'table8-1', ref: 'Table 8-1', title: 'Metric coarse / fine: \\(A_t\\) and \\(A_r\\)', src: 'figures/shigley/table8-1.png', page: 445 },
+    { id: 'fig8-15', ref: 'Figure 8-15', title: 'Member compression as a hollow-cone frustum (\\(\\alpha = 30^\\circ\\))', src: 'figures/shigley/fig8-15.png', page: 460 },
+    { id: 'fig8-17', ref: 'Figure 8-17', title: 'Example 8-2: frusta through a washer + two plates', src: 'figures/shigley/fig8-17.png', page: 463, note: 'Start at 1.5d on the washer face, spread at 30° to mid-grip, then converge; a new frustum at each material change.' },
+    { id: 'table8-8', ref: 'Table 8-8', title: 'Wileman stiffness parameters A, B and E', src: 'figures/shigley/table8-8.png', page: 462 },
+    { id: 'fig8-16', ref: 'Figure 8-16', title: 'Dimensionless member stiffness \\(k_m/(Ed)\\) vs d/l', src: 'figures/shigley/fig8-16.png', page: 462 },
     { id: 'fig8-18', ref: 'Figure 8-18 / 8-19', title: 'Spring model of preload + external load; force–deflection diagram', src: 'figures/shigley/fig8-18-19.png', page: 468 },
     { id: 'table8-9', ref: 'Table 8-9', title: 'SAE bolt grades: proof, tensile, yield strength (kpsi)', src: 'figures/shigley/table8-9.png', page: 465 },
     { id: 'table8-10', ref: 'Table 8-10', title: 'ASTM bolt grades', src: 'figures/shigley/table8-10.png', page: 466 },
     { id: 'table8-11', ref: 'Table 8-11', title: 'Metric property classes (MPa)', src: 'figures/shigley/table8-11.png', page: 467 },
-    { id: 'table8-15', ref: 'Table 8-15', title: 'Torque factor K for T = K Fi d', src: 'figures/shigley/table8-15.png', page: 471, note: 'Use K = 0.2 when the bolt condition is not stated.' },
-    { id: 'table8-17', ref: 'Table 8-17', title: 'Fully corrected endurance strengths Se for rolled-thread bolts (Kf included)', src: 'figures/shigley/table8-17.png', page: 478 },
-    { id: 'fig8-28', ref: 'Figure 8-28', title: 'Centroid of a pin / rivet / bolt group (Eq. 8-56)', src: 'figures/shigley/fig8-28.png', page: 488, note: 'The centroid is usually found by symmetry.' },
-    { id: 'fig8-29', ref: 'Figure 8-29', title: 'Beam bolted at both ends: free body and the bolt group with primary (F′) and secondary (F″) shear', src: 'figures/shigley/fig8-29.png', page: 489 },
-    { id: 'fig8-30', ref: 'Figure 8-30', title: 'Example 8-7: 15 × 200 mm bar cantilevered to a channel with four M16 bolts (dimensions in mm)', src: 'figures/shigley/fig8-30.png', page: 490 },
-    { id: 'fig8-31', ref: 'Figure 8-31', title: 'Example 8-7: vector sum of F′ and F″ at each bolt — A and B are critical', src: 'figures/shigley/fig8-31.png', page: 491, note: 'F′ = 4 kN, F″ = 17.7 kN → FA = FB = 21.0 kN, FC = FD = 14.8 kN.' },
-    { id: 'fig8-22', ref: 'Figure 8-22', title: 'Fluctuating-stress diagram: Goodman line and the bolt load line from σi', src: 'figures/shigley/fig8-22.png', page: 479 },
+    { id: 'table8-15', ref: 'Table 8-15', title: 'Torque factor K for \\(T = KF_id\\)', src: 'figures/shigley/table8-15.png', page: 471 },
+    { id: 'table8-17', ref: 'Table 8-17', title: 'Fully corrected endurance strengths \\(S_e\\) for rolled threads (\\(K_f\\) included)', src: 'figures/shigley/table8-17.png', page: 478 },
+    { id: 'fig8-28', ref: 'Figure 8-28', title: 'Centroid of a bolt group (Eq. 8-56) — the pivot for the moment', src: 'figures/shigley/fig8-28.png', page: 488 },
+    { id: 'fig8-29', ref: 'Figure 8-29', title: 'Beam bolted at both ends: primary (\\(F\'\\)) and secondary (\\(F\'\'\\)) shear', src: 'figures/shigley/fig8-29.png', page: 489 },
+    { id: 'fig8-30', ref: 'Figure 8-30', title: 'Example 8-7: bar cantilevered to a channel with four M16 bolts (mm)', src: 'figures/shigley/fig8-30.png', page: 490 },
+    { id: 'fig8-31', ref: 'Figure 8-31', title: 'Example 8-7: vector sum of \\(F\'\\) and \\(F\'\'\\) at each bolt', src: 'figures/shigley/fig8-31.png', page: 491, note: '\\(F\' = 4\\) kN, \\(F\'\' = 17.7\\) kN → \\(F_A = F_B = 21.0\\) kN.' },
+    { id: 'fig8-22', ref: 'Figure 8-22', title: 'Fluctuating-stress diagram: Goodman line and the bolt load line from \\(\\sigma_i\\)', src: 'figures/shigley/fig8-22.png', page: 479 },
   ],
 
   sections: [
     { title: 'Step 1: Bolt, grip and length', steps: [
       { id: 'bolt', title: 'Bolt size and thread', fig: ['table8-2', 'table8-1'],
         formula: 'A_d = \\frac{\\pi d^2}{4} \\qquad A_t = 0.7854\\left(d - \\frac{0.9743}{n}\\right)^2\\ (\\text{UN}) \\quad A_t = 0.7854(d - 0.9382p)^2\\ (\\text{metric})',
-        text: 'Read At from Table 8-2 (inch) or 8-1 (metric); the auto value is the ASME/ISO formula and matches the table.',
+        text: 'Read \\(A_t\\) from Table 8-2 / 8-1 (the auto value is the same formula). The size table below appears once the load and C are known.',
         vars: [
           { id: 'units', label: 'Unit system', kind: 'choice', type: 'text', options: [{ label: 'US: in, lbf, psi', value: 'US' }, { label: 'SI: mm, N, MPa', value: 'SI' }], default: 'US' },
-          { id: 'd', symbol: 'd', label: 'Nominal bolt diameter', unit: 'in / mm', kind: 'input' },
-          { id: 'tpi', symbol: 'n', label: 'Threads per inch (US)', kind: 'input', hint: 'e.g. ⅝-11 UNC → 11' },
-          { id: 'pitch', symbol: 'p', label: 'Pitch (metric)', unit: 'mm', kind: 'input', hint: 'e.g. M12 × 1.75' },
-          { id: 'Ad', symbol: 'A_d', label: 'Major-diameter area', unit: 'in² / mm²', kind: 'calc', digits: 4, compute: v => H.has(v, 'd') ? Math.PI * v.d * v.d / 4 : undefined },
-          { id: 'At', symbol: 'A_t', label: 'Tensile-stress area', unit: 'in² / mm²', kind: 'lookup', fig: 'table8-2', hint: 'Table 8-2 / 8-1 (auto = formula; ⅝-11: 0.226 in²)', auto: v => { if (!H.has(v, 'd')) return undefined;
+          { id: 'd', symbol: 'd', label: 'Nominal (major) bolt diameter', unit: 'in / mm', kind: 'input' },
+          { id: 'tpi', symbol: 'n', label: 'Threads per inch (US)', kind: 'input', hint: '⅝-11 UNC → 11' },
+          { id: 'pitch', symbol: 'p', label: 'Pitch (metric)', unit: 'mm', kind: 'input', hint: 'M12 × 1.75 → 1.75' },
+          { id: 'Ad', symbol: 'A_d', label: 'Major-diameter area', unit: 'in^2 / mm^2', kind: 'calc', digits: 4, compute: v => H.has(v, 'd') ? Math.PI * v.d * v.d / 4 : undefined },
+          { id: 'At', symbol: 'A_t', label: 'Tensile-stress area', unit: 'in^2 / mm^2', kind: 'lookup', fig: 'table8-2', hint: 'Table 8-2 / 8-1', auto: v => { if (!H.has(v, 'd')) return undefined;
               if (FS_SI(v)) return H.has(v, 'pitch') ? 0.7854 * Math.pow(v.d - 0.9382 * v.pitch, 2) : undefined; return H.has(v, 'tpi') ? 0.7854 * Math.pow(v.d - 0.9743 / v.tpi, 2) : undefined; } },
-          { id: 'Eb', symbol: 'E', label: 'Bolt modulus', unit: 'psi / MPa', kind: 'input', auto: v => FS_SI(v) ? 207000 : 30e6, hint: 'steel 30e6 psi / 207 000 MPa (auto by unit system)' },
-        ] },
-      { id: 'grip', title: 'Grip length and bolt length (Table 8-7)', fig: ['table8-7', 'fig8-13'],
-        formula: '(a)\\; l = \\sum t \\;\\; L > l + H \\qquad (b)\\; l = \\begin{cases} h + t_2/2 & t_2 < d \\\\ h + d/2 & t_2 \\ge d\\end{cases} \\;\\; L > h + 1.5d',
-        text: 'Joint (a): bolt through all members with a nut — the grip is everything between the bolt face and the nut face. Joint (b): cap screw into a tapped member of thickness t<sub>2</sub>; h = washer + upper member(s). Round L <b>up</b> to a standard length (¼ in steps, Table A-17).',
+          { id: 'Eb', symbol: 'E', label: 'Bolt modulus', unit: 'psi / MPa', kind: 'input', auto: v => FS_SI(v) ? 207000 : 30e6, hint: 'steel 30 Mpsi / 207 GPa' },
+        ],
+        after: v => sizeTable(v) },
+      { id: 'grip', title: 'Joint members (Table 8-7)', fig: ['table8-7', 'fig8-13'],
+        formula: '(a)\\; l = \\sum t,\\;\\; L > l + H \\qquad (b)\\; l = h + \\tfrac{t_2}{2}\\ (t_2 < d)\\ \\text{or}\\ h + \\tfrac{d}{2},\\;\\; L > h + 1.5d',
+        text: '(a) bolt and nut: the grip is everything clamped, washers included. (b) cap screw into a tapped member of thickness \\(t_2\\); h = washer + upper member.',
         vars: [
-          { id: 'joint', label: 'Joint type', kind: 'choice', type: 'text', options: [{ label: '(a) Bolt with nut', value: 'a' }, { label: '(b) Cap screw into tapped member', value: 'b' }], default: 'a' },
-          { id: 'tw1', symbol: 't_{w1}', label: 'Washer under head', unit: 'in / mm', kind: 'input', default: 0, hint: 'Table A-32: ½ N = 0.095 in' },
+          { id: 'joint', label: 'Joint type', kind: 'choice', type: 'text', options: [{ label: '(a) Bolt with nut', value: 'a' }, { label: '(b) Cap screw into a tapped member', value: 'b' }], default: 'a' },
+          { id: 'tw1', symbol: 't_{w1}', label: 'Washer under the head', unit: 'in / mm', kind: 'input', default: 0, hint: 'Table A-32: ½ N = 0.095 in' },
           { id: 't1', symbol: 't_1', label: 'Upper member thickness', unit: 'in / mm', kind: 'input' },
-          { id: 't2', symbol: 't_2', label: 'Lower member thickness (tapped member for (b))', unit: 'in / mm', kind: 'input' },
-          { id: 'tw2', symbol: 't_{w2}', label: 'Washer under nut (joint a)', unit: 'in / mm', kind: 'input', default: 0 },
-          { id: 'Hn', symbol: 'H', label: 'Nut height (joint a)', unit: 'in / mm', kind: 'input', hint: 'Table A-31; ⅝ in: 35/64 = 0.547' },
+          { id: 't2', symbol: 't_2', label: 'Lower member thickness', unit: 'in / mm', kind: 'input' },
+          { id: 'tw2', symbol: 't_{w2}', label: 'Washer under the nut (a)', unit: 'in / mm', kind: 'input', default: 0 },
+          { id: 'Hn', symbol: 'H', label: 'Nut height (a)', unit: 'in / mm', kind: 'input', hint: 'Table A-31; ½ in: 7/16, ⅝ in: 35/64' },
         ] },
       { id: 'glen', title: 'Grip length and bolt length', fig: ['table8-7'],
         vars: [
-          { id: 'h', symbol: 'h', label: 'h = tw1 + t1 (joint b)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => (v.joint === 'b' && H.has(v, 'tw1', 't1')) ? v.tw1 + v.t1 : undefined },
+          { id: 'h', symbol: 'h', label: '\\(h = t_{w1} + t_1\\) (b)', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => (v.joint === 'b' && H.has(v, 'tw1', 't1')) ? v.tw1 + v.t1 : undefined },
           { id: 'l', symbol: 'l', label: 'Grip length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => { if (v.joint === 'b') return H.has(v, 'h', 't2', 'd') ? v.h + (v.t2 < v.d ? v.t2 / 2 : v.d / 2) : undefined; return H.has(v, 'tw1', 't1', 't2', 'tw2') ? v.tw1 + v.t1 + v.t2 + v.tw2 : undefined; },
             work: v => H.has(v, 'l') ? (v.joint === 'b' ? '\\(l = h + ' + (v.t2 < v.d ? 't_2/2' : 'd/2') + ' = ' + TX(v.h, 4) + ' + ' + TX((v.t2 < v.d ? v.t2 : v.d) / 2, 4) + ' = ' + TX(v.l, 4) + '\\)' : '\\(l = ' + TX(v.tw1) + ' + ' + TX(v.t1) + ' + ' + TX(v.t2) + ' + ' + TX(v.tw2) + ' = ' + TX(v.l, 4) + '\\)') : null },
-          { id: 'Lmin', symbol: 'L_{min}', label: 'Minimum bolt length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.joint === 'b' ? (H.has(v, 'h', 'd') ? v.h + 1.5 * v.d : undefined) : (H.has(v, 'l', 'Hn') ? v.l + v.Hn : undefined), hint: 'Example 8-4 adds 2 threads (2/n) beyond the nut' },
-          { id: 'L', symbol: 'L', label: 'Bolt length used (standard)', unit: 'in / mm', kind: 'lookup', fig: 'table8-7', hint: 'auto: rounded up to ¼ in (US) or 5 mm (SI)', auto: v => H.has(v, 'Lmin') ? (FS_SI(v) ? Math.ceil(v.Lmin / 5) * 5 : Math.ceil(v.Lmin * 4 - 1e-9) / 4) : undefined },
+          { id: 'Lmin', symbol: 'L_{min}', label: 'Minimum bolt length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => v.joint === 'b' ? (H.has(v, 'h', 'd') ? v.h + 1.5 * v.d : undefined) : (H.has(v, 'l', 'Hn') ? v.l + v.Hn : undefined) },
+          { id: 'L', symbol: 'L', label: 'Bolt length used (standard)', unit: 'in / mm', kind: 'lookup', fig: 'table8-7', hint: 'auto: up to ¼ in (US) or 5 mm (SI)', auto: v => H.has(v, 'Lmin') ? (FS_SI(v) ? Math.ceil(v.Lmin / 5) * 5 : Math.ceil(v.Lmin * 4 - 1e-9) / 4) : undefined },
         ] },
     ] },
 
     { title: 'Step 2: Bolt stiffness', steps: [
       { id: 'kb', title: 'Threaded length and bolt stiffness', eq: '8-13, 8-14, 8-17', fig: ['table8-7'],
-        formula: 'L_T = \\begin{cases} 2d + \\tfrac14 & L \\le 6\\,\\text{in} \\\\ 2d + \\tfrac12 & L > 6\\,\\text{in}\\end{cases} \\quad l_d = L - L_T,\\; l_t = l - l_d \\qquad k_b = \\frac{A_d A_t E}{A_d l_t + A_t l_d}',
-        text: 'Metric: LT = 2d + 6 (L ≤ 125, d ≤ 48), 2d + 12 (125 < L ≤ 200), 2d + 25 (L > 200) mm. If ld comes out ≤ 0 the whole grip is threaded: kb = At E / l.',
+        formula: 'L_T = 2d + \\tfrac14\\ (L \\le 6\\ \\text{in}),\\; 2d + \\tfrac12\\ (L > 6) \\quad l_d = L - L_T,\\; l_t = l - l_d \\qquad k_b = \\frac{A_d A_t E}{A_d l_t + A_t l_d}',
+        text: 'Metric \\(L_T\\) = 2d + 6 (L ≤ 125 mm), 2d + 12 (≤ 200), 2d + 25 mm. The thread pitch does not enter \\(k_b\\) except through \\(A_t\\). If \\(k_b\\) is given, type it.',
         vars: [
           { id: 'LT', symbol: 'L_T', label: 'Threaded length', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => { if (!H.has(v, 'd', 'L')) return undefined;
               if (FS_SI(v)) return v.L <= 125 && v.d <= 48 ? 2 * v.d + 6 : (v.L <= 200 ? 2 * v.d + 12 : 2 * v.d + 25); return v.L <= 6 ? 2 * v.d + 0.25 : 2 * v.d + 0.5; } },
-          { id: 'ld', symbol: 'l_d', label: 'Unthreaded length in grip', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'L', 'LT') ? Math.max(0, v.L - v.LT) : undefined },
-          { id: 'lt', symbol: 'l_t', label: 'Threaded length in grip', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'l', 'ld') ? v.l - v.ld : undefined, check: v => (v.lt !== undefined && v.lt < 0) ? 'lt < 0: the grip is entirely in the shank — use kb = Ad E / l' : null },
-          { id: 'kb', symbol: 'k_b', label: 'Bolt stiffness', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => { if (!H.has(v, 'Ad', 'At', 'Eb', 'lt', 'ld')) return undefined; if (v.lt <= 0) return v.Ad * v.Eb / v.l; return v.Ad * v.At * v.Eb / (v.Ad * v.lt + v.At * v.ld); },
-            work: v => H.has(v, 'kb') && v.lt > 0 ? '\\(k_b = \\dfrac{' + TX(v.Ad, 4) + '(' + TX(v.At, 4) + ')(' + TX(v.Eb, 3) + ')}{' + TX(v.Ad, 4) + '(' + TX(v.lt, 4) + ') + ' + TX(v.At, 4) + '(' + TX(v.ld, 4) + ')} = ' + TX(v.kb, 4) + '\\)' : null },
+          { id: 'ld', symbol: 'l_d', label: 'Unthreaded length in the grip', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'L', 'LT') ? Math.max(0, v.L - v.LT) : undefined },
+          { id: 'lt', symbol: 'l_t', label: 'Threaded length in the grip', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'l', 'ld') ? v.l - v.ld : undefined, check: v => (v.lt !== undefined && v.lt < 0) ? '\\(l_t < 0\\): grip is all shank — \\(k_b = A_dE/l\\)' : null },
+          { id: 'kbg', symbol: 'k_{b,given}', label: 'Bolt stiffness, if given', unit: 'lbf/in / N/mm', kind: 'input', hint: 'HW5 P2: 3 Mlbf/in' },
+          { id: 'kb', symbol: 'k_b', label: 'Bolt stiffness', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => { if (H.has(v, 'kbg')) return v.kbg; if (!H.has(v, 'Ad', 'At', 'Eb', 'lt', 'ld')) return undefined; if (v.lt <= 0) return v.Ad * v.Eb / v.l; return v.Ad * v.At * v.Eb / (v.Ad * v.lt + v.At * v.ld); },
+            work: v => !H.has(v, 'kbg') && H.has(v, 'kb') && v.lt > 0 ? '\\(k_b = \\dfrac{' + TX(v.Ad, 4) + '(' + TX(v.At, 4) + ')(' + TX(v.Eb, 3) + ')}{' + TX(v.Ad, 4) + '(' + TX(v.lt, 4) + ') + ' + TX(v.At, 4) + '(' + TX(v.ld, 4) + ')} = ' + TX(v.kb, 4) + '\\)' : null },
         ] },
     ] },
 
     { title: 'Step 3: Member stiffness', steps: [
-      { id: 'km', title: 'Member stiffness km — choose the method', eq: '8-20, 8-22, 8-23', fig: ['fig8-15', 'fig8-17', 'table8-8', 'fig8-16'],
-        formula: 'k_m = \\frac{0.5774\\pi E d}{2\\ln\\left(5\\,\\dfrac{0.5774 l + 0.5d}{0.5774 l + 2.5d}\\right)}\\ (8\\text{-}22) \\qquad k_m = E d A e^{B d/l}\\ (8\\text{-}23) \\qquad k_i = \\frac{0.5774\\pi E d}{\\ln\\dfrac{(1.155t + D - d)(D + d)}{(1.155t + D + d)(D - d)}}\\ (8\\text{-}20)',
-        text: 'Eq. 8-22 and 8-23 need all members of the <b>same material</b> (α = 30°, washer face dw = 1.5d). For mixed materials (steel plate on cast iron, Example 8-2 / 8-5) stack frusta with Eq. 8-20 below: each frustum has thickness t, small-end diameter D (1.5d at the bolt head / nut, growing by 2t·tan 30° = 1.155t per frustum towards mid-grip) and its own E; then 1/km = Σ 1/ki.',
+      { id: 'km', title: 'Member stiffness — choose the method', eq: '8-20, 8-22, 8-23', fig: ['fig8-15', 'fig8-17', 'table8-8', 'fig8-16'],
+        formula: 'k_m = \\frac{0.5774\\pi E d}{2\\ln\\left(5\\,\\dfrac{0.5774 l + 0.5d}{0.5774 l + 2.5d}\\right)}\\ (8\\text{-}22) \\qquad k_m = E d A e^{B d/l}\\ (8\\text{-}23)',
+        text: 'Eqs. 8-22 / 8-23 need all members of one material. Mixed materials or washers: stack frusta (Eq. 8-20).',
         vars: [
-          { id: 'kmm', label: 'Method', kind: 'choice', type: 'text', options: [{ label: 'Eq. 8-22 — same material, α = 30°, dw = 1.5d', value: 'eq822' }, { label: 'Eq. 8-23 — Wileman curve fit, Table 8-8', value: 'wileman' }, { label: 'Eq. 8-20 — stack of frusta (mixed materials)', value: 'frusta' }], default: 'eq822' },
+          { id: 'kmm', label: 'Method', kind: 'choice', type: 'text', options: [{ label: 'Eq. 8-22 — same material, 30°, \\(d_w = 1.5d\\)', value: 'eq822' }, { label: 'Eq. 8-23 — Wileman, Table 8-8', value: 'wileman' }, { label: 'Eq. 8-20 — stack of frusta', value: 'frusta' }, { label: 'Given in the problem', value: 'given' }], default: 'eq822' },
+          { id: 'kmg', symbol: 'k_{m,given}', label: 'Member stiffness, if given', unit: 'lbf/in / N/mm', kind: 'input', hint: 'HW5 P2: 12 Mlbf/in per bolt' },
           { id: 'matm', label: 'Member material (Table 8-8)', kind: 'choice', type: 'text', options: [{ label: 'Steel', value: 'steel' }, { label: 'Aluminum', value: 'aluminum' }, { label: 'Copper', value: 'copper' }, { label: 'Gray cast iron', value: 'ci' }, { label: 'Other (general A, B)', value: 'general' }], default: 'steel' },
-          { id: 'Em', symbol: 'E_m', label: 'Member modulus (methods 8-22 / 8-23)', unit: 'psi / MPa', kind: 'lookup', fig: 'table8-8', auto: v => { const w = WILEMAN[v.matm]; return w && w[2] ? (FS_SI(v) ? w[3] * 1000 : w[2] * 1e6) : undefined; }, hint: 'CI: Shigley uses 14–16 Mpsi in examples' },
-          { id: 'Aw', symbol: 'A', label: 'Wileman A', kind: 'lookup', fig: 'table8-8', hint: 'Table 8-8 (steel 0.78715)', auto: v => WILEMAN[v.matm] ? WILEMAN[v.matm][0] : undefined },
-          { id: 'Bw', symbol: 'B', label: 'Wileman B', kind: 'lookup', fig: 'table8-8', hint: 'Table 8-8 (steel 0.62873)', auto: v => WILEMAN[v.matm] ? WILEMAN[v.matm][1] : undefined },
-          { id: 'km822', symbol: 'k_m^{(8\\text{-}22)}', label: 'km by Eq. 8-22', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Em', 'd', 'l') ? 0.5774 * Math.PI * v.Em * v.d / (2 * Math.log(5 * (0.5774 * v.l + 0.5 * v.d) / (0.5774 * v.l + 2.5 * v.d))) : undefined,
-            work: v => H.has(v, 'km822') ? '\\(k_m = \\dfrac{0.5774\\pi(' + TX(v.Em, 3) + ')(' + TX(v.d) + ')}{2\\ln\\left[5\\,\\dfrac{0.5774(' + TX(v.l, 4) + ') + 0.5(' + TX(v.d) + ')}{0.5774(' + TX(v.l, 4) + ') + 2.5(' + TX(v.d) + ')}\\right]} = ' + TX(v.km822, 4) + '\\)' : null },
-          { id: 'km823', symbol: 'k_m^{(8\\text{-}23)}', label: 'km by Eq. 8-23 (Wileman)', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Em', 'd', 'l', 'Aw', 'Bw') ? v.Em * v.d * v.Aw * Math.exp(v.Bw * v.d / v.l) : undefined,
-            work: v => H.has(v, 'km823') ? '\\(k_m = ' + TX(v.Em, 3) + '(' + TX(v.d) + ')(' + TX(v.Aw, 5) + ')\\exp[' + TX(v.Bw, 5) + '(' + TX(v.d) + ')/' + TX(v.l, 4) + '] = ' + TX(v.km823, 4) + '\\)' : null },
+          { id: 'Em', symbol: 'E_m', label: 'Member modulus', unit: 'psi / MPa', kind: 'lookup', fig: 'table8-8', auto: v => { const w = WILEMAN[v.matm]; return w && w[2] ? (FS_SI(v) ? w[3] * 1000 : w[2] * 1e6) : undefined; }, hint: 'CI: 14–16 Mpsi in the examples' },
+          { id: 'Aw', symbol: 'A', label: 'Wileman A', kind: 'lookup', fig: 'table8-8', auto: v => WILEMAN[v.matm] ? WILEMAN[v.matm][0] : undefined },
+          { id: 'Bw', symbol: 'B', label: 'Wileman B', kind: 'lookup', fig: 'table8-8', auto: v => WILEMAN[v.matm] ? WILEMAN[v.matm][1] : undefined },
+          { id: 'km822', symbol: 'k_m^{(8\\text{-}22)}', label: '\\(k_m\\) by Eq. 8-22', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Em', 'd', 'l') ? 0.5774 * Math.PI * v.Em * v.d / (2 * Math.log(5 * (0.5774 * v.l + 0.5 * v.d) / (0.5774 * v.l + 2.5 * v.d))) : undefined,
+            work: v => v.kmm === 'eq822' && H.has(v, 'km822') ? '\\(k_m = \\dfrac{0.5774\\pi(' + TX(v.Em, 3) + ')(' + TX(v.d) + ')}{2\\ln\\left[5\\,\\dfrac{0.5774(' + TX(v.l, 4) + ') + 0.5(' + TX(v.d) + ')}{0.5774(' + TX(v.l, 4) + ') + 2.5(' + TX(v.d) + ')}\\right]} = ' + TX(v.km822, 4) + '\\)' : null },
+          { id: 'km823', symbol: 'k_m^{(8\\text{-}23)}', label: '\\(k_m\\) by Eq. 8-23', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Em', 'd', 'l', 'Aw', 'Bw') ? v.Em * v.d * v.Aw * Math.exp(v.Bw * v.d / v.l) : undefined,
+            work: v => v.kmm === 'wileman' && H.has(v, 'km823') ? '\\(k_m = ' + TX(v.Em, 3) + '(' + TX(v.d) + ')(' + TX(v.Aw, 5) + ')\\exp[' + TX(v.Bw, 5) + '(' + TX(v.d) + ')/' + TX(v.l, 4) + '] = ' + TX(v.km823, 4) + '\\)' : null },
         ] },
       { id: 'frusta', title: 'Frusta stack (Eq. 8-20) — frusta 1 and 2', fig: ['fig8-17', 'fig8-15'],
-        text: 'Number the frusta from the bolt head towards the nut (Example 8-2: steel washer + steel plate as one frustum, then the cast iron above mid-grip, then the cast iron below). D is the diameter at the <i>narrow</i> end of each frustum: 1.5d for the first and last, D<sub>prev</sub> + 1.155 t<sub>prev</sub> while expanding. Fizz p.150: d in Eq. 8-20 is the hole diameter of that member — the bolt nominal diameter for plates (auto), the washer inner diameter for a washer; members of the same material and hole diameter can be merged into one frustum. Leave unused rows blank.',
+        text: 'Number frusta from the head to the nut. D = narrow-end diameter: 1.5d at the head / nut, then \\(D_{prev} + 1.155t_{prev}\\) while expanding (HW5 P1: Al frustum D = 0.75 + 1.155(0.095) = 0.860 in).',
         vars: [
-          { id: 'f1t', symbol: 't_1', label: 'Frustum 1 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f1D', symbol: 'D_1', label: 'Frustum 1 narrow-end diameter', unit: 'in / mm', kind: 'lookup', fig: 'fig8-17', hint: 'washer-face diameter 1.5d at the head / nut (Fizz p.149)', auto: v => H.has(v, 'd') ? 1.5 * v.d : undefined },
-          { id: 'f1E', symbol: 'E_1', label: 'Frustum 1 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f1d', symbol: 'd_1', label: 'Frustum 1 hole diameter', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'plate: bolt nominal d (auto); washer: its inner diameter (Fizz p.150)' },
-          { id: 'f2t', symbol: 't_2', label: 'Frustum 2 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f2D', symbol: 'D_2', label: 'Frustum 2 narrow-end diameter', unit: 'in / mm', kind: 'input', hint: 'expanding: previous D + 1.155 t; last frustum at the nut: 1.5d' },
-          { id: 'f2E', symbol: 'E_2', label: 'Frustum 2 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f2d', symbol: 'd_2', label: 'Frustum 2 hole diameter', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'plate: bolt nominal d (auto); washer: its inner diameter (Fizz p.150)' },
+          { id: 'f1t', symbol: 't_1', label: 'Frustum 1 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f1D', symbol: 'D_1', label: 'Frustum 1 narrow-end diameter', unit: 'in / mm', kind: 'lookup', fig: 'fig8-17', hint: '1.5d at the head', auto: v => H.has(v, 'd') ? 1.5 * v.d : undefined },
+          { id: 'f1E', symbol: 'E_1', label: 'Frustum 1 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f1d', symbol: 'd_1', label: 'Frustum 1 hole diameter', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'washer: its inner diameter' },
+          { id: 'f2t', symbol: 't_2', label: 'Frustum 2 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f2D', symbol: 'D_2', label: 'Frustum 2 narrow-end diameter', unit: 'in / mm', kind: 'input' },
+          { id: 'f2E', symbol: 'E_2', label: 'Frustum 2 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f2d', symbol: 'd_2', label: 'Frustum 2 hole diameter', unit: 'in / mm', kind: 'input', auto: v => v.d },
         ],
         when: v => v.kmm === 'frusta' },
       { id: 'frusta2', title: 'Frusta 3 and 4', fig: ['fig8-17'], text: 'Leave unused rows blank.',
         vars: [
-          { id: 'f3t', symbol: 't_3', label: 'Frustum 3 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f3D', symbol: 'D_3', label: 'Frustum 3 narrow-end diameter', unit: 'in / mm', kind: 'input', hint: 'expanding: previous D + 1.155 t; last frustum at the nut: 1.5d' },
-          { id: 'f3E', symbol: 'E_3', label: 'Frustum 3 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f3d', symbol: 'd_3', label: 'Frustum 3 hole diameter', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'plate: bolt nominal d (auto); washer: its inner diameter (Fizz p.150)' },
-          { id: 'f4t', symbol: 't_4', label: 'Frustum 4 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f4D', symbol: 'D_4', label: 'Frustum 4 narrow-end diameter', unit: 'in / mm', kind: 'input', hint: 'expanding: previous D + 1.155 t; last frustum at the nut: 1.5d' },
-          { id: 'f4E', symbol: 'E_4', label: 'Frustum 4 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f4d', symbol: 'd_4', label: 'Frustum 4 hole diameter', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'plate: bolt nominal d (auto); washer: its inner diameter (Fizz p.150)' },
+          { id: 'f3t', symbol: 't_3', label: 'Frustum 3 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f3D', symbol: 'D_3', label: 'Frustum 3 narrow-end diameter', unit: 'in / mm', kind: 'input' },
+          { id: 'f3E', symbol: 'E_3', label: 'Frustum 3 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f3d', symbol: 'd_3', label: 'Frustum 3 hole diameter', unit: 'in / mm', kind: 'input', auto: v => v.d },
+          { id: 'f4t', symbol: 't_4', label: 'Frustum 4 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f4D', symbol: 'D_4', label: 'Frustum 4 narrow-end diameter', unit: 'in / mm', kind: 'input' },
+          { id: 'f4E', symbol: 'E_4', label: 'Frustum 4 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f4d', symbol: 'd_4', label: 'Frustum 4 hole diameter', unit: 'in / mm', kind: 'input', auto: v => v.d },
         ],
         when: v => v.kmm === 'frusta' },
       { id: 'frusta3', title: 'Frustum 5', fig: ['fig8-17'], text: 'Leave blank if not needed.',
         vars: [
-          { id: 'f5t', symbol: 't_5', label: 'Frustum 5 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f5D', symbol: 'D_5', label: 'Frustum 5 narrow-end diameter', unit: 'in / mm', kind: 'input', hint: 'expanding: previous D + 1.155 t; last frustum at the nut: 1.5d' },
-          { id: 'f5E', symbol: 'E_5', label: 'Frustum 5 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f5d', symbol: 'd_5', label: 'Frustum 5 hole diameter', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'plate: bolt nominal d (auto); washer: its inner diameter (Fizz p.150)' },
+          { id: 'f5t', symbol: 't_5', label: 'Frustum 5 thickness', unit: 'in / mm', kind: 'input' }, { id: 'f5D', symbol: 'D_5', label: 'Frustum 5 narrow-end diameter', unit: 'in / mm', kind: 'input' },
+          { id: 'f5E', symbol: 'E_5', label: 'Frustum 5 modulus', unit: 'psi / MPa', kind: 'input' }, { id: 'f5d', symbol: 'd_5', label: 'Frustum 5 hole diameter', unit: 'in / mm', kind: 'input', auto: v => v.d },
         ],
         when: v => v.kmm === 'frusta' },
       { id: 'frustak', title: 'Frustum stiffnesses and the combined member stiffness', eq: '8-20', fig: ['fig8-17'],
-        formula: 'k_i = \\frac{0.5774\\pi E_i d_i}{\\ln\\dfrac{(1.155t_i + D_i - d_i)(D_i + d_i)}{(1.155t_i + D_i + d_i)(D_i - d_i)}} \\qquad \\frac{1}{k_m} = \\frac{1}{k_1} + \\frac{1}{k_2} + \\cdots',
-        text: 'Fizz p.150–151: if the top and bottom halves are identical, compute the top half and halve it (k<sub>m</sub> = k<sub>top</sub>/2).',
+        formula: 'k_i = \\frac{0.5774\\pi E_i d_i}{\\ln\\dfrac{(1.155t_i + D_i - d_i)(D_i + d_i)}{(1.155t_i + D_i + d_i)(D_i - d_i)}} \\qquad \\frac{1}{k_m} = \\sum\\frac{1}{k_i}',
         vars: [
-          { id: 'f1k', symbol: 'k_1', label: 'k1', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f1t', 'f1D', 'f1E', 'f1d') ? frust(v.f1E, v.f1d, v.f1t, v.f1D) : undefined,
+          { id: 'f1k', symbol: 'k_1', label: '\\(k_1\\)', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f1t', 'f1D', 'f1E', 'f1d') ? frust(v.f1E, v.f1d, v.f1t, v.f1D) : undefined,
             work: v => H.has(v, 'f1k') ? '\\(k_1 = \\dfrac{0.5774\\pi(' + TX(v.f1E, 3) + ')(' + TX(v.f1d) + ')}{\\ln\\dfrac{[1.155(' + TX(v.f1t) + ') + ' + TX(v.f1D, 4) + ' - ' + TX(v.f1d) + '](' + TX(v.f1D, 4) + ' + ' + TX(v.f1d) + ')}{[1.155(' + TX(v.f1t) + ') + ' + TX(v.f1D, 4) + ' + ' + TX(v.f1d) + '](' + TX(v.f1D, 4) + ' - ' + TX(v.f1d) + ')}} = ' + TX(v.f1k, 4) + '\\)' : null },
-          { id: 'f2k', symbol: 'k_2', label: 'k2', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f2t', 'f2D', 'f2E', 'f2d') ? frust(v.f2E, v.f2d, v.f2t, v.f2D) : undefined },
-          { id: 'f3k', symbol: 'k_3', label: 'k3', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f3t', 'f3D', 'f3E', 'f3d') ? frust(v.f3E, v.f3d, v.f3t, v.f3D) : undefined },
-          { id: 'f4k', symbol: 'k_4', label: 'k4', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f4t', 'f4D', 'f4E', 'f4d') ? frust(v.f4E, v.f4d, v.f4t, v.f4D) : undefined },
-          { id: 'f5k', symbol: 'k_5', label: 'k5', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f5t', 'f5D', 'f5E', 'f5d') ? frust(v.f5E, v.f5d, v.f5t, v.f5D) : undefined },
-          { id: 'kmfr', symbol: 'k_m^{(frusta)}', label: 'km = 1 / Σ(1/ki)', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => { const ks = ['f1k', 'f2k', 'f3k', 'f4k', 'f5k'].map(k => v[k]).filter(x => x !== undefined && x > 0); return ks.length ? 1 / ks.reduce((s, k) => s + 1 / k, 0) : undefined; },
+          { id: 'f2k', symbol: 'k_2', label: '\\(k_2\\)', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f2t', 'f2D', 'f2E', 'f2d') ? frust(v.f2E, v.f2d, v.f2t, v.f2D) : undefined },
+          { id: 'f3k', symbol: 'k_3', label: '\\(k_3\\)', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f3t', 'f3D', 'f3E', 'f3d') ? frust(v.f3E, v.f3d, v.f3t, v.f3D) : undefined },
+          { id: 'f4k', symbol: 'k_4', label: '\\(k_4\\)', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f4t', 'f4D', 'f4E', 'f4d') ? frust(v.f4E, v.f4d, v.f4t, v.f4D) : undefined },
+          { id: 'f5k', symbol: 'k_5', label: '\\(k_5\\)', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'f5t', 'f5D', 'f5E', 'f5d') ? frust(v.f5E, v.f5d, v.f5t, v.f5D) : undefined },
+          { id: 'kmfr', symbol: 'k_m^{(frusta)}', label: '\\(k_m = 1/\\sum(1/k_i)\\)', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => { const ks = ['f1k', 'f2k', 'f3k', 'f4k', 'f5k'].map(k => v[k]).filter(x => x !== undefined && x > 0); return ks.length ? 1 / ks.reduce((s, k) => s + 1 / k, 0) : undefined; },
             work: v => H.has(v, 'kmfr') ? '\\(\\dfrac{1}{k_m} = ' + ['f1k', 'f2k', 'f3k', 'f4k', 'f5k'].filter(k => v[k] > 0).map(k => '\\dfrac{1}{' + TX(v[k], 4) + '}').join(' + ') + ' \\Rightarrow k_m = ' + TX(v.kmfr, 4) + '\\)' : null },
         ],
         when: v => v.kmm === 'frusta' },
       { id: 'C', title: 'Joint stiffness constant', eq: '8-24 … (f)', fig: ['fig8-18'], formula: 'C = \\frac{k_b}{k_b + k_m} \\qquad P_b = CP,\\; P_m = (1 - C)P',
+        text: 'C is the fraction of the external load taken by the bolt.',
         vars: [
-          { id: 'km', symbol: 'k_m', label: 'Member stiffness used', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => v.kmm === 'frusta' ? v.kmfr : v.kmm === 'wileman' ? v.km823 : v.km822 },
-          { id: 'C', symbol: 'C', label: 'Stiffness constant (fraction of P taken by bolt)', kind: 'calc', digits: 4, compute: v => H.has(v, 'kb', 'km') ? v.kb / (v.kb + v.km) : undefined,
+          { id: 'km', symbol: 'k_m', label: 'Member stiffness used', unit: 'lbf/in / N/mm', kind: 'calc', digits: 4, compute: v => v.kmm === 'given' ? v.kmg : v.kmm === 'frusta' ? v.kmfr : v.kmm === 'wileman' ? v.km823 : v.km822 },
+          { id: 'C', symbol: 'C', label: 'Joint stiffness constant', kind: 'calc', digits: 4, compute: v => H.has(v, 'kb', 'km') ? v.kb / (v.kb + v.km) : undefined,
             work: v => H.has(v, 'C') ? '\\(C = \\dfrac{' + TX(v.kb, 4) + '}{' + TX(v.kb, 4) + ' + ' + TX(v.km, 4) + '} = ' + TX(v.C, 4) + '\\)' : null },
         ] },
     ] },
 
     { title: 'Step 4: Strength, preload and torque', steps: [
-      { id: 'str', title: 'Bolt grade → Sp, Sut, Sy, Se', fig: ['table8-9', 'table8-10', 'table8-11', 'table8-17'],
-        text: 'Values auto-fill from the tables by grade and diameter (kpsi → psi for US). Se (Table 8-17) is fully corrected for rolled threads and already includes Kf — do not apply Kf again.',
+      { id: 'str', title: 'Bolt grade → \\(S_p\\), \\(S_{ut}\\), \\(S_y\\), \\(S_e\\)', fig: ['table8-9', 'table8-10', 'table8-11', 'table8-17'],
+        text: 'Auto-filled from the tables by grade and diameter. \\(S_e\\) (Table 8-17) is for rolled threads and already includes \\(K_f\\).',
         vars: [
           { id: 'grade', label: 'Bolt grade / class', kind: 'choice', type: 'text', options: Object.keys(BOLT_GRADES).map(k => ({ label: BOLT_GRADES[k][0], value: k })), default: 'sae5' },
-          { id: 'Sp', symbol: 'S_p', label: 'Proof strength', unit: 'psi / MPa', kind: 'lookup', fig: 'table8-9', auto: v => { const r = gradeRow(v); return r ? r[1] * KS(v) : undefined; }, hint: 'Table 8-9 / 8-10 / 8-11 (Mott 19-1 … 19-3) proof strength for the grade and diameter'  },
-          { id: 'Sut', symbol: 'S_{ut}', label: 'Tensile strength', unit: 'psi / MPa', kind: 'lookup', fig: 'table8-9', auto: v => { const r = gradeRow(v); return r ? r[2] * KS(v) : undefined; }, hint: 'Table 8-9 / 8-10 / 8-11 (Mott 19-1 … 19-3) tensile strength for the grade and diameter'  },
-          { id: 'Sy', symbol: 'S_y', label: 'Yield strength', unit: 'psi / MPa', kind: 'lookup', fig: 'table8-9', auto: v => { const r = gradeRow(v); return r ? r[3] * KS(v) : undefined; }, hint: 'Table 8-9 / 8-10 / 8-11 (Mott 19-1 … 19-3) yield strength for the grade and diameter'  },
-          { id: 'Se', symbol: 'S_e', label: 'Endurance strength (fatigue only)', unit: 'psi / MPa', kind: 'lookup', fig: 'table8-17', auto: v => { const r = gradeRow(v); return r && r[4] ? r[4] * KS(v) : undefined; }, hint: 'blank if Table 8-17 has no entry for this grade' },
+          { id: 'Sp', symbol: 'S_p', label: 'Proof strength', unit: 'psi / MPa', kind: 'lookup', fig: 'table8-9', auto: v => { const r = gradeRow(v); return r ? r[1] * KS(v) : undefined; } },
+          { id: 'Sut', symbol: 'S_{ut}', label: 'Tensile strength', unit: 'psi / MPa', kind: 'lookup', fig: 'table8-9', auto: v => { const r = gradeRow(v); return r ? r[2] * KS(v) : undefined; } },
+          { id: 'Sy', symbol: 'S_y', label: 'Yield strength', unit: 'psi / MPa', kind: 'lookup', fig: 'table8-9', auto: v => { const r = gradeRow(v); return r ? r[3] * KS(v) : undefined; } },
+          { id: 'Se', symbol: 'S_e', label: 'Endurance strength (fatigue only)', unit: 'psi / MPa', kind: 'lookup', fig: 'table8-17', auto: v => { const r = gradeRow(v); return r && r[4] ? r[4] * KS(v) : undefined; }, hint: 'blank if Table 8-17 has no entry' },
         ],
-        after: v => (BOLT_GRADES[v.grade] && BOLT_GRADES[v.grade][1] !== v.units) ? '<span class="result-bad">This grade is tabulated in ' + BOLT_GRADES[v.grade][1] + ' units — switch the unit system or the grade.</span>' : '' },
-      { id: 'pre', title: 'Load per bolt, preload and wrench torque', eq: '8-31, 8-32, 8-27', fig: ['table8-15'],
-        formula: 'P = \\frac{P_{tot}}{N} \\qquad F_p = A_t S_p \\qquad F_i = \\begin{cases} 0.75F_p & \\text{reused / nonpermanent} \\\\ 0.90F_p & \\text{permanent}\\end{cases}',
-        text: 'Fizz: if the preload is given, enter it; if "X % of proof", pick that fraction. About 1000 lbf·in is already a very high hand-wrench torque.',
+        after: v => ((BOLT_GRADES[v.grade] && BOLT_GRADES[v.grade][1] !== (FS_SI(v) ? 'SI' : 'US')) ? '<span class="result-bad">This grade is tabulated in ' + BOLT_GRADES[v.grade][1] + ' units — switch the unit system or the grade.</span>' : '') + gradeTable(v) },
+      { id: 'pre', title: 'Load per bolt and preload', eq: '8-31, 8-32',
+        formula: 'P = \\frac{P_{tot}}{N} \\qquad F_p = A_t S_p \\qquad F_i = 0.75F_p\\ (\\text{reused}),\\; 0.90F_p\\ (\\text{permanent})',
         vars: [
-          { id: 'Ptot', symbol: 'P_{tot}', label: 'Total external tensile load on joint', unit: 'lbf / N', kind: 'input' },
+          { id: 'Ptot', symbol: 'P_{tot}', label: 'Total external tensile load on the joint', unit: 'lbf / N', kind: 'input' },
           { id: 'N', symbol: 'N', label: 'Number of bolts', kind: 'input', default: 1 },
           { id: 'P', symbol: 'P', label: 'External load per bolt', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'Ptot', 'N') && v.N > 0 ? v.Ptot / v.N : undefined },
           { id: 'Fp', symbol: 'F_p', label: 'Proof load', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'At', 'Sp') ? v.At * v.Sp : undefined },
-          { id: 'preload', label: 'Preload rule', kind: 'choice', options: [{ label: '0.75 Fp — nonpermanent, reused fasteners', value: 0.75 }, { label: '0.90 Fp — permanent connection', value: 0.9 }, { label: '0.60 Fp', value: 0.6 }, { label: '1.00 Fp (to proof)', value: 1 }, { label: 'Given directly (enter Fi below)', value: 0 }], default: 0.75 },
+          { id: 'preload', label: 'Preload rule', kind: 'choice', options: [{ label: '\\(0.75F_p\\) — reused fasteners', value: 0.75 }, { label: '\\(0.90F_p\\) — permanent connection', value: 0.9 }, { label: '\\(0.60F_p\\)', value: 0.6 }, { label: '\\(1.00F_p\\)', value: 1 }, { label: 'Given directly (enter \\(F_i\\))', value: 0 }], default: 0.75 },
           { id: 'Fig', symbol: 'F_{i,given}', label: 'Preload if given', unit: 'lbf / N', kind: 'input' },
           { id: 'Fi', symbol: 'F_i', label: 'Preload used', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => v.preload === 0 ? v.Fig : (H.has(v, 'Fp', 'preload') ? v.preload * v.Fp : undefined),
             work: v => (v.preload !== 0 && H.has(v, 'Fi')) ? '\\(F_i = ' + TX(v.preload) + '(' + TX(v.At, 4) + ')(' + TX(v.Sp) + ') = ' + TX(v.Fi, 4) + '\\)' : null },
         ] },
-      { id: 'tq', title: 'Preload stress and wrench torque', eq: '8-27', fig: ['table8-15'], formula: 'T = K F_i d',
+      { id: 'tq', title: 'Preload stress, wrench torque and wrench size', eq: '8-27', fig: ['table8-15'], formula: 'T = K F_i d \\qquad \\text{wrench (across flats)} \\approx 1.5d',
+        text: 'A hex nut takes a wrench about 1.5d across flats (½-in nut → ¾-in wrench).',
         vars: [
-          { id: 'sigi', symbol: '\\sigma_i', label: 'Preload stress Fi/At', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fi', 'At') ? v.Fi / v.At : undefined },
-          { id: 'K', symbol: 'K', label: 'Torque factor', kind: 'lookup', fig: 'table8-15', default: 0.2, hint: 'Table 8-15: 0.30 nonplated black finish, 0.20 zinc-plated, 0.18 lubricated, 0.16 cadmium-plated, 0.12 Bowman Anti-Seize, 0.09 Bowman-Grip nuts; 0.20 when the condition is not stated' },
+          { id: 'sigi', symbol: '\\sigma_i', label: 'Preload stress \\(F_i/A_t\\)', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fi', 'At') ? v.Fi / v.At : undefined },
+          { id: 'K', symbol: 'K', label: 'Torque factor', kind: 'lookup', fig: 'table8-15', default: 0.2, hint: '0.30 black, 0.20 zinc-plated / not stated, 0.18 lubricated, 0.16 cadmium' },
           { id: 'T', symbol: 'T', label: 'Wrench torque', unit: 'lbf·in / N·mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'K', 'Fi', 'd') ? v.K * v.Fi * v.d : undefined,
-            work: v => H.has(v, 'T') ? '\\(T = ' + TX(v.K) + '(' + TX(v.Fi, 4) + ')(' + TX(v.d) + ') = ' + TX(v.T, 4) + '\\)' : null },
+            work: v => H.has(v, 'T') ? '\\(T = ' + TX(v.K) + '(' + TX(v.Fi, 4) + ')(' + TX(v.d) + ') = ' + TX(v.T, 4) + (FS_SI(v) ? '\\ \\text{N·mm}' : '\\ \\text{lbf·in} = ' + TX(v.T / 12, 4) + '\\ \\text{ft·lbf}') + '\\)' : null },
+          { id: 'wr', symbol: 'W', label: 'Wrench size ≈ 1.5d', unit: 'in / mm', kind: 'calc', digits: 3, compute: v => H.has(v, 'd') ? 1.5 * v.d : undefined },
         ],
-        after: v => { if (!H.has(v, 'T')) return ''; const lim = FS_SI(v) ? 113000 : 1000; return v.T > lim ? '<span class="result-bad">T = ' + H.fmt(v.T, 4) + (FS_SI(v) ? ' N·mm' : ' lbf·in') + ' — above ≈ 1000 lbf·in (113 N·m), which the homework solutions call "VERY high" for a hand wrench (Fizz p.153): use a torque multiplier / turn-of-nut, or more, smaller bolts.</span>' : '<span class="result-ok">T = ' + H.fmt(v.T, 4) + (FS_SI(v) ? ' N·mm' : ' lbf·in') + ' — achievable with a hand torque wrench (below ≈ 1000 lbf·in).</span>'; } },
+        after: v => { if (!H.has(v, 'T')) return ''; const lim = FS_SI(v) ? 113000 : 1000; return v.T > lim ? '<span class="result-bad">T above ≈ 1000 lbf·in (113 N·m) — "VERY high" for a hand wrench: use a torque multiplier or more, smaller bolts.</span>' : '<span class="result-ok">Achievable with a hand torque wrench.</span>'; } },
     ] },
 
     { title: 'Step 5: Static factors of safety', steps: [
       { id: 'static', title: 'Bolt stress, yielding, overload and separation', eq: '8-24, 8-28, 8-29, 8-30',
-        formula: 'F_b = CP + F_i,\\; \\sigma_b = \\frac{F_b}{A_t} \\qquad n_p = \\frac{S_p A_t}{CP + F_i} \\qquad n_L = \\frac{S_p A_t - F_i}{CP} \\qquad n_0 = \\frac{F_i}{P(1 - C)}',
+        formula: 'F_b = CP + F_i \\qquad n_p = \\frac{S_p A_t}{CP + F_i} \\qquad n_L = \\frac{S_p A_t - F_i}{CP} \\qquad n_0 = \\frac{F_i}{P(1 - C)}',
         vars: [
           { id: 'Fb', symbol: 'F_b', label: 'Resultant bolt load', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'C', 'P', 'Fi') ? v.C * v.P + v.Fi : undefined },
-          { id: 'sigb', symbol: '\\sigma_b', label: 'Bolt stress under service load', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fb', 'At') ? v.Fb / v.At : undefined },
+          { id: 'sigb', symbol: '\\sigma_b', label: 'Bolt stress under service load', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => H.has(v, 'Fb', 'At') ? v.Fb / v.At : undefined,
+            work: v => H.has(v, 'sigb') ? '\\(\\sigma_b = \\dfrac{' + TX(v.C, 4) + '(' + TX(v.P, 4) + ') + ' + TX(v.Fi, 4) + '}{' + TX(v.At, 4) + '} = ' + TX(v.sigb, 4) + '\\)' : null },
           { id: 'np', symbol: 'n_p', label: 'Yielding factor (proof)', kind: 'calc', digits: 3, compute: v => H.has(v, 'Sp', 'At', 'Fb') && v.Fb > 0 ? v.Sp * v.At / v.Fb : undefined,
-            work: v => H.has(v, 'np') ? '\\(n_p = \\dfrac{' + TX(v.Sp) + '(' + TX(v.At, 4) + ')}{' + TX(v.C, 4) + '(' + TX(v.P, 4) + ') + ' + TX(v.Fi, 4) + '} = ' + TX(v.np, 3) + '\\)' : null },
+            work: v => H.has(v, 'np') ? '\\(n_p = \\dfrac{' + TX(v.Sp) + '(' + TX(v.At, 4) + ')}{' + TX(v.Fb, 4) + '} = ' + TX(v.np, 3) + '\\)' : null },
           { id: 'nL', symbol: 'n_L', label: 'Load (overload) factor', kind: 'calc', digits: 3, compute: v => H.has(v, 'Sp', 'At', 'Fi', 'C', 'P') && v.C * v.P > 0 ? (v.Sp * v.At - v.Fi) / (v.C * v.P) : undefined,
             work: v => H.has(v, 'nL') ? '\\(n_L = \\dfrac{' + TX(v.Sp) + '(' + TX(v.At, 4) + ') - ' + TX(v.Fi, 4) + '}{' + TX(v.C, 4) + '(' + TX(v.P, 4) + ')} = ' + TX(v.nL, 3) + '\\)' : null },
           { id: 'n0', symbol: 'n_0', label: 'Joint-separation factor', kind: 'calc', digits: 3, compute: v => H.has(v, 'Fi', 'P', 'C') && v.P > 0 ? v.Fi / (v.P * (1 - v.C)) : undefined,
             work: v => H.has(v, 'n0') ? '\\(n_0 = \\dfrac{' + TX(v.Fi, 4) + '}{' + TX(v.P, 4) + '(1 - ' + TX(v.C, 4) + ')} = ' + TX(v.n0, 3) + '\\)' : null },
-          { id: 'nLt', symbol: 'n_{L,target}', label: 'Required load factor (to size N)', kind: 'input', hint: 'Example 8-4: nL = 2' },
-          { id: 'Nreq', symbol: 'N_{req}', label: 'Bolts needed for target nL', kind: 'calc', digits: 3, compute: v => H.has(v, 'C', 'nLt', 'Ptot', 'Sp', 'At', 'Fi') && (v.Sp * v.At - v.Fi) > 0 ? v.C * v.nLt * v.Ptot / (v.Sp * v.At - v.Fi) : undefined,
-            work: v => H.has(v, 'Nreq') ? '\\(N = \\dfrac{C n_L P_{tot}}{S_p A_t - F_i} = \\dfrac{' + TX(v.C, 4) + '(' + TX(v.nLt) + ')(' + TX(v.Ptot) + ')}{' + TX(v.Sp) + '(' + TX(v.At, 4) + ') - ' + TX(v.Fi, 4) + '} = ' + TX(v.Nreq, 3) + ' \\rightarrow ' + Math.ceil(v.Nreq - 1e-9) + '\\ \\text{bolts}\\)' : null },
+          { id: 'nLt', symbol: 'n_{L,target}', label: 'Required load factor (to size N)', kind: 'input', hint: 'Example 8-4: 2' },
+          { id: 'Nreq', symbol: 'N_{req}', label: 'Bolts needed for the target \\(n_L\\)', kind: 'calc', digits: 3, compute: v => H.has(v, 'C', 'nLt', 'Ptot', 'Sp', 'At', 'Fi') && (v.Sp * v.At - v.Fi) > 0 ? v.C * v.nLt * v.Ptot / (v.Sp * v.At - v.Fi) : undefined,
+            work: v => H.has(v, 'Nreq') ? '\\(N = \\dfrac{C n_L P_{tot}}{S_p A_t - F_i} = \\dfrac{' + TX(v.C, 4) + '(' + TX(v.nLt) + ')(' + TX(v.Ptot) + ')}{' + TX(v.Sp) + '(' + TX(v.At, 4) + ') - ' + TX(v.Fi, 4) + '} = ' + TX(v.Nreq, 3) + ' \\rightarrow ' + Math.ceil(v.Nreq - 1e-9) + '\\)' : null },
         ],
         after: v => { if (v.np === undefined) return '';
-          const bad = []; if (v.np < 1) bad.push('bolt exceeds proof strength (n_p < 1)'); if (v.nL < 1) bad.push('overload factor n_L < 1'); if (v.n0 < 1) bad.push('joint separates (n_0 < 1)');
-          let s = bad.length ? '<span class="result-bad">FAIL — ' + bad.join('; ') + '. Increase bolt grade, size or number of bolts.</span>' : '<span class="result-ok">Static PASS — n<sub>p</sub> = ' + H.fmt(v.np, 3) + ', n<sub>L</sub> = ' + H.fmt(v.nL, 3) + ', n<sub>0</sub> = ' + H.fmt(v.n0, 3) + ' (members carry ' + H.fmt(100 * (1 - v.C), 3) + ' % of P).</span>';
-          if (H.has(v, 'Nreq')) s += ' Use at least ' + Math.ceil(v.Nreq - 1e-9) + ' bolts for n<sub>L</sub> = ' + H.fmt(v.nLt) + '.'; return s; } },
+          const bad = []; if (v.np < 1) bad.push('proof exceeded (\\(n_p < 1\\))'); if (v.nL < 1) bad.push('\\(n_L < 1\\)'); if (v.n0 < 1) bad.push('joint separates (\\(n_0 < 1\\))');
+          let s = bad.length ? '<span class="result-bad">FAIL — ' + bad.join('; ') + '. Higher grade, larger or more bolts.</span>' : '<span class="result-ok">Static PASS — members carry ' + H.fmt(100 * (1 - v.C), 3) + ' % of P.</span>';
+          if (H.has(v, 'Nreq')) s += ' Use at least ' + Math.ceil(v.Nreq - 1e-9) + ' bolts.'; return s; } },
     ] },
 
     { title: 'Step 6: Fatigue (fluctuating external load)', steps: [
-      { id: 'fat', title: 'Alternating / midrange stresses', eq: '8-35 … 8-37', fig: ['fig8-22', 'table8-17'],
+      { id: 'fat', title: 'Alternating and midrange stresses', eq: '8-35 … 8-37', fig: ['fig8-22', 'table8-17'],
         formula: '\\sigma_a = \\frac{C(P_{max} - P_{min})}{2A_t} \\qquad \\sigma_m = \\frac{C(P_{max} + P_{min})}{2A_t} + \\frac{F_i}{A_t}',
-        text: 'Pmax / Pmin are per bolt. Default is the repeated load 0 → P (Pmin = 0), for which Gerber (Eq. 8-46) and ASME-elliptic (Eq. 8-47) are also available; for Pmin ≠ 0 only the general Goodman form (Eq. 8-38) is implemented. Then check yielding with n<sub>p</sub> = S<sub>p</sub>/(σ<sub>m</sub> + σ<sub>a</sub>) (Eq. 8-51).',
+        text: 'Per-bolt loads; default repeated load 0 → P. Fatigue cracks start at the first engaged thread; rolled threads have a higher \\(S_e\\) than cut threads.',
         vars: [
-          { id: 'Pmax', symbol: 'P_{max}', label: 'Max external load per bolt', unit: 'lbf / N', kind: 'input', hint: 'blank = P from step 4' },
+          { id: 'Pmax', symbol: 'P_{max}', label: 'Max external load per bolt', unit: 'lbf / N', kind: 'input', hint: 'blank = P' },
           { id: 'Pmin', symbol: 'P_{min}', label: 'Min external load per bolt', unit: 'lbf / N', kind: 'input', default: 0 },
-          { id: 'fcrit', label: 'Criterion', kind: 'choice', type: 'text', options: [{ label: 'Goodman (Eq. 8-38 / 8-45)', value: 'goodman' }, { label: 'Gerber (Eq. 8-46, repeated load only)', value: 'gerber' }, { label: 'ASME-elliptic (Eq. 8-47, repeated load only)', value: 'asme' }], default: 'goodman' },
-          { id: 'Pmx', symbol: 'P_{max}', label: 'Pmax used', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'Pmax') ? v.Pmax : v.P },
+          { id: 'fcrit', label: 'Criterion', kind: 'choice', type: 'text', options: [{ label: 'Goodman (Eq. 8-38 / 8-45)', value: 'goodman' }, { label: 'Gerber (Eq. 8-46, repeated load)', value: 'gerber' }, { label: 'ASME-elliptic (Eq. 8-47, repeated load)', value: 'asme' }], default: 'goodman' },
+          { id: 'Pmx', symbol: 'P_{max}', label: '\\(P_{max}\\) used', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'Pmax') ? v.Pmax : v.P },
           { id: 'siga', symbol: '\\sigma_a', label: 'Alternating stress', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => H.has(v, 'C', 'Pmx', 'Pmin', 'At') ? v.C * (v.Pmx - v.Pmin) / (2 * v.At) : undefined,
             work: v => H.has(v, 'siga') ? '\\(\\sigma_a = \\dfrac{' + TX(v.C, 4) + '(' + TX(v.Pmx, 4) + ' - ' + TX(v.Pmin) + ')}{2(' + TX(v.At, 4) + ')} = ' + TX(v.siga, 4) + '\\)' : null },
           { id: 'sigm', symbol: '\\sigma_m', label: 'Midrange stress', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => H.has(v, 'C', 'Pmx', 'Pmin', 'At', 'Fi') ? v.C * (v.Pmx + v.Pmin) / (2 * v.At) + v.Fi / v.At : undefined,
-            work: v => H.has(v, 'sigm') ? '\\(\\sigma_m = \\dfrac{' + TX(v.C, 4) + '(' + TX(v.Pmx, 4) + ' + ' + TX(v.Pmin) + ')}{2(' + TX(v.At, 4) + ')} + \\dfrac{' + TX(v.Fi, 4) + '}{' + TX(v.At, 4) + '} = ' + TX(v.sigm, 4) + '\\)' : null },
+            work: v => H.has(v, 'sigm') ? '\\(\\sigma_m = ' + TX(v.siga, 4) + ' + \\dfrac{' + TX(v.Fi, 4) + '}{' + TX(v.At, 4) + '} = ' + TX(v.sigm, 4) + '\\)' : null },
         ],
         when: v => H.has(v, 'Se') && H.has(v, 'C') },
       { id: 'nfs', title: 'Fatigue factor of safety and yield check', eq: '8-38, 8-46, 8-47, 8-51', fig: ['fig8-22'],
@@ -278,84 +326,95 @@ window.TOPIC = {
               if (v.fcrit === 'asme' && v.Pmin === 0 && H.has(v, 'Sp')) return v.Se / (v.siga * (v.Sp * v.Sp + v.Se * v.Se)) * (v.Sp * Math.sqrt(v.Sp * v.Sp + v.Se * v.Se - v.sigi * v.sigi) - v.sigi * v.Se);
               return v.Se * (v.Sut - v.sigi) / (v.Sut * v.siga + v.Se * (v.sigm - v.sigi)); },
             work: v => H.has(v, 'nf') ? ((v.fcrit === 'goodman' || v.Pmin !== 0) ? '\\(n_f = \\dfrac{' + TX(v.Se) + '(' + TX(v.Sut) + ' - ' + TX(v.sigi, 4) + ')}{' + TX(v.Sut) + '(' + TX(v.siga, 4) + ') + ' + TX(v.Se) + '(' + TX(v.sigm, 4) + ' - ' + TX(v.sigi, 4) + ')} = ' + TX(v.nf, 3) + '\\)' : '\\(n_f = ' + TX(v.nf, 3) + '\\) (' + (v.fcrit === 'gerber' ? 'Eq. 8-46' : 'Eq. 8-47') + ')') : null },
-          { id: 'npf', symbol: 'n_p', label: 'Yield check Sp/(σm + σa)', kind: 'calc', digits: 3, compute: v => H.has(v, 'Sp', 'sigm', 'siga') && (v.sigm + v.siga) > 0 ? v.Sp / (v.sigm + v.siga) : undefined },
-          { id: 'Fimax', symbol: 'F_{i,max}', label: 'Preload ceiling for fatigue benefit (1 − C) Sut At', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'C', 'Sut', 'At') ? (1 - v.C) * v.Sut * v.At : undefined },
+          { id: 'npf', symbol: 'n_p', label: 'Yield check \\(S_p/(\\sigma_m + \\sigma_a)\\)', kind: 'calc', digits: 3, compute: v => H.has(v, 'Sp', 'sigm', 'siga') && (v.sigm + v.siga) > 0 ? v.Sp / (v.sigm + v.siga) : undefined },
+          { id: 'Fimax', symbol: 'F_{i,max}', label: 'Preload ceiling \\((1 - C)S_{ut}A_t\\)', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => H.has(v, 'C', 'Sut', 'At') ? (1 - v.C) * v.Sut * v.At : undefined },
         ],
         when: v => H.has(v, 'Se') && H.has(v, 'C'),
-        after: v => v.nf === undefined ? '<span>Enter Se (Table 8-17) to get the fatigue factor.</span>' : (v.nf >= 1 ? '<span class="result-ok">Fatigue PASS — n<sub>f</sub> = ' + H.fmt(v.nf, 3) + ' (' + v.fcrit + '), n<sub>p</sub> = ' + H.fmt(v.npf, 3) + '.' + (v.fcrit !== 'goodman' && v.Pmin !== 0 ? ' (Pmin ≠ 0: Goodman Eq. 8-38 was used.)' : '') + '</span>' : '<span class="result-bad">Fatigue FAIL — n<sub>f</sub> = ' + H.fmt(v.nf, 3) + ' &lt; 1: more / larger / higher-grade bolts, or a less conservative criterion (Gerber, ASME).</span>') },
+        after: v => v.nf === undefined ? '<span>Enter \\(S_e\\) for the fatigue factor.</span>' : (v.nf >= 1 ? '<span class="result-ok">Fatigue PASS — \\(n_f = ' + TX(v.nf, 3) + '\\) (' + v.fcrit + ').</span>' : '<span class="result-bad">Fatigue FAIL — \\(n_f = ' + TX(v.nf, 3) + ' < 1\\): more, larger or higher-grade bolts.</span>') },
     ] },
 
-    { title: 'Step 7: Shear joints with eccentric loading (Shigley 8-12)', text: 'Course reading guide: Shigley 8-12 with <b>eccentric loading emphasised</b>. The shear V is shared equally (primary shear F′ = V/n), the moment M about the bolt-group centroid is carried by secondary shear F″ = M r / Σr² perpendicular to each radius, and the critical bolt is the one where F′ and F″ add (Example 8-7).', steps: [
+    { title: 'Step 7: Shear joints with eccentric loading (Shigley 8-12)', text: 'Primary shear \\(F\' = V/n\\); the moment about the bolt-group <b>centroid</b> (the pivot) gives secondary shear \\(F\'\' = Mr/\\sum r^2\\), perpendicular to each radius; the critical bolt is where they add.', steps: [
       { id: 'sj', title: 'Shear-joint analysis', vars: [
-        { id: 'sj', label: 'Analyse a shear joint?', kind: 'choice', type: 'text', options: [{ label: 'No — tension joint only', value: 'none' }, { label: 'Yes — bolt group in shear with eccentric load (Ex. 8-7)', value: 'shear' }], default: 'none' },
+        { id: 'sj', label: 'Analyse a shear joint?', kind: 'choice', type: 'text', options: [{ label: 'No — tension joint only', value: 'none' }, { label: 'Yes — bolt group in shear (Ex. 8-7, HW5 P3)', value: 'shear' }], default: 'none' },
       ] },
       { id: 'sjin', title: 'Loads on the bolt group', eq: '8-56, 8-57', fig: ['fig8-29', 'fig8-30', 'fig8-31'], when: v => v.sj === 'shear',
         formula: "F' = \\frac{V}{n} \\qquad M = V e",
-        text: 'V = total shear force on the group (direction taken as the y axis); e = perpendicular distance from the line of action of V to the centroid of the bolt group (Example 8-7: 300 + 50 + 75 = 425 mm), or enter M directly.',
+        text: 'V = total shear on the group (along y); e = distance from its line of action to the centroid, or enter M.',
         vars: [
           { id: 'V', symbol: 'V', label: 'Shear force on the bolt group', unit: 'lbf / N', kind: 'input' },
-          { id: 'e', symbol: 'e', label: 'Eccentricity of V from the centroid', unit: 'in / mm', kind: 'input', hint: 'blank if M is given' },
+          { id: 'e', symbol: 'e', label: 'Eccentricity of V from the centroid', unit: 'in / mm', kind: 'input' },
           { id: 'Mg', symbol: 'M_{given}', label: 'Moment about the centroid, if given', unit: 'lbf·in / N·mm', kind: 'input' },
-          { id: 'M', symbol: 'M', label: 'Moment carried by the group', unit: 'lbf·in / N·mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Mg') ? v.Mg : (H.has(v, 'V', 'e') ? v.V * v.e : undefined),
-            work: v => (H.has(v, 'M') && !H.has(v, 'Mg')) ? '\\(M = ' + TX(v.V) + '(' + TX(v.e) + ') = ' + TX(v.M, 4) + '\\)' : null },
+          { id: 'M', symbol: 'M', label: 'Moment carried by the group', unit: 'lbf·in / N·mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'Mg') ? v.Mg : (H.has(v, 'V', 'e') ? v.V * v.e : undefined) },
           { id: 'nb', symbol: 'n', label: 'Number of bolts in the group', kind: 'input', default: 4 },
-          { id: 'Fp1', symbol: "F'", label: 'Primary (direct) shear per bolt', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => (H.has(v, 'V', 'nb') && v.nb > 0) ? v.V / v.nb : undefined,
-            work: v => H.has(v, 'Fp1') ? "\\(F' = " + TX(v.V) + '/' + TX(v.nb) + ' = ' + TX(v.Fp1, 4) + '\\)' : null },
+          { id: 'Fp1', symbol: "F'", label: 'Primary shear per bolt', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => (H.has(v, 'V', 'nb') && v.nb > 0) ? v.V / v.nb : undefined },
         ] },
       { id: 'sjgeo', title: 'Critical bolt: secondary shear and resultant', eq: '8-57', fig: ['fig8-31', 'fig8-28'], when: v => v.sj === 'shear',
         formula: "F'' = \\frac{M r}{\\sum r^2} \\qquad F = \\sqrt{F'^2 + F''^2 + 2F'F''\\,\\frac{|x_b|}{r}}",
-        text: 'Give the position (x<sub>b</sub>, y<sub>b</sub>) of the bolt farthest from the centroid, with V parallel to y. F″ is perpendicular to the radius, so its component along V is F″·|x<sub>b</sub>|/r; the critical bolt is the one where that component adds to F′ (A and B in Example 8-7, bolt 1 in Mott 20-1). Σr² is auto-filled as n·r² for a symmetric pattern — overwrite with the true sum when the bolts are at different radii.',
+        text: 'Give the farthest bolt\'s position from the centroid (V along y). \\(\\sum r^2\\) auto = n\\(r^2\\); type the true sum if radii differ (HW5 P3: 2(32)\\(^2\\), the middle bolt has r = 0).',
         vars: [
-          { id: 'xb', symbol: 'x_b', label: 'Critical bolt x (perpendicular to V)', unit: 'in / mm', kind: 'input', hint: 'Ex. 8-7: 75 mm; Mott 20-1: 2.0 in' },
-          { id: 'yb', symbol: 'y_b', label: 'Critical bolt y (along V)', unit: 'in / mm', kind: 'input', hint: 'Ex. 8-7: 60 mm; Mott 20-1: 1.5 in' },
-          { id: 'rb', symbol: 'r', label: 'Radius to the critical bolt', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'xb', 'yb') ? Math.sqrt(v.xb * v.xb + v.yb * v.yb) : undefined,
-            work: v => H.has(v, 'rb') ? '\\(r = \\sqrt{' + TX(v.xb) + '^2 + ' + TX(v.yb) + '^2} = ' + TX(v.rb, 4) + '\\)' : null },
-          { id: 'Sr2', symbol: '\\sum r^2', label: 'Sum of r² over all bolts', unit: 'in² / mm²', kind: 'input', auto: v => H.has(v, 'nb', 'rb') ? v.nb * v.rb * v.rb : undefined, hint: 'auto = n r² (all bolts equidistant)' },
-          { id: 'Fpp', symbol: "F''", label: 'Secondary (moment) shear on the critical bolt', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => (H.has(v, 'M', 'rb', 'Sr2') && v.Sr2 > 0) ? v.M * v.rb / v.Sr2 : undefined,
+          { id: 'xb', symbol: 'x_b', label: 'Critical bolt x (across V)', unit: 'in / mm', kind: 'input', hint: 'Ex. 8-7: 75 mm' },
+          { id: 'yb', symbol: 'y_b', label: 'Critical bolt y (along V)', unit: 'in / mm', kind: 'input', hint: 'Ex. 8-7: 60 mm' },
+          { id: 'rb', symbol: 'r', label: 'Radius to the critical bolt', unit: 'in / mm', kind: 'calc', digits: 4, compute: v => H.has(v, 'xb', 'yb') ? Math.sqrt(v.xb * v.xb + v.yb * v.yb) : undefined },
+          { id: 'Sr2', symbol: '\\sum r^2', label: '\\(\\sum r^2\\) over all bolts', unit: 'in^2 / mm^2', kind: 'input', auto: v => H.has(v, 'nb', 'rb') ? v.nb * v.rb * v.rb : undefined, hint: 'auto = n\\(r^2\\)' },
+          { id: 'Fpp', symbol: "F''", label: 'Secondary shear on the critical bolt', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => (H.has(v, 'M', 'rb', 'Sr2') && v.Sr2 > 0) ? v.M * v.rb / v.Sr2 : undefined,
             work: v => H.has(v, 'Fpp') ? "\\(F'' = \\dfrac{" + TX(v.M, 4) + '(' + TX(v.rb, 4) + ')}{' + TX(v.Sr2, 4) + '} = ' + TX(v.Fpp, 4) + '\\)' : null },
-          { id: 'Fres', symbol: 'F', label: 'Resultant load on the critical bolt', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => (H.has(v, 'Fp1', 'Fpp', 'xb', 'rb') && v.rb > 0) ? Math.sqrt(v.Fp1 * v.Fp1 + v.Fpp * v.Fpp + 2 * v.Fp1 * v.Fpp * Math.abs(v.xb) / v.rb) : undefined,
+          { id: 'Fres', symbol: 'F', label: 'Resultant on the critical bolt', unit: 'lbf / N', kind: 'calc', digits: 4, compute: v => (H.has(v, 'Fp1', 'Fpp', 'xb', 'rb') && v.rb > 0) ? Math.sqrt(v.Fp1 * v.Fp1 + v.Fpp * v.Fpp + 2 * v.Fp1 * v.Fpp * Math.abs(v.xb) / v.rb) : undefined,
             work: v => H.has(v, 'Fres') ? '\\(F = \\sqrt{' + TX(v.Fp1, 4) + '^2 + ' + TX(v.Fpp, 4) + '^2 + 2(' + TX(v.Fp1, 4) + ')(' + TX(v.Fpp, 4) + ')(' + TX(Math.abs(v.xb) / v.rb, 4) + ')} = ' + TX(v.Fres, 4) + '\\)' : null },
         ] },
       { id: 'sjstr', title: 'Bolt shear and bearing stresses', fig: ['fig8-30'], when: v => v.sj === 'shear',
-        formula: '\\tau = \\frac{F}{A_s} \\qquad \\sigma_b = \\frac{F}{t\\,d} \\qquad (A_s = \\pi d^2/4\\ \\text{body, or } A_r / A_t \\text{ if threads are in the shear plane})',
-        text: 'Good design keeps the threads out of the shear plane (shoulder bolts / unthreaded shank in the joint); otherwise the minor-diameter area carries the shear (Example 8-7: 146 MPa instead of 104 MPa). Bearing is checked on the thinnest member and on the bolt.',
+        formula: '\\tau = \\frac{F}{A_s} \\qquad \\sigma_{br} = \\frac{F}{t\\,d}',
+        text: 'Keep threads out of the shear plane (shoulder bolts); otherwise use \\(A_r\\) (Ex. 8-7: 146 vs 104 MPa).',
         vars: [
-          { id: 'dsj', symbol: 'd', label: 'Bolt diameter in the shear plane', unit: 'in / mm', kind: 'input', auto: v => v.d, hint: 'auto = bolt from step 1' },
-          { id: 'sarea', label: 'Shear area', kind: 'choice', type: 'text', options: [{ label: 'Body (unthreaded shank) — πd²/4', value: 'body' }, { label: 'Threads in shear plane — minor-diameter area A_r (Tables 8-1 / 8-2; Ex. 8-7: M16 → 144 mm², 146 MPa)', value: 'thread' }], default: 'body' },
-          { id: 'As', symbol: 'A_s', label: 'Shear area per bolt (one shear plane)', unit: 'in² / mm²', kind: 'calc', digits: 4, compute: v => { if (!H.has(v, 'dsj')) return undefined; if (v.sarea !== 'thread') return Math.PI * v.dsj * v.dsj / 4;
-              const dr = FS_SI(v) ? (H.has(v, 'pitch') ? v.dsj - 1.226869 * v.pitch : undefined) : (H.has(v, 'tpi') ? v.dsj - 1.299038 / v.tpi : undefined); return dr > 0 ? Math.PI * dr * dr / 4 : undefined; },
-            hint: 'threads: A_r = (π/4)(d − 1.226869p)² metric, (π/4)(d − 1.299038/n)² UN — needs the pitch / tpi of step 1' },
+          { id: 'dsj', symbol: 'd', label: 'Bolt diameter in the shear plane', unit: 'in / mm', kind: 'input', auto: v => v.d },
+          { id: 'sarea', label: 'Shear area', kind: 'choice', type: 'text', options: [{ label: 'Body (shank) — \\(\\pi d^2/4\\)', value: 'body' }, { label: 'Threads in the shear plane — \\(A_r\\)', value: 'thread' }], default: 'body' },
+          { id: 'As', symbol: 'A_s', label: 'Shear area per bolt', unit: 'in^2 / mm^2', kind: 'calc', digits: 4, compute: v => { if (!H.has(v, 'dsj')) return undefined; if (v.sarea !== 'thread') return Math.PI * v.dsj * v.dsj / 4;
+              const dr = FS_SI(v) ? (H.has(v, 'pitch') ? v.dsj - 1.226869 * v.pitch : undefined) : (H.has(v, 'tpi') ? v.dsj - 1.299038 / v.tpi : undefined); return dr > 0 ? Math.PI * dr * dr / 4 : undefined; } },
           { id: 'tau', symbol: '\\tau', label: 'Shear stress in the critical bolt', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => (H.has(v, 'Fres', 'As') && v.As > 0) ? v.Fres / v.As : undefined,
             work: v => H.has(v, 'tau') ? '\\(\\tau = ' + TX(v.Fres, 4) + '/' + TX(v.As, 4) + ' = ' + TX(v.tau, 4) + '\\)' : null },
-          { id: 'tmem', symbol: 't', label: 'Thinnest member thickness', unit: 'in / mm', kind: 'input', hint: 'Ex. 8-7: 10 mm channel web' },
-          { id: 'sigb', symbol: '\\sigma_b', label: 'Bearing stress on member / bolt', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => (H.has(v, 'Fres', 'tmem', 'dsj') && v.tmem * v.dsj > 0) ? v.Fres / (v.tmem * v.dsj) : undefined,
-            work: v => H.has(v, 'sigb') ? '\\(\\sigma_b = ' + TX(v.Fres, 4) + '/[' + TX(v.tmem) + '(' + TX(v.dsj) + ')] = ' + TX(v.sigb, 4) + '\\)' : null },
+          { id: 'tmem', symbol: 't', label: 'Thinnest member thickness', unit: 'in / mm', kind: 'input', hint: 'HW5 P3: 8 mm bracket' },
+          { id: 'sigbr', symbol: '\\sigma_{br}', label: 'Bearing stress (bolt and member)', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => (H.has(v, 'Fres', 'tmem', 'dsj') && v.tmem * v.dsj > 0) ? v.Fres / (v.tmem * v.dsj) : undefined,
+            work: v => H.has(v, 'sigbr') ? '\\(\\sigma_{br} = \\dfrac{' + TX(v.Fres, 4) + '}{' + TX(v.tmem) + '(' + TX(v.dsj) + ')} = ' + TX(v.sigbr, 4) + '\\)' : null },
         ] },
       { id: 'sjfos', title: 'Shear-joint factors of safety', fig: ['table8-9'], when: v => v.sj === 'shear',
-        formula: 'n_{shear} = \\frac{0.577 S_y}{\\tau} \\qquad n_{bear} = \\frac{S_y}{\\sigma_b}' ,
-        text: 'Shigley Example 8-6 style: shear yield 0.577 S<sub>y</sub> (distortion energy) for the bolt; bearing against S<sub>y</sub> of the bolt or the member, whichever is weaker.',
+        formula: 'n_{shear} = \\frac{0.577 S_{y,bolt}}{\\tau} \\qquad n_{bear} = \\frac{S_y}{\\sigma_{br}}\\ (\\text{bolt and member})',
         vars: [
           { id: 'Syb', symbol: 'S_{y,bolt}', label: 'Bolt yield strength', unit: 'psi / MPa', kind: 'input', auto: v => v.Sy, hint: 'auto = grade from step 4' },
-          { id: 'Sym', symbol: 'S_{y,mem}', label: 'Member yield strength (bearing)', unit: 'psi / MPa', kind: 'input', hint: 'Table A-20 for the plate / channel steel' },
-          { id: 'ndsj', symbol: 'n_d', label: 'Required design factor', kind: 'input', default: 1.5, hint: 'Ex. 8-6 uses nd = 1.5' },
+          { id: 'Sym', symbol: 'S_{y,mem}', label: 'Member yield strength', unit: 'psi / MPa', kind: 'input', hint: 'Table A-20 (1020 HR: 210 MPa)' },
+          { id: 'ndsj', symbol: 'n_d', label: 'Required design factor', kind: 'input', default: 1.5 },
           { id: 'nsh', symbol: 'n_{shear}', label: 'Bolt shear factor of safety', kind: 'calc', digits: 3, compute: v => (H.has(v, 'Syb', 'tau') && v.tau > 0) ? 0.577 * v.Syb / v.tau : undefined,
             work: v => H.has(v, 'nsh') ? '\\(n = 0.577(' + TX(v.Syb) + ')/' + TX(v.tau, 4) + ' = ' + TX(v.nsh, 3) + '\\)' : null },
-          { id: 'nbr', symbol: 'n_{bear}', label: 'Bearing factor of safety (weaker of bolt / member)', kind: 'calc', digits: 3, compute: v => { if (!H.has(v, 'sigb') || v.sigb <= 0) return undefined; const Sy = Math.min(...[v.Syb, v.Sym].filter(x => x !== undefined)); return isFinite(Sy) ? Sy / v.sigb : undefined; } },
+          { id: 'nbrb', symbol: 'n_{bear,bolt}', label: 'Bearing on the bolt', kind: 'calc', digits: 3, compute: v => H.has(v, 'Syb', 'sigbr') && v.sigbr > 0 ? v.Syb / v.sigbr : undefined },
+          { id: 'nbr', symbol: 'n_{bear,mem}', label: 'Bearing on the member', kind: 'calc', digits: 3, compute: v => H.has(v, 'Sym', 'sigbr') && v.sigbr > 0 ? v.Sym / v.sigbr : undefined },
         ],
         after: v => { if (!H.has(v, 'nsh')) return '';
-          const nd = v.ndsj || 1; const ok = v.nsh >= nd && (!H.has(v, 'nbr') || v.nbr >= nd);
-          return (ok ? '<span class="result-ok">Shear joint PASS — ' : '<span class="result-bad">Shear joint FAIL — ') + 'critical bolt F = ' + H.fmt(v.Fres, 4) + ' (F′ = ' + H.fmt(v.Fp1, 4) + ', F″ = ' + H.fmt(v.Fpp, 4) + '), τ = ' + H.fmt(v.tau, 4) + ' → n<sub>shear</sub> = ' + H.fmt(v.nsh, 3) + (H.has(v, 'nbr') ? ', σ<sub>b</sub> = ' + H.fmt(v.sigb, 4) + ' → n<sub>bear</sub> = ' + H.fmt(v.nbr, 3) : '') + ' vs n<sub>d</sub> = ' + H.fmt(nd) + '.' + (H.has(v, 'Dreq') ? ' Mott 20-1: required A<sub>s</sub> = ' + H.fmt(v.Asreq, 4) + ' → D ≥ ' + H.fmt(v.Dreq, 4) + ' (next standard size).' : '') + '</span>'; } },
+          const nd = v.ndsj || 1; const ns = [v.nsh, v.nbrb, v.nbr].filter(x => x !== undefined); const ok = ns.every(x => x >= nd);
+          return (ok ? '<span class="result-ok">Shear joint PASS — ' : '<span class="result-bad">Shear joint FAIL — ') + 'F = ' + H.fmt(v.Fres, 4) + ', \\(n_{shear}\\) = ' + H.fmt(v.nsh, 3) + (v.nbrb !== undefined ? ', bolt bearing ' + H.fmt(v.nbrb, 3) : '') + (v.nbr !== undefined ? ', member bearing ' + H.fmt(v.nbr, 3) : '') + ' vs \\(n_d\\) = ' + H.fmt(nd) + '.</span>'; } },
+      { id: 'sjbend', title: 'Bending of the bracket at the bolt line (HW5 P3)', fig: ['fig8-30'], when: v => v.sj === 'shear',
+        formula: 'I = \\frac{t h^3}{12} - \\sum_{holes}\\left(\\frac{t d^3}{12} + t\\,d\\,y_i^2\\right) \\qquad \\sigma = \\frac{M(h/2)}{I} \\qquad n = \\frac{S_{y,mem}}{\\sigma}',
+        text: 'Plate of thickness t and depth h with a row of holes along the depth (one at the centre, pairs at ±a). Optional.',
+        vars: [
+          { id: 'hbr', symbol: 'h', label: 'Bracket depth at the bolt line', unit: 'in / mm', kind: 'input', hint: 'HW5 P3: 136 mm' },
+          { id: 'nhc', symbol: 'n_{hc}', label: 'Holes on the neutral axis', kind: 'input', default: 1 },
+          { id: 'abr', symbol: 'a', label: 'Distance of the outer hole pair from the axis', unit: 'in / mm', kind: 'input', hint: 'HW5 P3: 32 mm' },
+          { id: 'Ibr', symbol: 'I', label: 'Net second moment of area', unit: 'in^4 / mm^4', kind: 'calc', digits: 4, compute: v => { if (!H.has(v, 'tmem', 'hbr', 'dsj')) return undefined; const t = v.tmem, d = v.dsj; const nh = (v.nhc || 0) + (H.has(v, 'abr') ? 2 : 0);
+              return t * Math.pow(v.hbr, 3) / 12 - nh * t * d * d * d / 12 - (H.has(v, 'abr') ? 2 * t * d * v.abr * v.abr : 0); },
+            work: v => H.has(v, 'Ibr') ? '\\(I = \\dfrac{' + TX(v.tmem) + '(' + TX(v.hbr) + ')^3}{12} - ' + ((v.nhc || 0) + (H.has(v, 'abr') ? 2 : 0)) + '\\dfrac{' + TX(v.tmem) + '(' + TX(v.dsj) + ')^3}{12}' + (H.has(v, 'abr') ? ' - 2(' + TX(v.abr) + ')^2(' + TX(v.tmem) + ')(' + TX(v.dsj) + ')' : '') + ' = ' + TX(v.Ibr, 4) + '\\)' : null },
+          { id: 'sbr', symbol: '\\sigma', label: 'Bending stress at the bolt line', unit: 'psi / MPa', kind: 'calc', digits: 4, compute: v => H.has(v, 'M', 'hbr', 'Ibr') && v.Ibr > 0 ? v.M * v.hbr / 2 / v.Ibr : undefined,
+            work: v => H.has(v, 'sbr') ? '\\(\\sigma = \\dfrac{' + TX(v.M, 4) + '(' + TX(v.hbr / 2) + ')}{' + TX(v.Ibr, 4) + '} = ' + TX(v.sbr, 4) + '\\)' : null },
+          { id: 'nbend', symbol: 'n_{bend}', label: 'Bracket bending factor of safety', kind: 'calc', digits: 3, compute: v => H.has(v, 'Sym', 'sbr') && v.sbr > 0 ? v.Sym / v.sbr : undefined },
+        ] },
     ] },
 
     { title: 'Result', steps: [
       { id: 'result', title: 'Overall verdict', vars: [],
         after: v => {
+          const ck = t => t ? '<span class="result-ok">✓</span>' : '<span class="result-bad">✗</span>';
           const parts = []; let ok = true;
-          if (v.np !== undefined) { const t = v.np >= 1 && v.nL >= 1 && v.n0 >= 1; ok = ok && t; parts.push('tension joint: n<sub>p</sub> = ' + H.fmt(v.np, 3) + ', n<sub>L</sub> = ' + H.fmt(v.nL, 3) + ', n<sub>0</sub> = ' + H.fmt(v.n0, 3) + ' ' + (t ? '<span class="result-ok">✓</span>' : '<span class="result-bad">✗</span>')); }
-          if (v.nf !== undefined) { const t = v.nf >= 1; ok = ok && t; parts.push('fatigue n<sub>f</sub> = ' + H.fmt(v.nf, 3) + ' ' + (t ? '<span class="result-ok">✓</span>' : '<span class="result-bad">✗</span>')); }
-          if (v.sj === 'shear' && v.nsh !== undefined) { const nd = v.ndsj || 1; const t = v.nsh >= nd && (!H.has(v, 'nbr') || v.nbr >= nd); ok = ok && t; parts.push('shear joint n<sub>shear</sub> = ' + H.fmt(v.nsh, 3) + (H.has(v, 'nbr') ? ', n<sub>bear</sub> = ' + H.fmt(v.nbr, 3) : '') + ' vs ' + H.fmt(nd) + ' ' + (t ? '<span class="result-ok">✓</span>' : '<span class="result-bad">✗</span>')); }
-          if (!parts.length) return '<span>Complete the steps above to get the verdict.</span>';
-          return (ok ? '<span class="result-ok"><b>PASS</b></span> — ' : '<span class="result-bad"><b>FAIL</b></span> — ') + parts.join('; ') + (H.has(v, 'd') ? ' (bolt d = ' + H.fmt(v.d) + (BOLT_GRADES[v.grade] ? ', ' + BOLT_GRADES[v.grade][0].split(' (')[0] : '') + (H.has(v, 'Fi') ? ', F<sub>i</sub> = ' + H.fmt(v.Fi, 4) + ', T = ' + H.fmt(v.T, 4) : '') + ').' : '.'); } },
+          if (v.np !== undefined) { const t = v.np >= 1 && v.nL >= 1 && v.n0 >= 1; ok = ok && t; parts.push('tension: \\(n_p\\) = ' + H.fmt(v.np, 3) + ', \\(n_L\\) = ' + H.fmt(v.nL, 3) + ', \\(n_0\\) = ' + H.fmt(v.n0, 3) + ' ' + ck(t)); }
+          if (v.nf !== undefined) { const t = v.nf >= 1; ok = ok && t; parts.push('fatigue \\(n_f\\) = ' + H.fmt(v.nf, 3) + ' ' + ck(t)); }
+          if (v.sj === 'shear' && v.nsh !== undefined) { const nd = v.ndsj || 1; const t = [v.nsh, v.nbrb, v.nbr, v.nbend].filter(x => x !== undefined).every(x => x >= nd); ok = ok && t; parts.push('shear joint (min ' + H.fmt(Math.min(...[v.nsh, v.nbrb, v.nbr, v.nbend].filter(x => x !== undefined)), 3) + ' vs ' + H.fmt(nd) + ') ' + ck(t)); }
+          if (!parts.length) return '<span>Complete the steps above.</span>';
+          return (ok ? '<span class="result-ok"><b>PASS</b></span> — ' : '<span class="result-bad"><b>FAIL</b></span> — ') + parts.join('; ') + (H.has(v, 'd') ? ' (d = ' + H.fmt(v.d) + (BOLT_GRADES[v.grade] ? ', ' + BOLT_GRADES[v.grade][0].split(' (')[0] : '') + (H.has(v, 'T') ? ', T = ' + H.fmt(v.T, 4) : '') + ').' : '.'); } },
     ] },
   ],
 };
