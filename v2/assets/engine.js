@@ -128,7 +128,7 @@
     s = String(s).replace(/<\/?[A-Za-z!][^<>]*>/g, '').replace(/\\[()\[\]]/g, '')
       .replace(/\\(?:mathrm|text|mathit|operatorname)\{([^{}]*)\}/g, '$1')
       .replace(/\\([A-Za-z]+)/g, (m, w) => TEXSYM[w] !== undefined ? TEXSYM[w] : w)
-      .replace(/\\,|\;|\\!|\\ /g, ' ');
+      .replace(/\\[,;!: ]/g, ' ');
     s = s.replace(FILERE, m => m.replace(/_/g, ' '));
     s = s.replace(SUBRE, (m, b, sub, br) => { const t = br !== undefined ? br : sub; const u = mapAll(t, SUBS); return b + (u !== null ? u : (keepUnderscore ? '_' + (t.length > 1 ? '{' + t + '}' : t) : t)); });
     s = s.replace(SUPRE, (m, b, sup, br, pr) => { const t = br !== undefined ? br : pr !== undefined ? pr : sup; const u = mapAll(t, SUPS); return b + (u !== null ? u : '^' + (t.length > 1 ? '(' + t + ')' : t)); });
