@@ -135,6 +135,25 @@
     return s.replace(/[{}]/g, '');
   }
   window.H.rich = rich; window.H.plain = plain;
+  // H.set('id', value) — used by "Use this" buttons in selection tables (after/work HTML): fills a field and recomputes
+  window.H.set = (id, val) => {
+    const vr = varById[id]; if (!vr) return;
+    raw[id] = val === undefined || val === null ? '' : String(val);
+    if (vr._inp) vr._inp.value = raw[id];
+    if (vr._sync) vr._sync();
+    update();
+    if (vr._el) { vr._el.classList.add('flash'); setTimeout(() => vr._el.classList.remove('flash'), 1200); }
+  };
+  // H.table(headers, rows, opts) → HTML for a selection table. rows: [{cells:[...], pick:bool, ok:bool, set:{id:value,...}}]
+  window.H.table = (headers, rows, opts) => {
+    opts = opts || {};
+    const th = headers.map(h => '<th>' + h + '</th>').join('') + (rows.some(r => r.set) ? '<th></th>' : '');
+    const tr = rows.map(r => {
+      const btn = r.set ? '<td><button type="button" class="use-btn" onclick=\'' + Object.keys(r.set).map(k => 'H.set(' + JSON.stringify(k) + ',' + JSON.stringify(r.set[k]) + ')').join(';').replace(/'/g, '&#39;') + '\'>' + (opts.useLabel || 'Use') + '</button></td>' : (rows.some(x => x.set) ? '<td></td>' : '');
+      return '<tr class="' + (r.pick ? 'pick ' : '') + (r.ok === false ? 'no' : r.ok === true ? 'ok' : '') + '">' + r.cells.map(c => '<td>' + (c === undefined || c === null ? '—' : c) + '</td>').join('') + btn + '</tr>';
+    }).join('');
+    return (opts.caption ? '<div class="seltab-cap">' + opts.caption + '</div>' : '') + '<div class="seltab-wrap"><table class="seltab"><thead><tr>' + th + '</tr></thead><tbody>' + tr + '</tbody></table></div>' + (opts.note ? '<div class="seltab-note">' + opts.note + '</div>' : '');
+  };
   const typeset = (els) => { if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(els.filter(Boolean)).catch(() => { }); };
   // links "Fizz p.42" / "Mech p. 79" to the guide PDFs
   function linkSrc(s) {
